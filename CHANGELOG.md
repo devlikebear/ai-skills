@@ -2,6 +2,23 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.2.3 - 2026-03-08
+
+### Added
+
+- Added Claude Code skill variants under `claude-code/skills/` with `ko/`, `en/`, and `shared/` layout matching the Codex convention.
+- Added `scripts/install_claude_code_skill.sh` installer for Claude Code skills.
+- Added Claude Code plugin marketplace support:
+  - `.claude-plugin/marketplace.json` at repo root registers this repo as a plugin marketplace.
+  - `claude-code/plugin/` contains the `code-workflow` plugin with all five skills (plan, implement, review, refactor, source-analyzer).
+  - Plugin skills are bilingual — they detect the user's language and respond accordingly.
+- Added contract tests for Claude Code skills and plugin marketplace structure.
+
+### Changed
+
+- Renamed `plan-for-codex` to `plan` in the Claude Code distribution since it is no longer Codex-specific.
+- Updated repository README to document Claude Code skills, plugin marketplace installation, and the new installer.
+
 ## 0.2.2 - 2026-03-08
 
 ### Fixed

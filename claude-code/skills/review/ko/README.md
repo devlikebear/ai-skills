@@ -1,0 +1,7 @@
+# review (Korean)
+
+이 변형은 한국어 기본 출력으로 diff 기반 리뷰를 수행하는 `review` 스킬입니다.
+
+- 스킬 본문: [SKILL.md](./SKILL.md)
+- 공용 참조: [../shared/](../shared/)
+- 영문 변형: [../en/README.md](../en/README.md)
