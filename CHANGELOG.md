@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.1.2 - 2026-03-08
+
+### Fixed
+
+- Quoted `description` values in all `SKILL.md` frontmatter blocks so YAML parsers do not fail on colons inside description text.
+- Added a contract test to keep future `SKILL.md` frontmatter descriptions YAML-safe.
+
 ## 0.1.1 - 2026-03-08
 
 ### Added

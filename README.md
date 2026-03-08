@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, starting with Codex-compatible packages.
 
-Current release: `0.1.1`
+Current release: `0.1.2`
 
 ## Overview
 

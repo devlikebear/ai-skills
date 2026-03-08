@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+import re
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -8,6 +9,16 @@ SKILL_GENERATOR_ROOT = REPO_ROOT / ".codex" / "skills" / "skill-generator"
 
 
 class SkillRepositoryContractTests(unittest.TestCase):
+    def test_all_skill_frontmatter_descriptions_are_quoted(self):
+        for skill_path in REPO_ROOT.glob("**/SKILL.md"):
+            content = skill_path.read_text(encoding="utf-8")
+            frontmatter = content.split("---", 2)[1]
+            self.assertRegex(
+                frontmatter,
+                re.compile(r'^description:\s+".+"$', re.MULTILINE),
+                msg=f"description must be quoted in {skill_path}",
+            )
+
     def test_source_analyzer_uses_language_directories(self):
         self.assertTrue((SOURCE_ANALYZER_ROOT / "README.md").exists())
         self.assertTrue((SOURCE_ANALYZER_ROOT / "ko" / "README.md").exists())

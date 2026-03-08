@@ -1,6 +1,6 @@
 ---
 name: skill-generator
-description: Wrapper around the upstream skill-creator guidance for generating Codex skills in this repository with a language-specific layout: root English README plus `ko/`, `en/`, and optional `shared/` directories.
+description: "Wrapper around the upstream skill-creator guidance for generating Codex skills in this repository with a language-specific layout: root English README plus `ko/`, `en/`, and optional `shared/` directories."
 ---
 
 # Skill Generator Wrapper

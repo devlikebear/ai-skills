@@ -1,6 +1,6 @@
 ---
 name: source-analyzer
-description: Analyze existing source code and generate beginner-friendly architecture documents or actionable refactoring work orders without modifying source files. Use this Korean-default variant when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, or refactor proposals with DUP/SEC/TIDY issue codes.
+description: "Analyze existing source code and generate beginner-friendly architecture documents or actionable refactoring work orders without modifying source files. Use this Korean-default variant when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, or refactor proposals with DUP/SEC/TIDY issue codes."
 ---
 
 # Source Analyzer Wrapper
