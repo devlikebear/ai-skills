@@ -1,0 +1,24 @@
+{
+  "name": "ai-skills",
+  "owner": {
+    "name": "devlikebear"
+  },
+  "metadata": {
+    "description": "Reusable AI-agent skills for code workflow automation",
+    "version": "0.2.3"
+  },
+  "plugins": [
+    {
+      "name": "code-workflow",
+      "source": "./claude-code/plugin",
+      "description": "Code workflow skills: plan, implement, review, refactor, and source-analyzer",
+      "version": "0.2.3",
+      "author": {
+        "name": "devlikebear"
+      },
+      "license": "MIT",
+      "keywords": ["code-review", "refactoring", "planning", "implementation", "source-analysis"],
+      "category": "developer-tools"
+    }
+  ]
+}
