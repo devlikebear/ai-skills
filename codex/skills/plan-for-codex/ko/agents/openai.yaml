@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan for Codex KO"
+  short_description: "Break requests into Korean work orders"
+  default_prompt: "Use $plan-for-codex to split this request into small, verifiable work orders with Korean output."

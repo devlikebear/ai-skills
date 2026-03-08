@@ -2,6 +2,22 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.2.0 - 2026-03-08
+
+### Added
+
+- Added four new public code skills under `codex/skills/`:
+  - `implement`
+  - `plan-for-codex`
+  - `refactor`
+  - `review`
+- Added language-specific `ko/` and `en/` variants plus shared references for each new skill.
+
+### Changed
+
+- Updated the repository README to document all public skills.
+- Ignored `.drafts/` and `.draft/` so local draft skills are not published accidentally.
+
 ## 0.1.2 - 2026-03-08
 
 ### Fixed

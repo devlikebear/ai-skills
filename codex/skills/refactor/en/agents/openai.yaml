@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refactor EN"
+  short_description: "Safe behavior-preserving refactoring in English"
+  default_prompt: "Use $refactor to improve internal structure without behavior changes, in small verified steps with English output."

@@ -25,6 +25,7 @@ class ReleaseContractTests(unittest.TestCase):
         content = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
         self.assertIn(".install_test_home", content)
         self.assertIn("security_best_practices_report.md", content)
+        self.assertIn(".drafts/", content)
 
     def test_installer_rejects_path_traversal_skill_names(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

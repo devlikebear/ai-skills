@@ -6,6 +6,14 @@ import re
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ANALYZER_ROOT = REPO_ROOT / "codex" / "skills" / "source-analyzer"
 SKILL_GENERATOR_ROOT = REPO_ROOT / ".codex" / "skills" / "skill-generator"
+PUBLIC_SKILLS_ROOT = REPO_ROOT / "codex" / "skills"
+EXPECTED_PUBLIC_SKILLS = {
+    "source-analyzer",
+    "implement",
+    "plan-for-codex",
+    "refactor",
+    "review",
+}
 
 
 class SkillRepositoryContractTests(unittest.TestCase):
@@ -18,6 +26,21 @@ class SkillRepositoryContractTests(unittest.TestCase):
                 re.compile(r'^description:\s+".+"$', re.MULTILINE),
                 msg=f"description must be quoted in {skill_path}",
             )
+
+    def test_public_skills_exist_and_use_language_directories(self):
+        actual = {path.name for path in PUBLIC_SKILLS_ROOT.iterdir() if path.is_dir()}
+        self.assertTrue(EXPECTED_PUBLIC_SKILLS.issubset(actual))
+
+        for skill_name in EXPECTED_PUBLIC_SKILLS:
+            root = PUBLIC_SKILLS_ROOT / skill_name
+            self.assertTrue((root / "README.md").exists(), msg=f"missing README for {skill_name}")
+            self.assertTrue((root / "ko" / "README.md").exists(), msg=f"missing ko README for {skill_name}")
+            self.assertTrue((root / "ko" / "SKILL.md").exists(), msg=f"missing ko SKILL for {skill_name}")
+            self.assertTrue((root / "ko" / "agents" / "openai.yaml").exists(), msg=f"missing ko openai.yaml for {skill_name}")
+            self.assertTrue((root / "en" / "README.md").exists(), msg=f"missing en README for {skill_name}")
+            self.assertTrue((root / "en" / "SKILL.md").exists(), msg=f"missing en SKILL for {skill_name}")
+            self.assertTrue((root / "en" / "agents" / "openai.yaml").exists(), msg=f"missing en openai.yaml for {skill_name}")
+            self.assertTrue((root / "shared").is_dir(), msg=f"missing shared dir for {skill_name}")
 
     def test_source_analyzer_uses_language_directories(self):
         self.assertTrue((SOURCE_ANALYZER_ROOT / "README.md").exists())
@@ -70,6 +93,10 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("AI Skills Repository", readme)
         self.assertIn("language-specific variants", readme)
         self.assertIn("codex/skills/source-analyzer", readme)
+        self.assertIn("codex/skills/implement", readme)
+        self.assertIn("codex/skills/plan-for-codex", readme)
+        self.assertIn("codex/skills/refactor", readme)
+        self.assertIn("codex/skills/review", readme)
         self.assertIn(".codex/skills/skill-generator", readme)
         self.assertIn("scripts/install_codex_skill.sh", readme)
 

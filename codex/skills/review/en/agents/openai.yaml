@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review EN"
+  short_description: "Diff-based review in English"
+  default_prompt: "Use $review to inspect this diff for regressions, security issues, and missing tests with English output."

@@ -1,6 +1,9 @@
 __pycache__/
 .DS_Store
 .analysis/
+.drafts/
 .pytest_cache/
 .install_test_home
 security_best_practices_report.md
+.drafts/
+.draft/

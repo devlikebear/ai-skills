@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review KO"
+  short_description: "Diff-based review in Korean"
+  default_prompt: "Use $review to inspect this diff for regressions, security issues, and missing tests with Korean output."

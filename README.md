@@ -2,14 +2,19 @@
 
 Public repository for reusable AI-agent skills, starting with Codex-compatible packages.
 
-Current release: `0.1.2`
+Current release: `0.2.0`
 
 ## Overview
 
 - Current scope: Codex-only distribution.
 - Public skill layout uses language-specific variants under `ko/` and `en/`.
 - Each skill root keeps an English `README.md` that links to the language-specific READMEs.
-- The first public skill is `codex/skills/source-analyzer`.
+- Public skills currently live under:
+  - `codex/skills/source-analyzer`
+  - `codex/skills/implement`
+  - `codex/skills/plan-for-codex`
+  - `codex/skills/refactor`
+  - `codex/skills/review`
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 
 ## Repository Layout
@@ -18,6 +23,10 @@ Current release: `0.1.2`
 codex/
   skills/
     source-analyzer/
+    implement/
+    plan-for-codex/
+    refactor/
+    review/
       README.md
       ko/
       en/
@@ -45,6 +54,26 @@ The installer selects a language-specific variant and materializes the runtime r
 - Supports `analyze` and `refactor-guide` modes.
 - Ships as language-specific variants with shared scripts and references.
 
+### `implement`
+
+- Executes an approved work order directly.
+- Keeps the scope small, explicit, and verification-driven.
+
+### `plan-for-codex`
+
+- Splits a request into executable work orders for Codex.
+- Keeps tasks bounded, verifiable, and ready for `/implement`.
+
+### `refactor`
+
+- Performs safe, behavior-preserving refactoring.
+- Uses shared checklists and refactoring patterns.
+
+### `review`
+
+- Performs diff-based review focused on regressions, security issues, and missing tests.
+- Produces a fix work order when changes are required.
+
 ### `skill-generator`
 
 - Lives under `.codex/skills/skill-generator`.
@@ -60,6 +89,7 @@ scripts/install_codex_skill.sh --list
 scripts/install_codex_skill.sh --list-languages source-analyzer
 scripts/install_codex_skill.sh source-analyzer ko
 scripts/install_codex_skill.sh source-analyzer en
+scripts/install_codex_skill.sh implement en
 ```
 
 By default the installer copies skills into `${CODEX_HOME:-$HOME/.codex}/skills`.

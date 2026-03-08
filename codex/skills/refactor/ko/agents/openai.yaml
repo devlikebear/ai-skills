@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refactor KO"
+  short_description: "Safe behavior-preserving refactoring in Korean"
+  default_prompt: "Use $refactor to improve internal structure without behavior changes, in small verified steps with Korean output."
