@@ -1,0 +1,5 @@
+__pycache__/
+.DS_Store
+.analysis/
+.pytest_cache/
+.install_test_home
