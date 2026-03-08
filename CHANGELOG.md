@@ -2,6 +2,21 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.1.1 - 2026-03-08
+
+### Added
+
+- Added `LICENSE` with the MIT license for public reuse.
+
+### Changed
+
+- Renamed release metadata file from `VERSION` to `VERSION.txt` to avoid IDE extension warnings.
+- Updated repository docs to reference `VERSION.txt` and `LICENSE`.
+
+### Security
+
+- Moved `security_best_practices_report.md` out of tracked release artifacts and added it to `.gitignore`.
+
 ## 0.1.0 - 2026-03-08
 
 ### Added
@@ -9,7 +24,7 @@ All notable changes to this repository will be documented in this file.
 - Initial public Codex skill repository layout with `ko/`, `en/`, and `shared/` skill variants.
 - Public `source-analyzer` skill source under `codex/skills/source-analyzer`.
 - Repository-local `skill-generator` wrapper skill under `.codex/skills/skill-generator`.
-- Release metadata via `VERSION` and this `CHANGELOG.md`.
+- Release metadata via `VERSION.txt`, `LICENSE`, and this `CHANGELOG.md`.
 
 ### Changed
 

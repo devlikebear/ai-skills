@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, starting with Codex-compatible packages.
 
-Current release: `0.1.0`
+Current release: `0.1.1`
 
 ## Overview
 
@@ -94,3 +94,4 @@ Use `.codex/skills/skill-generator` when you want to generate a new skill that f
 - This repository keeps authoring-time structure separate from install-time structure.
 - The `.codex/skills/skill-generator` helper is repository-specific and intended for skill authors.
 - Release history is tracked in `CHANGELOG.md`.
+- Licensing is provided in `LICENSE`.
