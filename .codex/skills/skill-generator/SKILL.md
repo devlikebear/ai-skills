@@ -7,6 +7,8 @@ description: "Wrapper around the upstream skill-creator guidance for generating 
 
 Use this wrapper when the user wants to create or update a Codex skill in this repository.
 
+응답은 한국어를 기본으로 하되, 사용자가 다른 언어를 명시하면 그 정책을 따른다.
+
 ## Upstream dependency
 
 - First read `${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/SKILL.md` just enough to follow its workflow.

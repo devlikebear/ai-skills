@@ -1,4 +1,4 @@
 interface:
-  display_name: "Skill Generator EN"
-  short_description: "Wrap skill-creator to scaffold Korean/English Codex skill layouts"
+  display_name: "Skill Generator"
+  short_description: "Wrap skill-creator to scaffold this repo's Codex skill layout"
   default_prompt: "Use $skill-generator to create or update a Codex skill in this repository with a root English README and ko/en variants."

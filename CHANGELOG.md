@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.2.2 - 2026-03-08
+
+### Fixed
+
+- Flattened the local project wrapper skill at `.codex/skills/skill-generator` so it exposes a single root `SKILL.md` and a single root `agents/openai.yaml`.
+- Kept `ko/README.md` and `en/README.md` only as human-facing guidance, preventing duplicate local skill entries in Codex.
+
 ## 0.2.1 - 2026-03-08
 
 ### Fixed
