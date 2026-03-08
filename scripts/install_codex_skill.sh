@@ -73,7 +73,13 @@ copy_skill() {
 
   mkdir -p "${TARGET_ROOT}"
   rm -rf "${target_dir}"
-  cp -R "${source_dir}" "${target_dir}"
+  mkdir -p "${target_dir}"
+  if [[ -f "${source_dir}/README.md" ]]; then
+    cp "${source_dir}/README.md" "${target_dir}/README.md"
+  fi
+  if [[ -d "${source_dir}/shared" ]]; then
+    cp -R "${source_dir}/shared" "${target_dir}/shared"
+  fi
   mkdir -p "${target_dir}/agents"
   cp "${language_dir}/SKILL.md" "${target_dir}/SKILL.md"
   cp "${language_dir}/agents/openai.yaml" "${target_dir}/agents/openai.yaml"

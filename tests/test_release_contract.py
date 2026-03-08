@@ -53,6 +53,28 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("invalid language", result.stderr)
 
+    def test_installer_materializes_only_one_runtime_skill(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            result = subprocess.run(
+                [str(INSTALLER), "implement", "ko"],
+                cwd=REPO_ROOT,
+                env={**os.environ, "CODEX_HOME": tmp_dir},
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+            install_root = Path(tmp_dir) / "skills" / "implement"
+            self.assertTrue((install_root / "SKILL.md").exists())
+            self.assertTrue((install_root / "agents" / "openai.yaml").exists())
+            self.assertTrue((install_root / "shared").is_dir())
+            self.assertFalse((install_root / "ko").exists())
+            self.assertFalse((install_root / "en").exists())
+
+            content = (install_root / "agents" / "openai.yaml").read_text(encoding="utf-8")
+            self.assertIn('display_name: "Implement"', content)
+
 
 if __name__ == "__main__":
     unittest.main()

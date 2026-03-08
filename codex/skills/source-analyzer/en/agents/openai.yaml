@@ -1,4 +1,4 @@
 interface:
-  display_name: "Source Analyzer EN"
-  short_description: "Analyze codebases into English architecture docs and DUP/SEC/TIDY guides"
-  default_prompt: "Use $source-analyzer to inspect a codebase incrementally and produce English analysis or refactor-guide outputs with resumable checkpoints."
+  display_name: "Source Analyzer"
+  short_description: "Analyze codebases into architecture docs and DUP/SEC/TIDY guides"
+  default_prompt: "Use $source-analyzer to inspect a codebase incrementally and produce analysis or refactor-guide outputs with resumable checkpoints."

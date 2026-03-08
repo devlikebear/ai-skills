@@ -1,4 +1,4 @@
 interface:
-  display_name: "Implement KO"
-  short_description: "Execute an approved work order in Korean"
-  default_prompt: "Use $implement to execute this work order directly with small, verified code changes and Korean output."
+  display_name: "Implement"
+  short_description: "Execute an approved work order directly"
+  default_prompt: "Use $implement to execute this work order directly with small, verified code changes."

@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.2.1 - 2026-03-08
+
+### Fixed
+
+- Changed the installer to materialize only one runtime skill at `~/.codex/skills/<skill-name>` instead of copying nested `ko/` and `en/` variants into the installed skill.
+- Removed `KO` and `EN` suffixes from installed skill display names so Codex shows a single clean skill entry per install.
+
 ## 0.2.0 - 2026-03-08
 
 ### Added
