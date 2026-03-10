@@ -2,6 +2,19 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.3.0 - 2026-03-10
+
+### Changed
+
+- Consolidated Claude Code skill distribution to use the `claude-code/plugin/` structure exclusively.
+- Removed the redundant `claude-code/skills/` directory (multi-language `ko/`/`en/`/`shared/` layout). Plugin skills handle bilingual output via automatic language detection in a single `SKILL.md`.
+- Shared references are now maintained in one place (`claude-code/plugin/references/`) instead of being duplicated per skill.
+
+### Removed
+
+- Removed `scripts/install_claude_code_skill.sh`. Claude Code skills are installed via the plugin marketplace (`/plugin install code-workflow@ai-skills`), not a manual script.
+- Removed contract tests that validated the now-deleted `claude-code/skills/` language-directory layout.
+
 ## 0.2.3 - 2026-03-08
 
 ### Added

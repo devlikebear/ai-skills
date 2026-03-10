@@ -7,20 +7,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ANALYZER_ROOT = REPO_ROOT / "codex" / "skills" / "source-analyzer"
 SKILL_GENERATOR_ROOT = REPO_ROOT / ".codex" / "skills" / "skill-generator"
 PUBLIC_SKILLS_ROOT = REPO_ROOT / "codex" / "skills"
-CLAUDE_CODE_SKILLS_ROOT = REPO_ROOT / "claude-code" / "skills"
 CLAUDE_CODE_PLUGIN_ROOT = REPO_ROOT / "claude-code" / "plugin"
 MARKETPLACE_ROOT = REPO_ROOT / ".claude-plugin"
 EXPECTED_PUBLIC_SKILLS = {
     "source-analyzer",
     "implement",
     "plan-for-codex",
-    "refactor",
-    "review",
-}
-EXPECTED_CLAUDE_CODE_SKILLS = {
-    "source-analyzer",
-    "implement",
-    "plan",
     "refactor",
     "review",
 }
@@ -114,52 +106,11 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn(".codex/skills/skill-generator", readme)
         self.assertIn("scripts/install_codex_skill.sh", readme)
 
-    def test_claude_code_skills_exist_and_use_language_directories(self):
-        actual = {path.name for path in CLAUDE_CODE_SKILLS_ROOT.iterdir() if path.is_dir()}
-        self.assertTrue(EXPECTED_CLAUDE_CODE_SKILLS.issubset(actual))
-
-        for skill_name in EXPECTED_CLAUDE_CODE_SKILLS:
-            root = CLAUDE_CODE_SKILLS_ROOT / skill_name
-            self.assertTrue((root / "README.md").exists(), msg=f"missing README for {skill_name}")
-            self.assertTrue((root / "ko" / "README.md").exists(), msg=f"missing ko README for {skill_name}")
-            self.assertTrue((root / "ko" / "SKILL.md").exists(), msg=f"missing ko SKILL for {skill_name}")
-            self.assertTrue((root / "en" / "README.md").exists(), msg=f"missing en README for {skill_name}")
-            self.assertTrue((root / "en" / "SKILL.md").exists(), msg=f"missing en SKILL for {skill_name}")
-            self.assertTrue((root / "shared").is_dir(), msg=f"missing shared dir for {skill_name}")
-
-    def test_claude_code_skills_do_not_have_openai_yaml(self):
-        for skill_name in EXPECTED_CLAUDE_CODE_SKILLS:
-            root = CLAUDE_CODE_SKILLS_ROOT / skill_name
-            self.assertFalse(
-                (root / "ko" / "agents").exists(),
-                msg=f"claude-code skill {skill_name}/ko should not have agents/ directory",
-            )
-            self.assertFalse(
-                (root / "en" / "agents").exists(),
-                msg=f"claude-code skill {skill_name}/en should not have agents/ directory",
-            )
-
-    def test_claude_code_source_analyzer_has_checkpoint_script(self):
-        sa_root = CLAUDE_CODE_SKILLS_ROOT / "source-analyzer"
-        self.assertTrue((sa_root / "shared" / "scripts" / "checkpoint_manager.py").exists())
-
-    def test_claude_code_skills_use_claude_skill_dir_not_codex_home(self):
-        for skill_path in CLAUDE_CODE_SKILLS_ROOT.glob("**/SKILL.md"):
-            content = skill_path.read_text(encoding="utf-8")
-            self.assertNotIn(
-                "CODEX_HOME",
-                content,
-                msg=f"claude-code skill {skill_path} should not reference CODEX_HOME",
-            )
-
-    def test_public_repo_readme_mentions_claude_code(self):
+    def test_public_repo_readme_mentions_claude_code_plugin(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("claude-code/skills/source-analyzer", readme)
-        self.assertIn("claude-code/skills/implement", readme)
-        self.assertIn("claude-code/skills/plan", readme)
-        self.assertIn("claude-code/skills/refactor", readme)
-        self.assertIn("claude-code/skills/review", readme)
-        self.assertIn("scripts/install_claude_code_skill.sh", readme)
+        self.assertIn("code-workflow", readme)
+        self.assertIn("/plugin marketplace add", readme)
+        self.assertIn("/plugin install", readme)
 
     # --- Plugin marketplace tests ---
 
