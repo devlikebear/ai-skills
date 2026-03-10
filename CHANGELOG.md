@@ -2,6 +2,23 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.4.0 - 2026-03-10
+
+### Added
+
+- Git-based incremental checkpoint system for source-analyzer.
+  - Records HEAD commit hash in checkpoint state (v2) and detects changed files via `git diff` on resume.
+  - Added `sync` CLI command to compare stored commit with current HEAD and update frontier.
+  - Added `migrate_state()` for transparent v1→v2 session upgrade.
+  - Only analyzes committed files (`git ls-tree -r HEAD`); ignores uncommitted/unstaged changes.
+  - Force push/rebase fallback: invalid old commit triggers full rescan.
+- Added 11 new tests for git helpers, migration, sync, and CLI sync (14 total).
+
+### Changed
+
+- Updated `SKILL.md` workflow and resume protocol (both codex and claude-code).
+- Updated `checkpoint-template.md` with commit hash metadata (both).
+
 ## 0.3.3 - 2026-03-10
 
 ### Changed
