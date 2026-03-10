@@ -30,7 +30,7 @@ class ReleaseContractTests(unittest.TestCase):
     def test_installer_rejects_path_traversal_skill_names(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             result = subprocess.run(
-                [str(INSTALLER), "../..", "ko"],
+                [str(INSTALLER), "../.."],
                 cwd=REPO_ROOT,
                 env={**os.environ, "CODEX_HOME": tmp_dir},
                 capture_output=True,
@@ -40,23 +40,10 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("invalid skill name", result.stderr)
 
-    def test_installer_rejects_invalid_language_values(self):
+    def test_installer_installs_skill_with_flat_structure(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             result = subprocess.run(
-                [str(INSTALLER), "source-analyzer", "../ko"],
-                cwd=REPO_ROOT,
-                env={**os.environ, "CODEX_HOME": tmp_dir},
-                capture_output=True,
-                text=True,
-            )
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("invalid language", result.stderr)
-
-    def test_installer_materializes_only_one_runtime_skill(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            result = subprocess.run(
-                [str(INSTALLER), "implement", "ko"],
+                [str(INSTALLER), "implement"],
                 cwd=REPO_ROOT,
                 env={**os.environ, "CODEX_HOME": tmp_dir},
                 capture_output=True,

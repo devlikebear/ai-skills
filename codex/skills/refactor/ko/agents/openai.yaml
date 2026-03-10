@@ -1,4 +1,0 @@
-interface:
-  display_name: "Refactor"
-  short_description: "Safe behavior-preserving refactoring"
-  default_prompt: "Use $refactor to improve internal structure without behavior changes, in small verified steps."

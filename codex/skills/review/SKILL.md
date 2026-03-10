@@ -1,11 +1,9 @@
 ---
 name: review
-description: "Review code changes for regressions, security issues, and missing tests. Use this Korean-default variant when users call `/review`, ask for a diff review, or need concrete fix guidance after implementation."
+description: "Review code changes for regressions, security issues, and missing tests. Use when users call `/review`, ask for a diff review, or need concrete fix guidance after implementation."
 ---
 
 # Review
-
-This is the Korean-default variant of `review`.
 
 ## Load only what you need
 
@@ -14,8 +12,8 @@ This is the Korean-default variant of `review`.
 
 ## Language policy
 
-- Write responses in Korean by default.
-- If the user explicitly requests another language policy, follow it.
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
 
 ## Workflow
 

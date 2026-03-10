@@ -2,12 +2,12 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.3.1`
+Current release: `0.3.2`
 
 ## Overview
 
 - Supports Codex and Claude Code distributions.
-- Codex skills use language-specific variants under `ko/` and `en/`.
+- Codex skills use a single `SKILL.md` per skill — respond in the user's language automatically.
 - Claude Code skills are distributed as a plugin marketplace with bilingual auto-detection.
 - Codex skills live under:
   - `codex/skills/source-analyzer`
@@ -30,9 +30,8 @@ codex/
     refactor/
     review/
     github-flow/
-      README.md
-      ko/
-      en/
+      SKILL.md
+      agents/
       shared/
 claude-code/
   plugin/
@@ -110,14 +109,13 @@ Clone this repository, then install a language-specific skill variant into your 
 
 ```bash
 scripts/install_codex_skill.sh --list
-scripts/install_codex_skill.sh --list-languages source-analyzer
-scripts/install_codex_skill.sh source-analyzer ko
-scripts/install_codex_skill.sh source-analyzer en
-scripts/install_codex_skill.sh implement en
+scripts/install_codex_skill.sh source-analyzer
+scripts/install_codex_skill.sh implement
+scripts/install_codex_skill.sh --all
 ```
 
 By default the installer copies skills into `${CODEX_HOME:-$HOME/.codex}/skills`.
-It copies the full source skill directory, then promotes the selected language variant to the root `SKILL.md` and `agents/openai.yaml`.
+Each skill is a single `SKILL.md` that responds in the user's language automatically.
 
 ## Install via Plugin Marketplace (Claude Code)
 
@@ -148,19 +146,12 @@ Plugin skills are bilingual — they detect the user's language and respond acco
 
 ```bash
 <skill-name>/
-  README.md
-  ko/
-    README.md
-    SKILL.md
-    agents/openai.yaml
-  en/
-    README.md
-    SKILL.md
-    agents/openai.yaml
+  SKILL.md             # single skill file — auto-detects user's language
+  agents/
+    openai.yaml
   shared/
     scripts/
     references/
-    assets/
 ```
 
 ### Claude Code plugin skills

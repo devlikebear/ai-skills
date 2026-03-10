@@ -2,6 +2,21 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.3.2 - 2026-03-10
+
+### Changed
+
+- Simplified Codex skill structure: removed `ko/` and `en/` language directories from all `codex/skills/`.
+  - Each skill now ships as a single root `SKILL.md` that auto-detects the user's language.
+  - `agents/openai.yaml` promoted to the skill root; `shared/` remains unchanged.
+- Simplified `scripts/install_codex_skill.sh`: removed the `<language>` argument and `--list-languages` command.
+  - New usage: `install_codex_skill.sh <skill-name>` or `install_codex_skill.sh --all`.
+
+### Removed
+
+- Removed language-specific `ko/` and `en/` variants from all Codex skills.
+- Removed `--list-languages` and language-validation logic from the installer.
+
 ## 0.3.1 - 2026-03-10
 
 ### Added

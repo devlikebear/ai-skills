@@ -1,11 +1,9 @@
 ---
 name: refactor
-description: "Perform safe, test-driven refactoring without behavior changes. Use this Korean-default variant when users call `/refactor`, ask for structure cleanup, or want duplication and technical debt reduced."
+description: "Perform safe, test-driven refactoring without behavior changes. Use when users call `/refactor`, ask for structure cleanup, or want duplication and technical debt reduced."
 ---
 
 # Refactor
-
-This is the Korean-default variant of `refactor`.
 
 ## Load only what you need
 
@@ -15,8 +13,8 @@ This is the Korean-default variant of `refactor`.
 
 ## Language policy
 
-- Write responses in Korean by default.
-- If the user explicitly requests another language policy, follow it.
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
 
 ## Workflow
 

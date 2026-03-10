@@ -1,11 +1,9 @@
 ---
 name: github-flow
-description: "Run the full GitHub Flow lifecycle: branch → develop → PR → merge → release. Use this English-default variant when starting a new feature, bugfix, or refactor that follows GitHub Flow conventions."
+description: "Run the full GitHub Flow lifecycle: branch → develop → PR → merge → release. Use when starting a new feature, bugfix, or refactor that follows GitHub Flow conventions, or when resuming any phase of an in-progress flow."
 ---
 
 # GitHub Flow
-
-This is the English-default variant of `github-flow`.
 
 ## Load only what you need
 
@@ -13,8 +11,8 @@ This is the English-default variant of `github-flow`.
 
 ## Language policy
 
-- Write responses in English by default.
-- If the user explicitly requests another language policy, follow it.
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
 
 ## Overview
 
