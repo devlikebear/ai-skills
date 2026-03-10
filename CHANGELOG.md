@@ -2,6 +2,17 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.3.1 - 2026-03-10
+
+### Added
+
+- Added `github-flow` skill for both Codex and Claude Code.
+  - Covers the full GitHub Flow lifecycle: branch → develop → PR → merge → release.
+  - Phase 2 integrates `plan` → `implement` → `review` as a structured inner loop before each commit.
+  - Codex: `codex/skills/github-flow/` with `ko/`, `en/`, and `shared/` variants.
+  - Claude Code plugin: `claude-code/plugin/skills/github-flow/SKILL.md` (bilingual auto-detect).
+- Added `github-flow-checklist.md` to both `claude-code/plugin/references/` and `codex/skills/github-flow/shared/references/`.
+
 ## 0.3.0 - 2026-03-10
 
 ### Changed
