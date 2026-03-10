@@ -1,4 +1,0 @@
-interface:
-  display_name: "Plan for Codex"
-  short_description: "Break requests into executable work orders"
-  default_prompt: "Use $plan-for-codex to split this request into small, verifiable work orders."

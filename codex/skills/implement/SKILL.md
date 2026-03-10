@@ -1,11 +1,9 @@
 ---
 name: implement
-description: "Execute an approved work order directly with small, test-proven code changes. Use this English-default variant when users call `/implement`, move from planning into implementation, or want Codex to make the code changes itself."
+description: "Execute an approved work order directly with small, test-proven code changes. Use when users call `/implement`, move from planning into implementation, or want Codex to make the code changes itself."
 ---
 
 # Implement
-
-This is the English-default variant of `implement`.
 
 ## Load only what you need
 
@@ -13,8 +11,8 @@ This is the English-default variant of `implement`.
 
 ## Language policy
 
-- Write responses in English by default.
-- If the user explicitly requests another language policy, follow it.
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
 
 ## Workflow
 

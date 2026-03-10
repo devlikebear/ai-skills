@@ -1,11 +1,9 @@
 ---
 name: plan-for-codex
-description: "Turn a request into executable work orders for Codex. Use this Korean-default variant when users ask for planning before implementation, call `/plan`, or need a request split into small verifiable tasks."
+description: "Turn a request into executable work orders for Codex. Use when users ask for planning before implementation, call `/plan`, or need a request split into small verifiable tasks."
 ---
 
 # Plan
-
-This is the Korean-default variant of `plan-for-codex`.
 
 ## Load only what you need
 
@@ -13,8 +11,8 @@ This is the Korean-default variant of `plan-for-codex`.
 
 ## Language policy
 
-- Write responses in Korean by default.
-- If the user explicitly requests another language policy, follow it.
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
 
 ## Workflow
 

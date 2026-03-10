@@ -38,48 +38,29 @@ class SkillRepositoryContractTests(unittest.TestCase):
                 msg=f"description must be quoted in {skill_path}",
             )
 
-    def test_public_skills_exist_and_use_language_directories(self):
+    def test_public_skills_have_flat_structure(self):
         actual = {path.name for path in PUBLIC_SKILLS_ROOT.iterdir() if path.is_dir()}
         self.assertTrue(EXPECTED_PUBLIC_SKILLS.issubset(actual))
 
         for skill_name in EXPECTED_PUBLIC_SKILLS:
             root = PUBLIC_SKILLS_ROOT / skill_name
-            self.assertTrue((root / "README.md").exists(), msg=f"missing README for {skill_name}")
-            self.assertTrue((root / "ko" / "README.md").exists(), msg=f"missing ko README for {skill_name}")
-            self.assertTrue((root / "ko" / "SKILL.md").exists(), msg=f"missing ko SKILL for {skill_name}")
-            self.assertTrue((root / "ko" / "agents" / "openai.yaml").exists(), msg=f"missing ko openai.yaml for {skill_name}")
-            self.assertTrue((root / "en" / "README.md").exists(), msg=f"missing en README for {skill_name}")
-            self.assertTrue((root / "en" / "SKILL.md").exists(), msg=f"missing en SKILL for {skill_name}")
-            self.assertTrue((root / "en" / "agents" / "openai.yaml").exists(), msg=f"missing en openai.yaml for {skill_name}")
+            self.assertTrue((root / "SKILL.md").exists(), msg=f"missing SKILL.md for {skill_name}")
+            self.assertTrue((root / "agents" / "openai.yaml").exists(), msg=f"missing agents/openai.yaml for {skill_name}")
             self.assertTrue((root / "shared").is_dir(), msg=f"missing shared dir for {skill_name}")
+            self.assertFalse((root / "ko").exists(), msg=f"{skill_name} should not have ko/ directory")
+            self.assertFalse((root / "en").exists(), msg=f"{skill_name} should not have en/ directory")
 
-    def test_source_analyzer_uses_language_directories(self):
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "README.md").exists())
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "ko" / "README.md").exists())
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "ko" / "SKILL.md").exists())
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "ko" / "agents" / "openai.yaml").exists())
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "en" / "README.md").exists())
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "en" / "SKILL.md").exists())
-        self.assertTrue((SOURCE_ANALYZER_ROOT / "en" / "agents" / "openai.yaml").exists())
+    def test_source_analyzer_has_checkpoint_script(self):
         self.assertTrue((SOURCE_ANALYZER_ROOT / "shared" / "scripts" / "checkpoint_manager.py").exists())
 
-    def test_source_analyzer_root_readme_is_english_and_links_to_language_readmes(self):
-        content = (SOURCE_ANALYZER_ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("# Source Analyzer", content)
-        self.assertIn("./ko/README.md", content)
-        self.assertIn("./en/README.md", content)
-        self.assertNotIn("AI 스킬 리포지토리", content)
-
-    def test_language_specific_source_analyzer_skills_have_expected_policies(self):
-        ko_skill = (SOURCE_ANALYZER_ROOT / "ko" / "SKILL.md").read_text(encoding="utf-8")
-        en_skill = (SOURCE_ANALYZER_ROOT / "en" / "SKILL.md").read_text(encoding="utf-8")
-
-        self.assertIn("Write responses and generated outputs in Korean by default.", ko_skill)
-        self.assertIn("If the user explicitly requests another language policy, follow it.", ko_skill)
-        self.assertIn("Write responses and generated outputs in English by default.", en_skill)
-        self.assertIn("If the user explicitly requests another language policy, follow it.", en_skill)
-        self.assertIn("shared/references", ko_skill)
-        self.assertIn("shared/references", en_skill)
+    def test_public_skills_language_policy_is_auto_detect(self):
+        for skill_name in EXPECTED_PUBLIC_SKILLS:
+            content = (PUBLIC_SKILLS_ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn(
+                "Respond in the same language the user writes in.",
+                content,
+                msg=f"{skill_name} SKILL.md should use auto-detect language policy",
+            )
 
     def test_skill_generator_wrapper_exists_in_dot_codex(self):
         self.assertTrue((SKILL_GENERATOR_ROOT / "README.md").exists())
@@ -96,10 +77,9 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("wrapper", root_skill.lower())
         self.assertIn('display_name: "Skill Generator"', root_agent)
 
-    def test_public_repo_readme_mentions_language_layout_and_installer(self):
+    def test_public_repo_readme_mentions_codex_skills_and_installer(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("AI Skills Repository", readme)
-        self.assertIn("language-specific variants", readme)
         self.assertIn("codex/skills/source-analyzer", readme)
         self.assertIn("codex/skills/implement", readme)
         self.assertIn("codex/skills/plan-for-codex", readme)

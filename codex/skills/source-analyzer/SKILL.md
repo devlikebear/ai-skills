@@ -1,11 +1,9 @@
 ---
 name: source-analyzer
-description: "Analyze existing source code and generate beginner-friendly architecture documents or actionable refactoring work orders without modifying source files. Use this English-default variant when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, or refactor proposals with DUP/SEC/TIDY issue codes."
+description: "Analyze existing source code and generate beginner-friendly architecture documents or actionable refactoring work orders without modifying source files. Use when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, or refactor proposals with DUP/SEC/TIDY issue codes."
 ---
 
-# Source Analyzer Wrapper
-
-This is the English-default variant of `source-analyzer`.
+# Source Analyzer
 
 ## Load only what you need
 
@@ -18,8 +16,8 @@ This is the English-default variant of `source-analyzer`.
 
 ## Language policy
 
-- Write responses and generated outputs in English by default.
-- If the user explicitly requests another language policy, follow it.
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
 
 ## Required workflow
 
@@ -50,7 +48,7 @@ python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --statu
   - `.analysis/sessions/<session-id>/outputs/tutorial.md`
   - `.analysis/sessions/<session-id>/outputs/clone-coding.md`
   - `.analysis/sessions/<session-id>/outputs/implementation-checklist.md`
-- Use real file paths, short paragraphs, and plain English.
+- Use real file paths, short paragraphs, and plain language.
 
 ## Refactor-guide mode
 
