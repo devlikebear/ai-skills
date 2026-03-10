@@ -2,25 +2,20 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.2.3`
+Current release: `0.3.0`
 
 ## Overview
 
 - Supports Codex and Claude Code distributions.
-- Public skill layout uses language-specific variants under `ko/` and `en/`.
-- Each skill root keeps an English `README.md` that links to the language-specific READMEs.
+- Codex skills use language-specific variants under `ko/` and `en/`.
+- Claude Code skills are distributed as a plugin marketplace with bilingual auto-detection.
 - Codex skills live under:
   - `codex/skills/source-analyzer`
   - `codex/skills/implement`
   - `codex/skills/plan-for-codex`
   - `codex/skills/refactor`
   - `codex/skills/review`
-- Claude Code skills live under:
-  - `claude-code/skills/source-analyzer`
-  - `claude-code/skills/implement`
-  - `claude-code/skills/plan`
-  - `claude-code/skills/refactor`
-  - `claude-code/skills/review`
+- Claude Code skills live under `claude-code/plugin/` as a plugin marketplace.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 
 ## Repository Layout
@@ -38,16 +33,6 @@ codex/
       en/
       shared/
 claude-code/
-  skills/
-    source-analyzer/
-    implement/
-    plan/
-    refactor/
-    review/
-      README.md
-      ko/
-      en/
-      shared/
   plugin/
     .claude-plugin/
       plugin.json
@@ -69,13 +54,11 @@ claude-code/
       en/
 scripts/
   install_codex_skill.sh
-  install_claude_code_skill.sh
 tests/
 ```
 
-`codex/skills/<skill-name>` stores the Codex source layout.
-`claude-code/skills/<skill-name>` stores the Claude Code source layout.
-Installers select a language-specific variant and materialize the runtime root `SKILL.md` in the appropriate home directory.
+`codex/skills/<skill-name>` stores the Codex source layout with language-specific variants.
+`claude-code/plugin/` is the Claude Code plugin distribution — each skill is a single bilingual `SKILL.md` with shared references.
 
 ## Included Skills
 
@@ -127,21 +110,6 @@ scripts/install_codex_skill.sh implement en
 By default the installer copies skills into `${CODEX_HOME:-$HOME/.codex}/skills`.
 It copies the full source skill directory, then promotes the selected language variant to the root `SKILL.md` and `agents/openai.yaml`.
 
-## Install for Claude Code
-
-Clone this repository, then install a language-specific skill variant into your Claude Code skills directory.
-
-```bash
-scripts/install_claude_code_skill.sh --list
-scripts/install_claude_code_skill.sh --list-languages source-analyzer
-scripts/install_claude_code_skill.sh source-analyzer ko
-scripts/install_claude_code_skill.sh source-analyzer en
-scripts/install_claude_code_skill.sh implement en
-```
-
-By default the installer copies skills into `${CLAUDE_HOME:-$HOME/.claude}/skills`.
-It copies the full source skill directory, then promotes the selected language variant to the root `SKILL.md`.
-
 ## Install via Plugin Marketplace (Claude Code)
 
 This repository is also a Claude Code plugin marketplace. Add it directly and install the `code-workflow` plugin:
@@ -166,7 +134,7 @@ Plugin skills are bilingual — they detect the user's language and respond acco
 
 ## Skill Root Convention
 
-Each skill root should look like this:
+### Codex skills
 
 ```bash
 <skill-name>/
@@ -185,13 +153,21 @@ Each skill root should look like this:
     assets/
 ```
 
-Use `.codex/skills/skill-generator` when you want to generate a new skill that follows this convention.
+### Claude Code plugin skills
+
+```bash
+<skill-name>/
+  SKILL.md       # bilingual — detects user's language automatically
+```
+
+Shared references live in `claude-code/plugin/references/` and are referenced by all plugin skills.
+
+Use `.codex/skills/skill-generator` when you want to generate a new Codex skill that follows the language-variant convention.
 
 ## Notes
 
 - Codex discovers runtime skills from `~/.codex/skills`.
-- Claude Code discovers runtime skills from `~/.claude/skills`.
-- This repository keeps authoring-time structure separate from install-time structure.
+- Claude Code installs skills via plugin marketplace.
 - The `.codex/skills/skill-generator` helper is repository-specific and intended for skill authors.
 - Release history is tracked in `CHANGELOG.md`.
 - Licensing is provided in `LICENSE`.
