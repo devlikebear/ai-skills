@@ -63,18 +63,15 @@ class SkillRepositoryContractTests(unittest.TestCase):
             )
 
     def test_skill_generator_wrapper_exists_in_dot_codex(self):
-        self.assertTrue((SKILL_GENERATOR_ROOT / "README.md").exists())
-        self.assertTrue((SKILL_GENERATOR_ROOT / "ko" / "README.md").exists())
-        self.assertTrue((SKILL_GENERATOR_ROOT / "en" / "README.md").exists())
         self.assertTrue((SKILL_GENERATOR_ROOT / "SKILL.md").exists())
         self.assertTrue((SKILL_GENERATOR_ROOT / "agents" / "openai.yaml").exists())
-        root_readme = (SKILL_GENERATOR_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertFalse((SKILL_GENERATOR_ROOT / "ko").exists())
+        self.assertFalse((SKILL_GENERATOR_ROOT / "en").exists())
         root_skill = (SKILL_GENERATOR_ROOT / "SKILL.md").read_text(encoding="utf-8")
         root_agent = (SKILL_GENERATOR_ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
-        self.assertIn("./ko/README.md", root_readme)
-        self.assertIn("./en/README.md", root_readme)
         self.assertIn("skill-creator", root_skill)
         self.assertIn("wrapper", root_skill.lower())
+        self.assertIn("Respond in the same language the user writes in.", root_skill)
         self.assertIn('display_name: "Skill Generator"', root_agent)
 
     def test_public_repo_readme_mentions_codex_skills_and_installer(self):
