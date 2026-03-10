@@ -88,15 +88,98 @@ MODULE_ORDER=(
   "implement"
   "review"
   "refactor"
+  "github-flow"
   "plugin"
   "scripts"
   "tests"
   "skill-generator"
 )
 
+list_module_files() {
+  local modules_dir="$1"
+  if [[ ! -d "${modules_dir}" ]]; then
+    return 0
+  fi
+
+  python3 - "$modules_dir" "${MODULE_ORDER[@]}" <<'PY'
+from pathlib import Path
+import sys
+
+modules_dir = Path(sys.argv[1])
+order = sys.argv[2:]
+rank = {name: index for index, name in enumerate(order)}
+files = sorted(modules_dir.glob("*.md"))
+
+def sort_key(path):
+    stem = path.stem
+    if stem in rank:
+        return (0, rank[stem], stem)
+    return (1, stem, stem)
+
+for path in sorted(files, key=sort_key):
+    print(path)
+PY
+}
+
+module_name_from_file() {
+  basename "$1" .md
+}
+
+module_title_from_file() {
+  python3 - "$1" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+title = path.stem
+for line in path.read_text(encoding="utf-8").splitlines():
+    if line.startswith("# "):
+        title = line[2:].strip()
+        break
+
+prefix = "모듈: "
+if title.startswith(prefix):
+    title = title[len(prefix):]
+
+print(title)
+PY
+}
+
+module_description_from_file() {
+  python3 - "$1" <<'PY'
+from pathlib import Path
+import sys
+
+lines = Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()
+description = "모듈 분석 문서"
+
+for index, line in enumerate(lines):
+    if line.strip() != "## 역할":
+        continue
+
+    paragraph = []
+    cursor = index + 1
+    while cursor < len(lines) and not lines[cursor].strip():
+        cursor += 1
+    while cursor < len(lines):
+        current = lines[cursor].strip()
+        if not current or current.startswith("#"):
+            break
+        paragraph.append(current)
+        cursor += 1
+    if paragraph:
+        description = " ".join(paragraph)
+    break
+
+print(description)
+PY
+}
+
 build_sidebar() {
   local wiki_dir="$1"
-  cat > "${wiki_dir}/_Sidebar.md" <<'SIDEBAR'
+  local modules_dir="$2"
+  {
+    cat <<'SIDEBAR'
 ### 📖 분석 결과
 
 - [[Home]]
@@ -109,23 +192,26 @@ build_sidebar() {
 - [[07 구현 체크리스트|07-implementation-checklist]]
 
 ### 📦 모듈 분석
-
-- [[source-analyzer|module-source-analyzer]]
-- [[plan|module-plan]]
-- [[implement|module-implement]]
-- [[review|module-review]]
-- [[refactor|module-refactor]]
-- [[plugin (code-workflow)|module-plugin]]
-- [[설치 스크립트|module-scripts]]
-- [[테스트|module-tests]]
-- [[skill-generator|module-skill-generator]]
 SIDEBAR
+
+    local module_file=""
+    local module_name=""
+    local module_title=""
+    while IFS= read -r module_file; do
+      [[ -n "${module_file}" ]] || continue
+      module_name=$(module_name_from_file "${module_file}")
+      module_title=$(module_title_from_file "${module_file}")
+      printf -- '- [[%s|module-%s]]\n' "${module_title}" "${module_name}"
+    done < <(list_module_files "${modules_dir}")
+  } > "${wiki_dir}/_Sidebar.md"
 }
 
 build_home() {
   local wiki_dir="$1"
   local session_id="$2"
-  cat > "${wiki_dir}/Home.md" <<EOF
+  local modules_dir="$3"
+  {
+    cat <<EOF
 # AI Skills 코드베이스 분석
 
 > 세션: \`${session_id}\`
@@ -149,16 +235,27 @@ build_home() {
 
 | 모듈 | 설명 |
 |------|------|
-| [[source-analyzer\|module-source-analyzer]] | 체크포인트 기반 BFS 분석 |
-| [[plan\|module-plan]] | 요청 → 작업 지시서 분할 |
-| [[implement\|module-implement]] | 작업 지시서 실행 |
-| [[review\|module-review]] | diff 기반 코드 리뷰 |
-| [[refactor\|module-refactor]] | 안전한 리팩터링 |
-| [[plugin\|module-plugin]] | Claude Code 플러그인 |
-| [[설치 스크립트\|module-scripts]] | Codex/Claude Code 설치 |
-| [[테스트\|module-tests]] | 32개 계약 테스트 |
-| [[skill-generator\|module-skill-generator]] | 로컬 스킬 생성 래퍼 |
 EOF
+
+    local module_file=""
+    local module_name=""
+    local module_title=""
+    local module_description=""
+    local module_title_cell=""
+    local module_description_cell=""
+    while IFS= read -r module_file; do
+      [[ -n "${module_file}" ]] || continue
+      module_name=$(module_name_from_file "${module_file}")
+      module_title=$(module_title_from_file "${module_file}")
+      module_description=$(module_description_from_file "${module_file}")
+      module_title_cell=${module_title//|/\\|}
+      module_description_cell=${module_description//|/\\|}
+      printf '| [[%s\\|module-%s]] | %s |\n' \
+        "${module_title_cell}" \
+        "${module_name}" \
+        "${module_description_cell}"
+    done < <(list_module_files "${modules_dir}")
+  } > "${wiki_dir}/Home.md"
 }
 
 main() {
@@ -206,7 +303,7 @@ main() {
 
   local work_dir
   work_dir=$(mktemp -d)
-  trap 'rm -rf "${work_dir}"' EXIT
+  trap '[[ -n "${work_dir:-}" ]] && rm -rf "${work_dir}"' EXIT
 
   echo ""
   echo "cloning wiki repository..."
@@ -244,9 +341,9 @@ main() {
   fi
 
   # Build Home and Sidebar
-  build_home "${wiki_dir}" "${session_id}"
+  build_home "${wiki_dir}" "${session_id}" "${modules_dir}"
   echo "  page: Home.md"
-  build_sidebar "${wiki_dir}"
+  build_sidebar "${wiki_dir}" "${modules_dir}"
   echo "  page: _Sidebar.md"
 
   if [[ "${dry_run}" == true ]]; then
@@ -263,7 +360,7 @@ main() {
 
   # Commit and push
   cd "${wiki_dir}"
-  trap 'cd "${REPO_ROOT}" && rm -rf "${work_dir}"' EXIT
+  trap 'cd "${REPO_ROOT}" && [[ -n "${work_dir:-}" ]] && rm -rf "${work_dir}"' EXIT
   git add -A
   if git diff --cached --quiet; then
     echo ""
