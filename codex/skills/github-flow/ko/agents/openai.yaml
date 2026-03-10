@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Flow"
+  short_description: "GitHub Flow 전체 라이프사이클 진행"
+  default_prompt: "Use $github-flow to guide me through the full GitHub Flow: branch, develop (plan → implement → review), PR, merge, and release."

@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.3.0`
+Current release: `0.3.1`
 
 ## Overview
 
@@ -15,6 +15,7 @@ Current release: `0.3.0`
   - `codex/skills/plan-for-codex`
   - `codex/skills/refactor`
   - `codex/skills/review`
+  - `codex/skills/github-flow`
 - Claude Code skills live under `claude-code/plugin/` as a plugin marketplace.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 
@@ -28,6 +29,7 @@ codex/
     plan-for-codex/
     refactor/
     review/
+    github-flow/
       README.md
       ko/
       en/
@@ -41,6 +43,7 @@ claude-code/
       implement/
       plan/
       refactor/
+        github-flow/
       source-analyzer/
     references/
     scripts/
@@ -89,6 +92,12 @@ tests/
 - Performs diff-based review focused on regressions, security issues, and missing tests.
 - Produces a fix work order when changes are required.
 
+### `github-flow`
+
+- Guides through the full GitHub Flow lifecycle: branch → develop → PR → merge → release.
+- Phase 2 integrates `plan` → `implement` → `review` as an inner loop before each commit.
+- Available for both Codex (`/github-flow`) and Claude Code (`/code-workflow:github-flow`).
+
 ### `skill-generator`
 
 - Lives under `.codex/skills/skill-generator`.
@@ -129,6 +138,7 @@ After installation the following skills are available:
 - `/code-workflow:review`
 - `/code-workflow:refactor`
 - `/code-workflow:source-analyzer`
+- `/code-workflow:github-flow`
 
 Plugin skills are bilingual — they detect the user's language and respond accordingly.
 

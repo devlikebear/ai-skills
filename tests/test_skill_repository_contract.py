@@ -15,6 +15,7 @@ EXPECTED_PUBLIC_SKILLS = {
     "plan-for-codex",
     "refactor",
     "review",
+    "github-flow",
 }
 EXPECTED_PLUGIN_SKILLS = {
     "source-analyzer",
@@ -22,6 +23,7 @@ EXPECTED_PLUGIN_SKILLS = {
     "plan",
     "refactor",
     "review",
+    "github-flow",
 }
 
 
@@ -177,6 +179,7 @@ class SkillRepositoryContractTests(unittest.TestCase):
             "tidy-first-rules.md",
             "security-triage-checklist.md",
             "tutorial-template.md",
+            "github-flow-checklist.md",
         ]
         for ref in expected_refs:
             self.assertTrue((refs_dir / ref).exists(), msg=f"missing reference {ref} in plugin")
