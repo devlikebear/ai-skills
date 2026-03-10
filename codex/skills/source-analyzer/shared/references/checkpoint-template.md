@@ -14,6 +14,7 @@ Write in the active skill language by default.
 > Mode / 모드: `analyze | refactor-guide`
 > Scope / 범위: `<진입점/파일/함수>`
 > Status / 상태: `in_progress | paused | completed`
+> Commit / 커밋: `<HEAD commit hash at checkpoint time>`
 > Created At (UTC) / 생성 시각(UTC): `YYYY-MM-DDTHH:MM:SS+00:00`
 
 ## Summary / 요약

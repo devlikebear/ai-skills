@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -47,6 +48,51 @@ def dedupe_keep_order(items: list[str]) -> list[str]:
         seen.add(value)
         ordered.append(value)
     return ordered
+
+
+def get_head_commit() -> str:
+    """현재 HEAD 커밋 해시(full SHA) 반환."""
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        capture_output=True, text=True, check=True,
+    )
+    return result.stdout.strip()
+
+
+def get_committed_files(scope: str) -> list[str]:
+    """HEAD에서 scope 경로 아래 추적 파일 목록 반환."""
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "HEAD", "--name-only", "--", scope],
+        capture_output=True, text=True, check=True,
+    )
+    return [f for f in result.stdout.strip().splitlines() if f]
+
+
+def get_changed_files(old_commit: str, new_commit: str) -> list[str]:
+    """두 커밋 사이 변경된 파일 목록 반환 (삭제 제외)."""
+    result = subprocess.run(
+        ["git", "diff", "--name-only", "--diff-filter=ACMR", old_commit, new_commit],
+        capture_output=True, text=True, check=True,
+    )
+    return [f for f in result.stdout.strip().splitlines() if f]
+
+
+def commit_hash_valid(commit: str) -> bool:
+    """커밋 해시가 리포지토리에 존재하는지 확인."""
+    result = subprocess.run(
+        ["git", "cat-file", "-t", commit],
+        capture_output=True, text=True,
+    )
+    return result.returncode == 0 and "commit" in result.stdout
+
+
+def migrate_state(state: dict[str, Any]) -> dict[str, Any]:
+    """v1 → v2 마이그레이션: commit_hash 필드 추가."""
+    if state.get("version", 1) >= 2:
+        return state
+    state["version"] = 2
+    state["commit_hash"] = None
+    return state
 
 
 def generate_session_id(mode: str) -> str:
@@ -118,6 +164,7 @@ def write_resume_file(analysis_dir: Path, session_id: str) -> None:
     checkpoint_file = latest_checkpoint_file(state)
     checkpoint_ref = checkpoint_file if checkpoint_file else "(no checkpoints yet)"
     resume_path = analysis_dir / RESUME_FILENAME
+    commit = state.get("commit_hash", "(unknown)")
     resume_path.write_text(
         (
             "# Source Analyzer Resume Pointer\n\n"
@@ -125,13 +172,15 @@ def write_resume_file(analysis_dir: Path, session_id: str) -> None:
             f"- Mode: `{state.get('mode', '')}`\n"
             f"- Scope: `{state.get('scope', '')}`\n"
             f"- State: `{state.get('status', '')}`\n"
+            f"- Commit: `{commit}`\n"
             f"- Next Checkpoint Number: `{state.get('next_checkpoint', 1):03d}`\n"
             f"- Last Checkpoint File: `{checkpoint_ref}`\n"
             f"- Updated At (UTC): `{state.get('updated_at', '')}`\n\n"
             "Resume steps:\n"
             "1. Open this session's `index.md`.\n"
-            "2. Open `state.json` and continue from `frontier`.\n"
-            "3. Write the next `checkpoints/checkpoint-XXX.md`.\n"
+            "2. Run `sync` to detect new commits.\n"
+            "3. Open `state.json` and continue from `frontier`.\n"
+            "4. Write the next `checkpoints/checkpoint-XXX.md`.\n"
         ),
         encoding="utf-8",
     )
@@ -171,17 +220,21 @@ def init_session(
     scope: str,
     session_id: str | None = None,
     resume_if_exists: bool = True,
+    commit_hash: str | None = None,
 ) -> dict[str, Any]:
     ensure_layout(analysis_dir)
 
     if session_id is None and resume_if_exists:
         existing = find_latest_resumable_session(analysis_dir, mode=mode)
         if existing:
+            state = migrate_state(load_state(analysis_dir, existing))
+            save_state(analysis_dir, existing, state)
             write_resume_file(analysis_dir, existing)
             return {
                 "session_id": existing,
                 "session_dir": session_path(analysis_dir, existing),
                 "resumed": True,
+                "commit_hash": state.get("commit_hash"),
             }
 
     final_session_id = session_id or generate_session_id(mode)
@@ -192,15 +245,17 @@ def init_session(
     (session_dir / "checkpoints").mkdir(parents=True, exist_ok=False)
     (session_dir / "outputs").mkdir(parents=True, exist_ok=False)
 
+    effective_commit = commit_hash or get_head_commit()
     now = now_iso()
     state: dict[str, Any] = {
-        "version": 1,
+        "version": 2,
         "session_id": final_session_id,
         "mode": mode,
         "scope": scope,
         "status": "in_progress",
         "created_at": now,
         "updated_at": now,
+        "commit_hash": effective_commit,
         "next_checkpoint": 1,
         "visited": [],
         "frontier": [],
@@ -214,7 +269,12 @@ def init_session(
         encoding="utf-8",
     )
     write_resume_file(analysis_dir, final_session_id)
-    return {"session_id": final_session_id, "session_dir": session_dir, "resumed": False}
+    return {
+        "session_id": final_session_id,
+        "session_dir": session_dir,
+        "resumed": False,
+        "commit_hash": effective_commit,
+    }
 
 
 def render_list(items: list[str]) -> str:
@@ -258,12 +318,14 @@ def add_checkpoint(
     checkpoint_path = session_path(analysis_dir, session_id) / "checkpoints" / checkpoint_filename
     now = now_iso()
 
+    commit = state.get("commit_hash", "(unknown)")
     checkpoint_md = (
         f"# Checkpoint {checkpoint_no:03d}: {title}\n\n"
         f"> Session: `{session_id}`\n"
         f"> Mode: `{state.get('mode', '')}`\n"
         f"> Scope: `{state.get('scope', '')}`\n"
         f"> Status: `{status}`\n"
+        f"> Commit: `{commit}`\n"
         f"> Created At (UTC): `{now}`\n\n"
         "## Summary\n\n"
         f"{summary.strip() or '(no summary provided)'}\n\n"
@@ -319,6 +381,53 @@ def add_checkpoint(
     }
 
 
+def sync_session(
+    analysis_dir: Path,
+    session_id: str,
+    scope: str | None = None,
+) -> dict[str, Any]:
+    """HEAD와 체크포인트 커밋을 비교하여 변경 파일을 frontier에 추가."""
+    state = migrate_state(load_state(analysis_dir, session_id))
+    old_commit = state.get("commit_hash")
+    new_commit = get_head_commit()
+
+    if old_commit and old_commit == new_commit:
+        save_state(analysis_dir, session_id, state)
+        return {
+            "session_id": session_id,
+            "status": "unchanged",
+            "commit_hash": new_commit,
+            "changed_files": [],
+        }
+
+    effective_scope = scope or state.get("scope", ".")
+
+    if old_commit and commit_hash_valid(old_commit):
+        changed = get_changed_files(old_commit, new_commit)
+        changed = [f for f in changed if f.startswith(effective_scope)]
+    else:
+        changed = get_committed_files(effective_scope)
+
+    visited_set = set(state.get("visited", []))
+    for f in changed:
+        visited_set.discard(f)
+    state["visited"] = [v for v in state.get("visited", []) if v in visited_set]
+
+    state["frontier"] = dedupe_keep_order(list(state.get("frontier", [])) + changed)
+    state["commit_hash"] = new_commit
+    state["updated_at"] = now_iso()
+    save_state(analysis_dir, session_id, state)
+    write_resume_file(analysis_dir, session_id)
+
+    return {
+        "session_id": session_id,
+        "status": "synced",
+        "old_commit": old_commit,
+        "commit_hash": new_commit,
+        "changed_files": changed,
+    }
+
+
 def resolve_session_id(
     analysis_dir: Path,
     session_id: str | None,
@@ -340,11 +449,13 @@ def resolve_session_id(
 def status_summary(analysis_dir: Path, session_id: str) -> str:
     state = load_state(analysis_dir, session_id)
     latest_cp = latest_checkpoint_file(state) or "(no checkpoints yet)"
+    commit = state.get("commit_hash", "(unknown)")
     return (
         f"session_id={session_id}\n"
         f"mode={state.get('mode', '')}\n"
         f"scope={state.get('scope', '')}\n"
         f"status={state.get('status', '')}\n"
+        f"commit_hash={commit}\n"
         f"next_checkpoint={int(state.get('next_checkpoint', 1)):03d}\n"
         f"visited={len(state.get('visited', []))}\n"
         f"frontier={len(state.get('frontier', []))}\n"
@@ -362,6 +473,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     init_parser.add_argument("--scope", required=True)
     init_parser.add_argument("--session-id")
     init_parser.add_argument("--no-resume", action="store_true")
+    init_parser.add_argument("--commit", help="Initial commit hash to record.")
+
+    sync_parser = subparsers.add_parser("sync", help="Sync session with latest HEAD commit.")
+    sync_parser.add_argument("--analysis-dir", default=".analysis")
+    sync_parser.add_argument("--session-id")
+    sync_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
+    sync_parser.add_argument("--scope")
 
     checkpoint_parser = subparsers.add_parser("checkpoint", help="Write a checkpoint markdown and update state.")
     checkpoint_parser.add_argument("--analysis-dir", default=".analysis")
@@ -399,10 +517,25 @@ def cli(argv: list[str]) -> int:
             scope=args.scope,
             session_id=args.session_id,
             resume_if_exists=not args.no_resume,
+            commit_hash=args.commit,
         )
         print(f"session_id={result['session_id']}")
         print(f"session_dir={result['session_dir']}")
         print(f"resumed={str(result['resumed']).lower()}")
+        print(f"commit_hash={result.get('commit_hash', '')}")
+        return 0
+
+    if args.command == "sync":
+        resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=getattr(args, "mode", None))
+        result = sync_session(
+            analysis_dir=analysis_dir,
+            session_id=resolved_session_id,
+            scope=args.scope,
+        )
+        print(f"session_id={result['session_id']}")
+        print(f"status={result['status']}")
+        print(f"commit_hash={result['commit_hash']}")
+        print(f"changed_files={len(result['changed_files'])}")
         return 0
 
     if args.command == "checkpoint":
