@@ -2,6 +2,15 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.3.3 - 2026-03-10
+
+### Changed
+
+- Simplified `.codex/skills/skill-generator` to match the flat skill structure.
+  - Removed `ko/`, `en/`, and `README.md`.
+  - Updated `SKILL.md` to use auto-detect language policy and document the new flat layout convention.
+  - Updated `agents/openai.yaml` default_prompt accordingly.
+
 ## 0.3.2 - 2026-03-10
 
 ### Changed
