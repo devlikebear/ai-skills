@@ -2,6 +2,23 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.5.0 - 2026-03-15
+
+### Added
+
+- Structured AI-consumable outputs: `SUMMARY.json`, `dependency-graph.json`, `module-map.json`.
+- `generate-summary` CLI command to produce `SUMMARY.json` from session state.
+- Default exclude patterns (`.analysis/`, `.codex/`, `.claude/`, `vendor/`, `node_modules/`, etc.) with `--exclude` CLI option for custom patterns.
+- Empty checkpoint validation: rejects checkpoints with no visited files, outputs, summary, or next actions.
+- Analyze-to-refactor bridge: `issue-candidates.md` generated at analyze pause/completion.
+- Post-analysis AI context generation: `AI_CONTEXT.md` with pointers for CLAUDE.md integration.
+- Sync incremental update notices for changed files in existing module documents.
+- 6 new tests for exclude patterns, empty checkpoint rejection, and summary generation (20 total).
+
+### Changed
+
+- Updated `SKILL.md` for both codex and claude-code with structured output rules, bridge, and context generation sections.
+
 ## 0.4.0 - 2026-03-10
 
 ### Added
