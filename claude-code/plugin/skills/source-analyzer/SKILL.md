@@ -147,7 +147,23 @@ When the session reaches `completed` or `paused` status, generate a context file
 <list from issue-candidates.md if exists>
 ```
 
-3. Suggest the user add a pointer to `.analysis/AI_CONTEXT.md` in their `CLAUDE.md` or project instructions file.
+3. Register the analysis in project instruction files so all AI assistants can discover it.
+   Check for these files in the project root and append a pointer block to each one that exists:
+   - `CLAUDE.md` (Claude Code)
+   - `AGENTS.md` (Codex / general agents)
+   - `codex.md` (Codex legacy)
+   - `.claude/CLAUDE.md` (Claude Code project-level)
+
+   Append this block only if a `## Codebase Analysis` section does not already exist:
+
+   ```markdown
+   ## Codebase Analysis
+
+   Architecture and module analysis available at `.analysis/AI_CONTEXT.md`.
+   Read it first when you need to understand the project structure, dependencies, or key data flows.
+   ```
+
+   If none of these files exist, create `CLAUDE.md` with the block above and inform the user.
 
 ## Constraints
 
