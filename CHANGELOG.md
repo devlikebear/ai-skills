@@ -2,6 +2,12 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.5.1 - 2026-03-15
+
+### Fixed
+
+- Auto-register analysis in all project instruction files (`CLAUDE.md`, `AGENTS.md`, `codex.md`, `.claude/CLAUDE.md`) instead of only suggesting manual addition.
+
 ## 0.5.0 - 2026-03-15
 
 ### Added
