@@ -16,6 +16,20 @@ from typing import Any
 STATE_FILENAME = "state.json"
 INDEX_FILENAME = "index.md"
 RESUME_FILENAME = "RESUME.md"
+SUMMARY_FILENAME = "SUMMARY.json"
+
+DEFAULT_EXCLUDE_PATTERNS: list[str] = [
+    ".analysis/",
+    ".codex/",
+    ".claude/",
+    ".git/",
+    "vendor/",
+    "node_modules/",
+    ".venv/",
+    "__pycache__/",
+    "dist/",
+    "build/",
+]
 
 
 def now_iso() -> str:
@@ -59,13 +73,26 @@ def get_head_commit() -> str:
     return result.stdout.strip()
 
 
-def get_committed_files(scope: str) -> list[str]:
-    """HEAD에서 scope 경로 아래 추적 파일 목록 반환."""
+def should_exclude(filepath: str, exclude_patterns: list[str] | None = None) -> bool:
+    """Check if a file path matches any exclude pattern."""
+    patterns = exclude_patterns or DEFAULT_EXCLUDE_PATTERNS
+    for pattern in patterns:
+        if pattern.endswith("/"):
+            if filepath.startswith(pattern) or f"/{pattern}" in f"/{filepath}":
+                return True
+        elif filepath.endswith(pattern) or filepath == pattern:
+            return True
+    return False
+
+
+def get_committed_files(scope: str, exclude_patterns: list[str] | None = None) -> list[str]:
+    """HEAD에서 scope 경로 아래 추적 파일 목록 반환 (exclude 패턴 적용)."""
     result = subprocess.run(
         ["git", "ls-tree", "-r", "HEAD", "--name-only", "--", scope],
         capture_output=True, text=True, check=True,
     )
-    return [f for f in result.stdout.strip().splitlines() if f]
+    files = [f for f in result.stdout.strip().splitlines() if f]
+    return [f for f in files if not should_exclude(f, exclude_patterns)]
 
 
 def get_changed_files(old_commit: str, new_commit: str) -> list[str]:
@@ -221,6 +248,7 @@ def init_session(
     session_id: str | None = None,
     resume_if_exists: bool = True,
     commit_hash: str | None = None,
+    exclude_patterns: list[str] | None = None,
 ) -> dict[str, Any]:
     ensure_layout(analysis_dir)
 
@@ -246,6 +274,7 @@ def init_session(
     (session_dir / "outputs").mkdir(parents=True, exist_ok=False)
 
     effective_commit = commit_hash or get_head_commit()
+    effective_excludes = list(DEFAULT_EXCLUDE_PATTERNS) + (exclude_patterns or [])
     now = now_iso()
     state: dict[str, Any] = {
         "version": 2,
@@ -256,6 +285,7 @@ def init_session(
         "created_at": now,
         "updated_at": now,
         "commit_hash": effective_commit,
+        "exclude_patterns": effective_excludes,
         "next_checkpoint": 1,
         "visited": [],
         "frontier": [],
@@ -304,6 +334,11 @@ def add_checkpoint(
     queue_done = queue_done or []
     outputs = outputs or []
     next_actions = next_actions or []
+
+    if not visited_add and not outputs and not summary.strip() and not next_actions:
+        raise ValueError(
+            "empty checkpoint: provide at least one of --visited-add, --outputs, --summary, or --next-actions"
+        )
 
     visited = dedupe_keep_order(list(state.get("visited", [])) + visited_add)
 
@@ -402,11 +437,13 @@ def sync_session(
 
     effective_scope = scope or state.get("scope", ".")
 
+    excludes = state.get("exclude_patterns", DEFAULT_EXCLUDE_PATTERNS)
+
     if old_commit and commit_hash_valid(old_commit):
         changed = get_changed_files(old_commit, new_commit)
-        changed = [f for f in changed if f.startswith(effective_scope)]
+        changed = [f for f in changed if f.startswith(effective_scope) and not should_exclude(f, excludes)]
     else:
-        changed = get_committed_files(effective_scope)
+        changed = get_committed_files(effective_scope, exclude_patterns=excludes)
 
     visited_set = set(state.get("visited", []))
     for f in changed:
@@ -463,6 +500,46 @@ def status_summary(analysis_dir: Path, session_id: str) -> str:
     )
 
 
+def generate_summary(analysis_dir: Path, session_id: str) -> dict[str, Any]:
+    """Generate SUMMARY.json from session outputs for AI consumption."""
+    state = load_state(analysis_dir, session_id)
+    sdir = session_path(analysis_dir, session_id)
+    outputs_dir = sdir / "outputs"
+
+    modules: list[dict[str, str]] = []
+    modules_dir = outputs_dir / "modules"
+    if modules_dir.exists():
+        for md_file in sorted(modules_dir.glob("*.md")):
+            first_line = ""
+            for line in md_file.read_text(encoding="utf-8").splitlines():
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#"):
+                    first_line = stripped
+                    break
+            modules.append({
+                "name": md_file.stem,
+                "file": str(md_file.relative_to(analysis_dir)),
+                "summary": first_line[:200],
+            })
+
+    summary: dict[str, Any] = {
+        "session_id": session_id,
+        "mode": state.get("mode", ""),
+        "scope": state.get("scope", ""),
+        "status": state.get("status", ""),
+        "commit": state.get("commit_hash", ""),
+        "visited_count": len(state.get("visited", [])),
+        "frontier_count": len(state.get("frontier", [])),
+        "modules": modules,
+        "outputs": state.get("outputs", []),
+        "checkpoints_count": len(state.get("checkpoints", [])),
+    }
+
+    summary_path = sdir / "outputs" / SUMMARY_FILENAME
+    save_json(summary_path, summary)
+    return summary
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Manage source-analyzer incremental checkpoints.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -474,12 +551,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     init_parser.add_argument("--session-id")
     init_parser.add_argument("--no-resume", action="store_true")
     init_parser.add_argument("--commit", help="Initial commit hash to record.")
+    init_parser.add_argument("--exclude", nargs="*", default=[], help="Additional exclude patterns.")
 
     sync_parser = subparsers.add_parser("sync", help="Sync session with latest HEAD commit.")
     sync_parser.add_argument("--analysis-dir", default=".analysis")
     sync_parser.add_argument("--session-id")
     sync_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
     sync_parser.add_argument("--scope")
+    sync_parser.add_argument("--exclude", nargs="*", default=[], help="Additional exclude patterns.")
 
     checkpoint_parser = subparsers.add_parser("checkpoint", help="Write a checkpoint markdown and update state.")
     checkpoint_parser.add_argument("--analysis-dir", default=".analysis")
@@ -503,6 +582,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     status_parser.add_argument("--session-id")
     status_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
 
+    summary_parser = subparsers.add_parser("generate-summary", help="Generate SUMMARY.json for AI consumption.")
+    summary_parser.add_argument("--analysis-dir", default=".analysis")
+    summary_parser.add_argument("--session-id")
+    summary_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
+
     return parser.parse_args(argv)
 
 
@@ -518,6 +602,7 @@ def cli(argv: list[str]) -> int:
             session_id=args.session_id,
             resume_if_exists=not args.no_resume,
             commit_hash=args.commit,
+            exclude_patterns=args.exclude or None,
         )
         print(f"session_id={result['session_id']}")
         print(f"session_dir={result['session_dir']}")
@@ -560,6 +645,12 @@ def cli(argv: list[str]) -> int:
     if args.command == "status":
         resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
         print(status_summary(analysis_dir, resolved_session_id), end="")
+        return 0
+
+    if args.command == "generate-summary":
+        resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
+        summary = generate_summary(analysis_dir, resolved_session_id)
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
         return 0
 
     return 1

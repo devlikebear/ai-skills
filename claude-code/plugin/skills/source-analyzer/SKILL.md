@@ -18,10 +18,12 @@ Checkpoint session manager script:
 ```bash
 CHECKPOINT_SCRIPT="${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py"
 COMMIT=$(git rev-parse HEAD)
-python3 "$CHECKPOINT_SCRIPT" init --mode analyze --scope "src/main.ts" --commit "$COMMIT"
-# 재개 시: 최신 HEAD와 동기화
+python3 "$CHECKPOINT_SCRIPT" init --mode analyze --scope "." --commit "$COMMIT"
+# Resume: sync with latest HEAD
 python3 "$CHECKPOINT_SCRIPT" sync
 python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --status in_progress
+# Generate AI-consumable summary after analysis
+python3 "$CHECKPOINT_SCRIPT" generate-summary
 ```
 
 ## Language policy
@@ -36,15 +38,16 @@ python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --statu
 3. Start or resume a session: pass `--commit "$COMMIT"` to init.
 4. If resuming, run `sync` to detect new commits and update the frontier.
 5. Use `git ls-tree -r HEAD --name-only -- <scope>` to enumerate files (committed files only).
-6. Traverse first-party source with BFS in small chunks.
-7. Update `.analysis/sessions/<session-id>/outputs/` after each chunk.
-8. Write a checkpoint after each chunk.
-9. Pause safely with status `paused` when handing off.
+6. Filter out files matching exclude patterns (see Constraints).
+7. Traverse first-party source with BFS in small chunks.
+8. Update `.analysis/sessions/<session-id>/outputs/` after each chunk.
+9. Write a checkpoint after each chunk (must include at least one of: visited-add, outputs, summary, or next-actions).
+10. Pause safely with status `paused` when handing off.
 
 ## Analyze mode
 
 - Goal: produce newcomer-friendly architecture and clone-coding material.
-- Outputs:
+- Markdown outputs (human-readable):
   - `.analysis/sessions/<session-id>/outputs/overview.md`
   - `.analysis/sessions/<session-id>/outputs/architecture.md`
   - `.analysis/sessions/<session-id>/outputs/technologies.md`
@@ -53,7 +56,19 @@ python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --statu
   - `.analysis/sessions/<session-id>/outputs/tutorial.md`
   - `.analysis/sessions/<session-id>/outputs/clone-coding.md`
   - `.analysis/sessions/<session-id>/outputs/implementation-checklist.md`
-- Use real file paths and short paragraphs.
+- Structured outputs (AI-consumable):
+  - `.analysis/sessions/<session-id>/outputs/SUMMARY.json`: module list, key flows, known issues.
+  - `.analysis/sessions/<session-id>/outputs/dependency-graph.json`: `{"file": ["imported_file", ...]}` mapping.
+  - `.analysis/sessions/<session-id>/outputs/module-map.json`: `{"module_name": {"path": "...", "responsibility": "...", "key_files": [...]}}`.
+- Use real file paths, short paragraphs, and plain language.
+
+### Structured output rules
+
+After completing each module analysis chunk, update the structured JSON outputs incrementally:
+
+- `dependency-graph.json`: for each visited source file, record its import/dependency targets as an array. Use relative paths from project root.
+- `module-map.json`: for each logical module (directory group), record path prefix, one-line responsibility, and list of key files.
+- `SUMMARY.json`: auto-generated via `python3 "$CHECKPOINT_SCRIPT" generate-summary`. Run this after the final checkpoint or at each pause.
 
 ## Refactor-guide mode
 
@@ -61,6 +76,36 @@ python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --statu
 - Follow [refactor-template.md](../../references/refactor-template.md) exactly.
 - For each issue include evidence, completion criteria, and test criteria.
 - Check security references first, then fall back to [security-triage-checklist.md](../../references/security-triage-checklist.md).
+
+## Analyze-to-refactor bridge
+
+When analyze mode completes (or pauses), scan the produced documents for refactor candidates and write:
+
+- `.analysis/sessions/<session-id>/outputs/issue-candidates.md`
+
+Format each candidate as:
+
+```markdown
+### <CODE>-<NNN>: <short title>
+
+- Module: `<module path>`
+- Type: `DUP` | `SEC` | `TIDY`
+- Evidence: <1-2 sentence observation from analyze outputs>
+- Suggested action: <brief description>
+```
+
+This file serves as the starting point when the user later runs `refactor-guide` mode.
+
+## Sync and incremental update
+
+When `sync` detects changed files:
+
+1. Changed files are added to the frontier for re-analysis.
+2. For each changed file that has an existing module document, prepend a notice:
+   ```
+   > **Updated since last analysis** — file changed between commits `<old>...<new>`. Re-analysis pending.
+   ```
+3. After re-analyzing changed files, remove the notice and update the content.
 
 ## Resume protocol
 
@@ -72,8 +117,42 @@ python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --statu
 4. Continue from `frontier` and pending `next actions`.
 5. Write the next checkpoint before ending.
 
+## Post-analysis: AI context generation
+
+When the session reaches `completed` or `paused` status, generate a context file for AI assistants:
+
+1. Run `python3 "$CHECKPOINT_SCRIPT" generate-summary` to produce `outputs/SUMMARY.json`.
+2. Write `.analysis/AI_CONTEXT.md` with the following structure:
+
+```markdown
+# Codebase Analysis Context
+
+> Auto-generated by source-analyzer. Session: `<session-id>`
+> Commit: `<hash>` | Status: `<status>` | Updated: `<timestamp>`
+
+## Quick Reference
+
+- Overview: `.analysis/sessions/<id>/outputs/overview.md`
+- Architecture: `.analysis/sessions/<id>/outputs/architecture.md`
+- Module details: `.analysis/sessions/<id>/outputs/modules/`
+- Structured data: `.analysis/sessions/<id>/outputs/SUMMARY.json`
+- Dependency graph: `.analysis/sessions/<id>/outputs/dependency-graph.json`
+
+## Module Summary
+
+<one-line summary per module from module-map.json>
+
+## Known Issues
+
+<list from issue-candidates.md if exists>
+```
+
+3. Suggest the user add a pointer to `.analysis/AI_CONTEXT.md` in their `CLAUDE.md` or project instructions file.
+
 ## Constraints
 
 - Never modify analyzed source files.
 - Update only `.analysis/` outputs while running this skill.
 - Only analyze files committed to git (`git ls-tree -r HEAD --name-only`). Ignore uncommitted/unstaged changes.
+- Exclude non-source paths by default: `.analysis/`, `.codex/`, `.claude/`, `.git/`, `vendor/`, `node_modules/`, `.venv/`, `__pycache__/`, `dist/`, `build/`. Pass `--exclude` to add more patterns.
+- Every checkpoint must contain at least one of: visited files, output files, summary text, or next actions. Empty checkpoints are rejected.

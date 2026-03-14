@@ -294,5 +294,125 @@ class CLISyncTests(unittest.TestCase):
             self.assertEqual(exit_code, 0)
 
 
+class ExcludePatternTests(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def test_should_exclude_default_patterns(self):
+        self.assertTrue(self.module.should_exclude(".analysis/sessions/foo"))
+        self.assertTrue(self.module.should_exclude(".codex/skills/bar"))
+        self.assertTrue(self.module.should_exclude(".claude/CLAUDE.md"))
+        self.assertTrue(self.module.should_exclude("vendor/github.com/foo"))
+        self.assertTrue(self.module.should_exclude("node_modules/lodash/index.js"))
+        self.assertFalse(self.module.should_exclude("src/main.go"))
+        self.assertFalse(self.module.should_exclude("internal/config/types.go"))
+
+    def test_should_exclude_custom_patterns(self):
+        patterns = ["test_data/", ".env"]
+        self.assertTrue(self.module.should_exclude("test_data/fixtures/a.json", patterns))
+        self.assertFalse(self.module.should_exclude("src/main.go", patterns))
+
+    def test_init_session_stores_exclude_patterns(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            with patch.object(self.module, "get_head_commit", return_value="abc123"):
+                self.module.init_session(
+                    analysis_dir=analysis_dir,
+                    mode="analyze",
+                    scope="src",
+                    session_id="exclude-test",
+                    resume_if_exists=False,
+                    exclude_patterns=["docs/"],
+                )
+            state = self.module.load_state(analysis_dir, "exclude-test")
+            self.assertIn("docs/", state["exclude_patterns"])
+            self.assertIn(".analysis/", state["exclude_patterns"])
+
+
+class EmptyCheckpointTests(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def test_empty_checkpoint_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            with patch.object(self.module, "get_head_commit", return_value="abc123"):
+                self.module.init_session(
+                    analysis_dir=analysis_dir,
+                    mode="analyze",
+                    scope="src",
+                    session_id="empty-cp-test",
+                    resume_if_exists=False,
+                )
+
+            with self.assertRaises(ValueError) as ctx:
+                self.module.add_checkpoint(
+                    analysis_dir=analysis_dir,
+                    session_id="empty-cp-test",
+                    title="empty checkpoint",
+                    summary="",
+                    visited_add=[],
+                    outputs=[],
+                    next_actions=[],
+                )
+            self.assertIn("empty checkpoint", str(ctx.exception))
+
+    def test_checkpoint_with_summary_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            with patch.object(self.module, "get_head_commit", return_value="abc123"):
+                self.module.init_session(
+                    analysis_dir=analysis_dir,
+                    mode="analyze",
+                    scope="src",
+                    session_id="summary-cp-test",
+                    resume_if_exists=False,
+                )
+
+            result = self.module.add_checkpoint(
+                analysis_dir=analysis_dir,
+                session_id="summary-cp-test",
+                title="has summary",
+                summary="analyzed the service layer",
+            )
+            self.assertEqual(result["checkpoint_no"], 1)
+
+
+class GenerateSummaryTests(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def test_generate_summary_produces_json(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            with patch.object(self.module, "get_head_commit", return_value="abc123"):
+                self.module.init_session(
+                    analysis_dir=analysis_dir,
+                    mode="analyze",
+                    scope="src",
+                    session_id="summary-test",
+                    resume_if_exists=False,
+                )
+
+            # Create a module doc
+            modules_dir = analysis_dir / "sessions" / "summary-test" / "outputs" / "modules"
+            modules_dir.mkdir(parents=True, exist_ok=True)
+            (modules_dir / "auth.md").write_text(
+                "# Auth Module\n\nHandles authentication and token validation.\n",
+                encoding="utf-8",
+            )
+
+            summary = self.module.generate_summary(analysis_dir, "summary-test")
+            self.assertEqual(summary["session_id"], "summary-test")
+            self.assertEqual(summary["mode"], "analyze")
+            self.assertEqual(len(summary["modules"]), 1)
+            self.assertEqual(summary["modules"][0]["name"], "auth")
+            self.assertIn("authentication", summary["modules"][0]["summary"])
+
+            # Verify file was written
+            summary_path = analysis_dir / "sessions" / "summary-test" / "outputs" / "SUMMARY.json"
+            self.assertTrue(summary_path.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
