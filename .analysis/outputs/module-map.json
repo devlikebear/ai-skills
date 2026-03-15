@@ -1,0 +1,128 @@
+{
+  "release-docs": {
+    "path": ".",
+    "responsibility": "버전, 설치 방법, 운영 규칙, 라이선스와 마켓플레이스 진입점을 관리한다.",
+    "key_files": [
+      "README.md",
+      "CLAUDE.md",
+      "CHANGELOG.md",
+      "VERSION.txt",
+      "LICENSE",
+      ".claude-plugin/marketplace.json"
+    ]
+  },
+  "source-analyzer": {
+    "path": "codex/skills/source-analyzer",
+    "responsibility": "코드베이스를 증분 분석해 문서와 리팩터링 입력을 생성한다.",
+    "key_files": [
+      "codex/skills/source-analyzer/SKILL.md",
+      "codex/skills/source-analyzer/agents/openai.yaml",
+      "codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py",
+      "codex/skills/source-analyzer/shared/references/tutorial-template.md",
+      "claude-code/plugin/skills/source-analyzer/SKILL.md",
+      "claude-code/plugin/scripts/checkpoint_manager.py"
+    ]
+  },
+  "plan-for-codex": {
+    "path": "codex/skills/plan-for-codex",
+    "responsibility": "요청을 작은 실행 워크오더로 분해한다.",
+    "key_files": [
+      "codex/skills/plan-for-codex/SKILL.md",
+      "codex/skills/plan-for-codex/agents/openai.yaml",
+      "codex/skills/plan-for-codex/shared/references/work-order.md",
+      "claude-code/plugin/skills/plan/SKILL.md"
+    ]
+  },
+  "implement": {
+    "path": "codex/skills/implement",
+    "responsibility": "승인된 워크오더를 작은 범위로 구현하고 검증한다.",
+    "key_files": [
+      "codex/skills/implement/SKILL.md",
+      "codex/skills/implement/agents/openai.yaml",
+      "codex/skills/implement/shared/references/work-order.md",
+      "claude-code/plugin/skills/implement/SKILL.md"
+    ]
+  },
+  "review": {
+    "path": "codex/skills/review",
+    "responsibility": "회귀, 보안, 테스트 누락 중심의 코드 리뷰를 수행한다.",
+    "key_files": [
+      "codex/skills/review/SKILL.md",
+      "codex/skills/review/agents/openai.yaml",
+      "codex/skills/review/shared/references/review-checklist.md",
+      "codex/skills/review/shared/references/work-order.md",
+      "claude-code/plugin/skills/review/SKILL.md"
+    ]
+  },
+  "refactor": {
+    "path": "codex/skills/refactor",
+    "responsibility": "행동 변경 없이 구조를 정리하는 리팩터링 절차를 제공한다.",
+    "key_files": [
+      "codex/skills/refactor/SKILL.md",
+      "codex/skills/refactor/agents/openai.yaml",
+      "codex/skills/refactor/shared/references/refactoring-checklist.md",
+      "codex/skills/refactor/shared/references/refactoring-patterns.md",
+      "codex/skills/refactor/shared/references/work-order.md",
+      "claude-code/plugin/skills/refactor/SKILL.md"
+    ]
+  },
+  "github-flow": {
+    "path": "codex/skills/github-flow",
+    "responsibility": "브랜치부터 릴리스까지 GitHub Flow 전체 수명주기를 오케스트레이션한다.",
+    "key_files": [
+      "codex/skills/github-flow/SKILL.md",
+      "codex/skills/github-flow/agents/openai.yaml",
+      "codex/skills/github-flow/shared/references/github-flow-checklist.md",
+      "claude-code/plugin/skills/github-flow/SKILL.md"
+    ]
+  },
+  "reference-templates": {
+    "path": "codex/skills/*/shared/references + claude-code/plugin/references",
+    "responsibility": "워크오더, 체크리스트, 튜토리얼 템플릿을 재사용 가능한 문서로 제공한다.",
+    "key_files": [
+      "codex/skills/source-analyzer/shared/references/tutorial-template.md",
+      "codex/skills/source-analyzer/shared/references/refactor-template.md",
+      "codex/skills/review/shared/references/review-checklist.md",
+      "codex/skills/refactor/shared/references/refactoring-patterns.md",
+      "claude-code/plugin/references/tutorial-template.md",
+      "claude-code/plugin/references/github-flow-checklist.md"
+    ]
+  },
+  "claude-plugin": {
+    "path": "claude-code/plugin",
+    "responsibility": "Claude Code용 code-workflow 플러그인과 중앙 references를 배포한다.",
+    "key_files": [
+      "claude-code/plugin/.claude-plugin/plugin.json",
+      "claude-code/plugin/skills/source-analyzer/SKILL.md",
+      "claude-code/plugin/skills/plan/SKILL.md",
+      "claude-code/plugin/references/work-order.md",
+      "claude-code/plugin/scripts/checkpoint_manager.py"
+    ]
+  },
+  "scripts": {
+    "path": "scripts",
+    "responsibility": "Codex 설치와 분석 결과 위키 게시를 자동화한다.",
+    "key_files": [
+      "scripts/install_codex_skill.sh",
+      "scripts/publish_wiki.sh"
+    ]
+  },
+  "tests": {
+    "path": "tests",
+    "responsibility": "구조 계약, 릴리스 규칙, 체크포인트 매니저, 위키 게시 흐름을 검증한다.",
+    "key_files": [
+      "tests/test_skill_repository_contract.py",
+      "tests/test_checkpoint_manager.py",
+      "tests/test_release_contract.py",
+      "tests/test_publish_wiki.py"
+    ]
+  },
+  "skill-generator": {
+    "path": ".codex/skills/skill-generator",
+    "responsibility": "이 저장소 규칙에 맞는 새 Codex 스킬 생성을 돕는 로컬 래퍼를 제공한다.",
+    "key_files": [
+      ".codex/skills/skill-generator/SKILL.md",
+      ".codex/skills/skill-generator/agents/openai.yaml"
+    ]
+  }
+}
