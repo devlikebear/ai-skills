@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -42,6 +43,7 @@ def now_for_id() -> str:
 
 def ensure_layout(analysis_dir: Path) -> None:
     (analysis_dir / "sessions").mkdir(parents=True, exist_ok=True)
+    (analysis_dir / "outputs").mkdir(parents=True, exist_ok=True)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -409,10 +411,15 @@ def add_checkpoint(
     )
     write_resume_file(analysis_dir, session_id)
 
+    publish_result = None
+    if status in {"paused", "completed"}:
+        publish_result = publish_outputs(analysis_dir, session_id)
+
     return {
         "session_id": session_id,
         "checkpoint_no": checkpoint_no,
         "checkpoint_path": checkpoint_path,
+        "published": publish_result,
     }
 
 
@@ -500,6 +507,39 @@ def status_summary(analysis_dir: Path, session_id: str) -> str:
     )
 
 
+def publish_outputs(analysis_dir: Path, session_id: str) -> dict[str, Any]:
+    """Copy session outputs to .analysis/outputs/ for git tracking.
+
+    Only the published outputs directory is meant to be committed to git.
+    Session working state (checkpoints, state.json, etc.) stays git-ignored.
+    """
+    state = load_state(analysis_dir, session_id)
+    sdir = session_path(analysis_dir, session_id)
+    session_outputs = sdir / "outputs"
+    published_dir = analysis_dir / "outputs"
+
+    if not session_outputs.exists():
+        return {"session_id": session_id, "published": [], "target": str(published_dir)}
+
+    published_dir.mkdir(parents=True, exist_ok=True)
+
+    published: list[str] = []
+    for item in sorted(session_outputs.rglob("*")):
+        if item.is_dir():
+            continue
+        rel = item.relative_to(session_outputs)
+        dest = published_dir / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(item, dest)
+        published.append(str(rel))
+
+    return {
+        "session_id": session_id,
+        "published": published,
+        "target": str(published_dir),
+    }
+
+
 def generate_summary(analysis_dir: Path, session_id: str) -> dict[str, Any]:
     """Generate SUMMARY.json from session outputs for AI consumption."""
     state = load_state(analysis_dir, session_id)
@@ -518,7 +558,7 @@ def generate_summary(analysis_dir: Path, session_id: str) -> dict[str, Any]:
                     break
             modules.append({
                 "name": md_file.stem,
-                "file": str(md_file.relative_to(analysis_dir)),
+                "file": f"outputs/modules/{md_file.name}",
                 "summary": first_line[:200],
             })
 
@@ -531,7 +571,7 @@ def generate_summary(analysis_dir: Path, session_id: str) -> dict[str, Any]:
         "visited_count": len(state.get("visited", [])),
         "frontier_count": len(state.get("frontier", [])),
         "modules": modules,
-        "outputs": state.get("outputs", []),
+        "outputs": [f"outputs/{o.split('outputs/')[-1]}" if "outputs/" in o else o for o in state.get("outputs", [])],
         "checkpoints_count": len(state.get("checkpoints", [])),
     }
 
@@ -586,6 +626,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     summary_parser.add_argument("--analysis-dir", default=".analysis")
     summary_parser.add_argument("--session-id")
     summary_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
+
+    publish_parser = subparsers.add_parser("publish", help="Copy session outputs to .analysis/outputs/ for git tracking.")
+    publish_parser.add_argument("--analysis-dir", default=".analysis")
+    publish_parser.add_argument("--session-id")
+    publish_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
 
     return parser.parse_args(argv)
 
@@ -651,6 +696,16 @@ def cli(argv: list[str]) -> int:
         resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
         summary = generate_summary(analysis_dir, resolved_session_id)
         print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "publish":
+        resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
+        result = publish_outputs(analysis_dir, resolved_session_id)
+        print(f"session_id={result['session_id']}")
+        print(f"target={result['target']}")
+        print(f"published_files={len(result['published'])}")
+        for f in result["published"]:
+            print(f"  {f}")
         return 0
 
     return 1

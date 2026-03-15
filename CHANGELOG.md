@@ -2,6 +2,23 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.6.0 - 2026-03-15
+
+### Added
+
+- Publish workflow: session outputs are now copied to `.analysis/outputs/` (git-tracked) on `paused`/`completed` checkpoints.
+  - Session working state (`sessions/`) stays git-ignored; only stable outputs are committed.
+  - New `publish` CLI command for manual publish.
+  - Auto-publish on `paused`/`completed` checkpoints.
+- Directory layout documentation in SKILL.md with recommended `.gitignore` entry.
+- 5 new tests for publish behavior (25 total checkpoint manager tests, 45 total).
+
+### Changed
+
+- AI_CONTEXT.md paths now point to `.analysis/outputs/` instead of session-specific paths.
+- `ensure_layout` now creates both `sessions/` and `outputs/` directories.
+- `generate_summary` module file paths now use `outputs/modules/` relative format.
+
 ## 0.5.1 - 2026-03-15
 
 ### Fixed

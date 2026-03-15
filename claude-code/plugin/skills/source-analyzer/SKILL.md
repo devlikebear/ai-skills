@@ -21,8 +21,10 @@ COMMIT=$(git rev-parse HEAD)
 python3 "$CHECKPOINT_SCRIPT" init --mode analyze --scope "." --commit "$COMMIT"
 # Resume: sync with latest HEAD
 python3 "$CHECKPOINT_SCRIPT" sync
-python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --status in_progress
-# Generate AI-consumable summary after analysis
+python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --status paused
+# Manual publish (auto-runs on paused/completed checkpoint)
+python3 "$CHECKPOINT_SCRIPT" publish
+# Generate AI-consumable summary
 python3 "$CHECKPOINT_SCRIPT" generate-summary
 ```
 
@@ -30,6 +32,45 @@ python3 "$CHECKPOINT_SCRIPT" generate-summary
 
 - Detect the user's language from their message and respond in the same language.
 - If the user explicitly requests a language, follow it.
+
+## Directory layout
+
+```
+.analysis/
+├── RESUME.md              ← resume pointer (git-tracked)
+├── AI_CONTEXT.md          ← AI discovery file (git-tracked)
+├── outputs/               ← published stable outputs (git-tracked)
+│   ├── overview.md
+│   ├── architecture.md
+│   ├── technologies.md
+│   ├── glossary.md
+│   ├── tutorial.md
+│   ├── clone-coding.md
+│   ├── implementation-checklist.md
+│   ├── issue-candidates.md
+│   ├── SUMMARY.json
+│   ├── dependency-graph.json
+│   ├── module-map.json
+│   └── modules/
+│       └── <name>.md
+└── sessions/              ← working state (git-ignored)
+    └── <session-id>/
+        ├── state.json
+        ├── index.md
+        ├── checkpoints/
+        └── outputs/       ← work-in-progress outputs
+```
+
+- `sessions/` contains transient analysis state and should be in `.gitignore`.
+- `outputs/` at the root level contains published (stable) results and should be committed to git.
+- Outputs are published automatically when a checkpoint is written with status `paused` or `completed`.
+- Manual publish: `python3 "$CHECKPOINT_SCRIPT" publish`.
+
+### Recommended .gitignore entry
+
+```gitignore
+.analysis/sessions/
+```
 
 ## Required workflow
 
@@ -42,24 +83,20 @@ python3 "$CHECKPOINT_SCRIPT" generate-summary
 7. Traverse first-party source with BFS in small chunks.
 8. Update `.analysis/sessions/<session-id>/outputs/` after each chunk.
 9. Write a checkpoint after each chunk (must include at least one of: visited-add, outputs, summary, or next-actions).
-10. Pause safely with status `paused` when handing off.
+10. On `paused` or `completed` checkpoint, outputs are auto-published to `.analysis/outputs/`.
 
 ## Analyze mode
 
 - Goal: produce newcomer-friendly architecture and clone-coding material.
 - Markdown outputs (human-readable):
-  - `.analysis/sessions/<session-id>/outputs/overview.md`
-  - `.analysis/sessions/<session-id>/outputs/architecture.md`
-  - `.analysis/sessions/<session-id>/outputs/technologies.md`
-  - `.analysis/sessions/<session-id>/outputs/modules/<name>.md`
-  - `.analysis/sessions/<session-id>/outputs/glossary.md`
-  - `.analysis/sessions/<session-id>/outputs/tutorial.md`
-  - `.analysis/sessions/<session-id>/outputs/clone-coding.md`
-  - `.analysis/sessions/<session-id>/outputs/implementation-checklist.md`
+  - `overview.md`, `architecture.md`, `technologies.md`, `glossary.md`
+  - `tutorial.md`, `clone-coding.md`, `implementation-checklist.md`
+  - `modules/<name>.md`
 - Structured outputs (AI-consumable):
-  - `.analysis/sessions/<session-id>/outputs/SUMMARY.json`: module list, key flows, known issues.
-  - `.analysis/sessions/<session-id>/outputs/dependency-graph.json`: `{"file": ["imported_file", ...]}` mapping.
-  - `.analysis/sessions/<session-id>/outputs/module-map.json`: `{"module_name": {"path": "...", "responsibility": "...", "key_files": [...]}}`.
+  - `SUMMARY.json`: module list, key flows, known issues.
+  - `dependency-graph.json`: `{"file": ["imported_file", ...]}` mapping.
+  - `module-map.json`: `{"module_name": {"path": "...", "responsibility": "...", "key_files": [...]}}`.
+- All outputs are written to `.analysis/sessions/<session-id>/outputs/` during work, then published to `.analysis/outputs/` on pause/complete.
 - Use real file paths, short paragraphs, and plain language.
 
 ### Structured output rules
@@ -122,7 +159,8 @@ When `sync` detects changed files:
 When the session reaches `completed` or `paused` status, generate a context file for AI assistants:
 
 1. Run `python3 "$CHECKPOINT_SCRIPT" generate-summary` to produce `outputs/SUMMARY.json`.
-2. Write `.analysis/AI_CONTEXT.md` with the following structure:
+2. Run `python3 "$CHECKPOINT_SCRIPT" publish` (or rely on auto-publish from checkpoint).
+3. Write `.analysis/AI_CONTEXT.md` with the following structure:
 
 ```markdown
 # Codebase Analysis Context
@@ -132,11 +170,11 @@ When the session reaches `completed` or `paused` status, generate a context file
 
 ## Quick Reference
 
-- Overview: `.analysis/sessions/<id>/outputs/overview.md`
-- Architecture: `.analysis/sessions/<id>/outputs/architecture.md`
-- Module details: `.analysis/sessions/<id>/outputs/modules/`
-- Structured data: `.analysis/sessions/<id>/outputs/SUMMARY.json`
-- Dependency graph: `.analysis/sessions/<id>/outputs/dependency-graph.json`
+- Overview: `.analysis/outputs/overview.md`
+- Architecture: `.analysis/outputs/architecture.md`
+- Module details: `.analysis/outputs/modules/`
+- Structured data: `.analysis/outputs/SUMMARY.json`
+- Dependency graph: `.analysis/outputs/dependency-graph.json`
 
 ## Module Summary
 
@@ -147,7 +185,7 @@ When the session reaches `completed` or `paused` status, generate a context file
 <list from issue-candidates.md if exists>
 ```
 
-3. Register the analysis in project instruction files so all AI assistants can discover it.
+4. Register the analysis in project instruction files so all AI assistants can discover it.
    Check for these files in the project root and append a pointer block to each one that exists:
    - `CLAUDE.md` (Claude Code)
    - `AGENTS.md` (Codex / general agents)

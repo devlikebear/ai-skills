@@ -414,5 +414,101 @@ class GenerateSummaryTests(unittest.TestCase):
             self.assertTrue(summary_path.exists())
 
 
+class PublishOutputsTests(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def _create_session_with_outputs(self, analysis_dir, session_id="publish-test"):
+        with patch.object(self.module, "get_head_commit", return_value="abc123"):
+            self.module.init_session(
+                analysis_dir=analysis_dir,
+                mode="analyze",
+                scope="src",
+                session_id=session_id,
+                resume_if_exists=False,
+            )
+        # Create some output files in the session
+        session_outputs = analysis_dir / "sessions" / session_id / "outputs"
+        (session_outputs / "overview.md").write_text("# Overview\n", encoding="utf-8")
+        (session_outputs / "architecture.md").write_text("# Architecture\n", encoding="utf-8")
+        modules_dir = session_outputs / "modules"
+        modules_dir.mkdir(exist_ok=True)
+        (modules_dir / "auth.md").write_text("# Auth\n", encoding="utf-8")
+
+    def test_publish_copies_to_root_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            self._create_session_with_outputs(analysis_dir)
+
+            result = self.module.publish_outputs(analysis_dir, "publish-test")
+
+            self.assertEqual(result["session_id"], "publish-test")
+            self.assertIn("overview.md", result["published"])
+            self.assertIn("architecture.md", result["published"])
+
+            # Check files exist in published location
+            published_dir = analysis_dir / "outputs"
+            self.assertTrue((published_dir / "overview.md").exists())
+            self.assertTrue((published_dir / "architecture.md").exists())
+            self.assertTrue((published_dir / "modules" / "auth.md").exists())
+
+    def test_checkpoint_paused_auto_publishes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            self._create_session_with_outputs(analysis_dir)
+
+            result = self.module.add_checkpoint(
+                analysis_dir=analysis_dir,
+                session_id="publish-test",
+                title="paused analysis",
+                summary="analyzed overview and architecture",
+                status="paused",
+            )
+
+            self.assertIsNotNone(result["published"])
+            self.assertIn("overview.md", result["published"]["published"])
+
+            # Verify published outputs exist
+            self.assertTrue((analysis_dir / "outputs" / "overview.md").exists())
+
+    def test_checkpoint_in_progress_does_not_publish(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            self._create_session_with_outputs(analysis_dir)
+
+            result = self.module.add_checkpoint(
+                analysis_dir=analysis_dir,
+                session_id="publish-test",
+                title="wip analysis",
+                summary="still working",
+                status="in_progress",
+            )
+
+            self.assertIsNone(result["published"])
+
+    def test_checkpoint_completed_auto_publishes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            self._create_session_with_outputs(analysis_dir)
+
+            result = self.module.add_checkpoint(
+                analysis_dir=analysis_dir,
+                session_id="publish-test",
+                title="done",
+                summary="analysis complete",
+                status="completed",
+            )
+
+            self.assertIsNotNone(result["published"])
+            self.assertTrue((analysis_dir / "outputs" / "modules" / "auth.md").exists())
+
+    def test_ensure_layout_creates_outputs_dir(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            self.module.ensure_layout(analysis_dir)
+            self.assertTrue((analysis_dir / "sessions").is_dir())
+            self.assertTrue((analysis_dir / "outputs").is_dir())
+
+
 if __name__ == "__main__":
     unittest.main()
