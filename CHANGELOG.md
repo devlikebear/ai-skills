@@ -2,6 +2,15 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.6.1 - 2026-03-15
+
+### Added
+
+- `migrate` CLI command for backward compatibility with pre-0.6.0 layout.
+  - Copies latest session outputs to `.analysis/outputs/` and prints `.gitignore` reminder.
+  - Migration guide added to SKILL.md (both codex and claude-code).
+- 3 new tests for migrate behavior (48 total).
+
 ## 0.6.0 - 2026-03-15
 
 ### Added

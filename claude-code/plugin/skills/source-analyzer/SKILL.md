@@ -66,6 +66,16 @@ python3 "$CHECKPOINT_SCRIPT" generate-summary
 - Outputs are published automatically when a checkpoint is written with status `paused` or `completed`.
 - Manual publish: `python3 "$CHECKPOINT_SCRIPT" publish`.
 
+### Migrating from old layout
+
+If the project has existing analysis results under `.analysis/sessions/<id>/outputs/` (pre-0.6.0 layout), run:
+
+```bash
+python3 "$CHECKPOINT_SCRIPT" migrate --analysis-dir .analysis
+```
+
+This copies the latest session's outputs to `.analysis/outputs/` and prints a `.gitignore` reminder. Run this once before starting new analysis sessions.
+
 ### Recommended .gitignore entry
 
 ```gitignore

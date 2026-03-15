@@ -510,5 +510,59 @@ class PublishOutputsTests(unittest.TestCase):
             self.assertTrue((analysis_dir / "outputs").is_dir())
 
 
+class MigrateLayoutTests(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def test_migrate_publishes_latest_session_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            # Create an old-style session with outputs
+            with patch.object(self.module, "get_head_commit", return_value="abc123"):
+                self.module.init_session(
+                    analysis_dir=analysis_dir,
+                    mode="analyze",
+                    scope="src",
+                    session_id="old-session",
+                    resume_if_exists=False,
+                )
+            session_outputs = analysis_dir / "sessions" / "old-session" / "outputs"
+            (session_outputs / "overview.md").write_text("# Old Overview\n", encoding="utf-8")
+            modules_dir = session_outputs / "modules"
+            modules_dir.mkdir(exist_ok=True)
+            (modules_dir / "core.md").write_text("# Core\n", encoding="utf-8")
+
+            result = self.module.migrate_layout(analysis_dir)
+
+            self.assertTrue(result["migrated"])
+            self.assertEqual(result["source_session"], "old-session")
+            self.assertIn("overview.md", result["published"])
+
+            # Check published files
+            self.assertTrue((analysis_dir / "outputs" / "overview.md").exists())
+            self.assertTrue((analysis_dir / "outputs" / "modules" / "core.md").exists())
+
+    def test_migrate_no_sessions(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            result = self.module.migrate_layout(analysis_dir)
+            self.assertFalse(result["migrated"])
+
+    def test_migrate_empty_session_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir = Path(tmp_dir) / ".analysis"
+            with patch.object(self.module, "get_head_commit", return_value="abc123"):
+                self.module.init_session(
+                    analysis_dir=analysis_dir,
+                    mode="analyze",
+                    scope="src",
+                    session_id="empty-session",
+                    resume_if_exists=False,
+                )
+            # outputs dir exists but is empty
+            result = self.module.migrate_layout(analysis_dir)
+            self.assertFalse(result["migrated"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -580,6 +580,57 @@ def generate_summary(analysis_dir: Path, session_id: str) -> dict[str, Any]:
     return summary
 
 
+def migrate_layout(analysis_dir: Path) -> dict[str, Any]:
+    """Migrate from old layout (outputs inside sessions) to new layout.
+
+    1. Find the latest session with outputs.
+    2. Publish those outputs to .analysis/outputs/.
+    3. Return migration details.
+    """
+    sessions_dir = analysis_dir / "sessions"
+    published_dir = analysis_dir / "outputs"
+
+    if not sessions_dir.exists():
+        return {"migrated": False, "reason": "no sessions directory"}
+
+    # Find all sessions ordered by updated_at (latest first)
+    candidates: list[tuple[str, str, Path]] = []
+    for state_file in sessions_dir.glob(f"*/{STATE_FILENAME}"):
+        state = load_json(state_file)
+        updated_at = str(state.get("updated_at", ""))
+        sid = str(state.get("session_id", state_file.parent.name))
+        outputs_dir = state_file.parent / "outputs"
+        if outputs_dir.exists() and any(outputs_dir.iterdir()):
+            candidates.append((updated_at, sid, outputs_dir))
+
+    if not candidates:
+        return {"migrated": False, "reason": "no sessions with outputs found"}
+
+    candidates.sort(reverse=True)
+    published_dir.mkdir(parents=True, exist_ok=True)
+
+    all_published: list[str] = []
+    source_session = candidates[0][1]
+
+    # Publish from latest session
+    session_outputs = candidates[0][2]
+    for item in sorted(session_outputs.rglob("*")):
+        if item.is_dir():
+            continue
+        rel = item.relative_to(session_outputs)
+        dest = published_dir / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(item, dest)
+        all_published.append(str(rel))
+
+    return {
+        "migrated": True,
+        "source_session": source_session,
+        "published": all_published,
+        "target": str(published_dir),
+    }
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Manage source-analyzer incremental checkpoints.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -631,6 +682,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     publish_parser.add_argument("--analysis-dir", default=".analysis")
     publish_parser.add_argument("--session-id")
     publish_parser.add_argument("--mode", choices=["analyze", "refactor-guide"])
+
+    migrate_parser = subparsers.add_parser("migrate", help="Migrate old layout: publish latest session outputs to .analysis/outputs/.")
+    migrate_parser.add_argument("--analysis-dir", default=".analysis")
 
     return parser.parse_args(argv)
 
@@ -706,6 +760,19 @@ def cli(argv: list[str]) -> int:
         print(f"published_files={len(result['published'])}")
         for f in result["published"]:
             print(f"  {f}")
+        return 0
+
+    if args.command == "migrate":
+        result = migrate_layout(analysis_dir)
+        if not result["migrated"]:
+            print(f"nothing to migrate: {result['reason']}")
+            return 0
+        print(f"source_session={result['source_session']}")
+        print(f"target={result['target']}")
+        print(f"published_files={len(result['published'])}")
+        for f in result["published"]:
+            print(f"  {f}")
+        print("\nAdd to .gitignore:  .analysis/sessions/")
         return 0
 
     return 1
