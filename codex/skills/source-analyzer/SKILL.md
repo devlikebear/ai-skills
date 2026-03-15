@@ -13,6 +13,7 @@ description: "Analyze existing source code and generate beginner-friendly archit
 - `shared/references/security-triage-checklist.md`: security fallback checks.
 - `shared/references/checkpoint-template.md`: manual checkpoint fallback.
 - `shared/scripts/checkpoint_manager.py`: resumable checkpoint session manager.
+- `shared/scripts/publish_wiki.sh`: publish analysis outputs to GitHub wiki.
 
 ## Language policy
 
@@ -227,6 +228,31 @@ When the session reaches `completed` or `paused` status, generate a context file
    ```
 
    If none of these files exist, create `AGENTS.md` with the block above and inform the user.
+
+## Publishing to GitHub Wiki
+
+After analysis is complete (or paused), publish the outputs to the project's GitHub wiki:
+
+```bash
+PUBLISH_SCRIPT="${CODEX_HOME:-$HOME/.codex}/skills/source-analyzer/shared/scripts/publish_wiki.sh"
+# Publish latest session outputs
+bash "$PUBLISH_SCRIPT"
+# Publish a specific session
+bash "$PUBLISH_SCRIPT" --session-id analyze-20260308-120027
+# Dry-run: prepare wiki pages locally without pushing
+bash "$PUBLISH_SCRIPT" --dry-run
+```
+
+Prerequisites:
+- The GitHub wiki must be enabled for the repository (Settings > Features > Wikis).
+- At least one page must exist in the wiki (create it via the GitHub UI first).
+- The script uses the current directory as the project root by default. Use `--project-dir <path>` to override.
+
+The script generates:
+- Ordered wiki pages from analysis outputs (overview, architecture, etc.).
+- Per-module pages with `module-` prefix.
+- A `Home.md` with document and module tables.
+- A `_Sidebar.md` for navigation.
 
 ## Constraints
 

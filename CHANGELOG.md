@@ -2,6 +2,17 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.8.0 - 2026-03-15
+
+### Added
+
+- `publish_wiki.sh` script for publishing analysis outputs to GitHub wiki.
+  - Generates ordered wiki pages, module pages, Home, and Sidebar from `.analysis/outputs/`.
+  - Supports `--project-dir`, `--session-id`, and `--dry-run` options.
+  - Auto-detects page titles from output files; falls back to published outputs if session outputs are unavailable.
+  - Included in both codex (`shared/scripts/`) and claude-code (`plugin/scripts/`) distributions.
+- Wiki publishing documentation added to source-analyzer SKILL.md (both codex and claude-code).
+
 ## 0.7.0 - 2026-03-15
 
 ### Added
