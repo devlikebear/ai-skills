@@ -2,6 +2,17 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.9.0 - 2026-03-15
+
+### Added
+
+- System overhaul mode (`--mode overhaul`) for source-analyzer skill.
+  - Identifies architectural flaws (`ARCH-*`), unnecessary features (`DEAD-*`), over-engineering (`OVER-*`), and accumulated technical debt (`DEBT-*`).
+  - Produces `overhaul-<scope>.md` with target architecture, OH work orders, migration paths, execution order, and risk assessment.
+  - Supports starting from existing analyze outputs or from scratch.
+  - Breaking changes are explicitly documented with migration paths.
+- `overhaul-template.md` reference file for both codex and claude-code distributions.
+
 ## 0.8.0 - 2026-03-15
 
 ### Added

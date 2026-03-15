@@ -1,6 +1,6 @@
 ---
 name: source-analyzer
-description: "Analyze existing source code and generate beginner-friendly architecture documents or actionable refactoring work orders without modifying source files. Use when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, or refactor proposals with DUP/SEC/TIDY issue codes."
+description: "Analyze existing source code and generate beginner-friendly architecture documents, actionable refactoring work orders, or system overhaul proposals without modifying source files. Use when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, refactor proposals with DUP/SEC/TIDY issue codes, or system overhaul with ARCH/DEAD/OVER/DEBT issue codes."
 ---
 
 # Source Analyzer
@@ -11,6 +11,7 @@ description: "Analyze existing source code and generate beginner-friendly archit
 - [refactor-template.md](../../references/refactor-template.md): refactor work-order structure.
 - [tidy-first-rules.md](../../references/tidy-first-rules.md): TIDY rule mapping.
 - [security-triage-checklist.md](../../references/security-triage-checklist.md): security fallback checks.
+- [overhaul-template.md](../../references/overhaul-template.md): system overhaul proposal structure.
 - [checkpoint-template.md](../../references/checkpoint-template.md): manual checkpoint fallback.
 
 Scripts:
@@ -52,6 +53,7 @@ python3 "$CHECKPOINT_SCRIPT" generate-summary
 │   ├── clone-coding.md
 │   ├── implementation-checklist.md
 │   ├── issue-candidates.md
+│   ├── overhaul-<scope>.md
 │   ├── SUMMARY.json
 │   ├── dependency-graph.json
 │   ├── module-map.json
@@ -88,7 +90,7 @@ This copies the latest session's outputs to `.analysis/outputs/` and prints a `.
 
 ## Required workflow
 
-1. Decide the mode: `analyze` or `refactor-guide`.
+1. Decide the mode: `analyze`, `refactor-guide`, or `overhaul`.
 2. Capture the current commit: `COMMIT=$(git rev-parse HEAD)`.
 3. Start or resume a session: pass `--commit "$COMMIT"` to init.
 4. If resuming, run `sync` to detect new commits and update the frontier.
@@ -141,6 +143,39 @@ When `issue-candidates.md` exists (from a prior analyze session):
 ### Starting from scratch
 
 When no `issue-candidates.md` exists, perform BFS analysis in refactor-guide mode directly and produce WOs as you discover issues.
+
+## Overhaul mode
+
+- Goal: produce a system overhaul proposal that identifies architectural flaws, unnecessary features, and over-engineering, then proposes a redesigned architecture — even if it breaks backward compatibility.
+- Follow [overhaul-template.md](../../references/overhaul-template.md) exactly.
+- Issue classification codes:
+  - `ARCH-*`: architectural design flaws — incorrect layer separation, circular dependencies, mixed responsibilities, wrong abstraction boundaries.
+  - `DEAD-*`: unnecessary features/code — unused modules, obsolete features, legacy compatibility layers.
+  - `OVER-*`: over-engineering — unnecessary abstractions, excessive configurability, premature optimization.
+  - `DEBT-*`: accumulated technical debt — outdated patterns, deprecated API usage, inconsistent conventions.
+- Output: `.analysis/sessions/<session-id>/outputs/overhaul-<scope>.md` (published to `.analysis/outputs/` on pause/complete).
+- Each work order (OH-NNN) must include: current state, target state, migration path, instructions, completion criteria, and test criteria.
+- Every breaking change must have a documented migration path or an explicit "clean reimplementation" justification.
+
+### Starting from analyze outputs
+
+When analyze outputs exist (from a prior analyze session):
+
+1. Read `.analysis/outputs/architecture.md`, `module-map.json`, and `dependency-graph.json` first.
+2. Read `issue-candidates.md` if available — `DUP-*`/`SEC-*`/`TIDY-*` issues that indicate deeper architectural problems feed into `ARCH-*`/`DEBT-*` classifications.
+3. Diagnose root problems at the architecture level, not individual code-level symptoms.
+4. Design the target architecture based on the diagnosis.
+5. Produce OH work orders for the transition.
+
+### Starting from scratch
+
+When no analyze outputs exist, perform BFS analysis in overhaul mode directly: first build an architectural understanding, then diagnose and propose redesign.
+
+### Execution order principles
+
+1. **Remove first**: eliminate unnecessary code/features to reduce scope before redesigning.
+2. **Foundation first**: redesign core architecture before adjusting dependent modules.
+3. **Verify per phase**: run full tests after each phase completes.
 
 ## Analyze-to-refactor bridge
 

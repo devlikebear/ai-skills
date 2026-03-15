@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Reusable AI-agent skills for code workflow automation",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "plugins": [
     {
       "name": "code-workflow",
       "source": "./claude-code/plugin",
       "description": "Code workflow skills: plan, implement, review, refactor, source-analyzer, and github-flow",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "author": {
         "name": "devlikebear"
       },

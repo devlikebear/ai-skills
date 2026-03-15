@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.8.0`
+Current release: `0.9.0`
 
 ## Overview
 
@@ -83,7 +83,7 @@ tests/
 
 - Analyzes an existing codebase without modifying source files.
 - Produces resumable outputs under `.analysis/sessions/` and published outputs under `.analysis/outputs/`.
-- Supports `analyze` and `refactor-guide` modes.
+- Supports `analyze`, `refactor-guide`, and `overhaul` modes.
 - Ships `checkpoint_manager.py` and `publish_wiki.sh` in both Codex and Claude Code distributions.
 
 ### `implement`
