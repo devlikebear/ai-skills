@@ -123,6 +123,20 @@ After completing each module analysis chunk, update the structured JSON outputs 
 - Follow [refactor-template.md](../../references/refactor-template.md) exactly.
 - For each issue include evidence, completion criteria, and test criteria.
 - Check security references first, then fall back to [security-triage-checklist.md](../../references/security-triage-checklist.md).
+- Output: `.analysis/sessions/<session-id>/outputs/refactor-<scope>.md` (published to `.analysis/outputs/` on pause/complete).
+
+### Starting from issue-candidates
+
+When `issue-candidates.md` exists (from a prior analyze session):
+
+1. Read `.analysis/outputs/issue-candidates.md` first.
+2. Use each candidate as the seed for a WO — copy the issue code, module, and evidence into the WO's `Source Issue` field.
+3. Expand each candidate with full analysis: read the actual source files, verify the issue, and fill all required WO fields.
+4. Remove candidates that turn out to be false positives and note the reason.
+
+### Starting from scratch
+
+When no `issue-candidates.md` exists, perform BFS analysis in refactor-guide mode directly and produce WOs as you discover issues.
 
 ## Analyze-to-refactor bridge
 
@@ -141,7 +155,7 @@ Format each candidate as:
 - Suggested action: <brief description>
 ```
 
-This file serves as the starting point when the user later runs `refactor-guide` mode.
+This file is published to `.analysis/outputs/issue-candidates.md` and serves as the starting point when the user later runs `refactor-guide` mode or the `refactor` skill.
 
 ## Sync and incremental update
 

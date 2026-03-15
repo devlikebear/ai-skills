@@ -2,6 +2,20 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.7.0 - 2026-03-15
+
+### Added
+
+- Connected `source-analyzer` refactor-guide mode to `refactor` skill via `issue-candidates.md`.
+  - refactor-guide mode now documents how to start from existing `issue-candidates.md` vs. scratch.
+  - `refactor` skill (both codex and claude-code) now checks `.analysis/outputs/` for issue-candidates and existing work orders before starting.
+- Added `Source Issue` traceability field to refactor-template.md WOs for linking back to analyze-mode findings.
+- Added `Source` metadata field to refactor work order header.
+
+### Changed
+
+- Updated `refactor-template.md` output path from `.analysis/refactor-*.md` to `.analysis/outputs/refactor-*.md`.
+
 ## 0.6.1 - 2026-03-15
 
 ### Added

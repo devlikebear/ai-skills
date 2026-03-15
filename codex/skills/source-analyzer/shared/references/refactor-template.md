@@ -1,6 +1,6 @@
 # Refactoring Work Order Template
 
-Use this exact structure when writing `.analysis/refactor-*.md`.
+Use this exact structure when writing `.analysis/outputs/refactor-*.md` (or `.analysis/sessions/<id>/outputs/refactor-*.md` during active sessions).
 Each section is mandatory. Write in the active skill language by default.
 
 ## Template
@@ -15,6 +15,7 @@ Each section is mandatory. Write in the active skill language by default.
 > **대상 / Target**: `<파일 경로 또는 모듈명 / file path or module name>`
 > **분석 범위 / Analysis Scope**: 진입점 BFS / 파일 전체 / 특정 함수
 > **우선순위 / Priority**: 높음 / 중간 / 낮음
+> **소스 / Source**: `issue-candidates.md` 또는 직접 분석 / `issue-candidates.md` or direct analysis
 
 ---
 
@@ -53,6 +54,7 @@ If there is a dependency, fill in the "Prerequisite" field.
 **심각도 / Severity**: 높음 / 중간 / 낮음
 **선행 작업 / Prerequisite**: 없음 (또는 WO-XXX 완료 후)
 **근거 / Evidence**: `<정적 분석/코드 근거를 1-2문장으로 기술>`
+**소스 이슈 / Source Issue**: `<issue-candidates.md의 이슈 코드, 있으면 기재 / issue code from issue-candidates.md if applicable>`
 **영향 범위 / Impact Area**: `<모듈/기능>`
 
 **문제 설명 / Problem**

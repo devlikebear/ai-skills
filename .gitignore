@@ -1,6 +1,7 @@
 __pycache__/
 .DS_Store
-.analysis/
+.analysis/sessions/
+.analysis/RESUME.md
 .drafts/
 .pytest_cache/
 .install_test_home

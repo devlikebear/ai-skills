@@ -16,6 +16,16 @@ description: "Perform safe, test-driven refactoring without behavior changes. Us
 - Detect the user's language from their message and respond in the same language.
 - If the user explicitly requests a language, follow it.
 
+## Pre-flight: check for existing analysis
+
+Before starting, check if `.analysis/outputs/` exists in the project root.
+
+- If `.analysis/outputs/issue-candidates.md` exists, read it and present the discovered issues to the user. Ask which issues to address in this session.
+- If `.analysis/outputs/refactor-*.md` work orders exist, read them and resume from the first incomplete WO.
+- If neither exists, proceed with the standard workflow below.
+
+This integration allows the `source-analyzer` skill's analysis to feed directly into refactoring work.
+
 ## Workflow
 
 1. Analyze the current state and existing tests.
