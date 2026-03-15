@@ -2,22 +2,22 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.4.0`
+Current release: `0.8.0`
 
 ## Overview
 
-- Supports Codex and Claude Code distributions.
-- Codex skills use a single `SKILL.md` per skill — respond in the user's language automatically.
-- Claude Code skills are distributed as a plugin marketplace with bilingual auto-detection.
-- Codex skills live under:
+- Supports both Codex runtime skills and a Claude Code plugin marketplace.
+- Codex skills use a flat runtime layout: one `SKILL.md`, one `agents/openai.yaml`, and optional `shared/`.
+- Claude Code skills are distributed through the `code-workflow` plugin with bilingual `SKILL.md` files and shared `references/`.
+- `source-analyzer` produces resumable `.analysis/` outputs and now ships a wiki publisher alongside its checkpoint manager.
+- A local authoring wrapper lives at `.codex/skills/skill-generator`.
+- Public Codex skill roots:
   - `codex/skills/source-analyzer`
   - `codex/skills/implement`
   - `codex/skills/plan-for-codex`
   - `codex/skills/refactor`
   - `codex/skills/review`
   - `codex/skills/github-flow`
-- Claude Code skills live under `claude-code/plugin/` as a plugin marketplace.
-- A local authoring wrapper lives at `.codex/skills/skill-generator`.
 
 ## Repository Layout
 
@@ -25,10 +25,25 @@ Current release: `0.4.0`
 codex/
   skills/
     source-analyzer/
+      SKILL.md
+      agents/
+      shared/
     implement/
+      SKILL.md
+      agents/
+      shared/
     plan-for-codex/
+      SKILL.md
+      agents/
+      shared/
     refactor/
+      SKILL.md
+      agents/
+      shared/
     review/
+      SKILL.md
+      agents/
+      shared/
     github-flow/
       SKILL.md
       agents/
@@ -38,12 +53,12 @@ claude-code/
     .claude-plugin/
       plugin.json
     skills/
-      review/
+      source-analyzer/
       implement/
       plan/
       refactor/
-        github-flow/
-      source-analyzer/
+      review/
+      github-flow/
     references/
     scripts/
 .claude-plugin/
@@ -51,25 +66,25 @@ claude-code/
 .codex/
   skills/
     skill-generator/
-      README.md
-      ko/
-      en/
+      SKILL.md
+      agents/
 scripts/
   install_codex_skill.sh
+  publish_wiki.sh
 tests/
 ```
 
-`codex/skills/<skill-name>` stores the Codex source layout with language-specific variants.
-`claude-code/plugin/` is the Claude Code plugin distribution — each skill is a single bilingual `SKILL.md` with shared references.
+`codex/skills/<skill-name>` stores the Codex source layout with flat runtime files only.
+`claude-code/plugin/` is the Claude Code plugin distribution with shared references and shared scripts.
 
 ## Included Skills
 
 ### `source-analyzer`
 
 - Analyzes an existing codebase without modifying source files.
-- Produces resumable checkpointed outputs under `.analysis/`.
+- Produces resumable outputs under `.analysis/sessions/` and published outputs under `.analysis/outputs/`.
 - Supports `analyze` and `refactor-guide` modes.
-- Ships as language-specific variants with shared scripts and references.
+- Ships `checkpoint_manager.py` and `publish_wiki.sh` in both Codex and Claude Code distributions.
 
 ### `implement`
 
@@ -101,11 +116,11 @@ tests/
 
 - Lives under `.codex/skills/skill-generator`.
 - Wraps the upstream `skill-creator` workflow for this repository.
-- Enforces the root-English-README plus `ko/`, `en/`, and `shared/` convention.
+- Enforces the flat `SKILL.md` + `agents/openai.yaml` + optional `shared/` convention used by public Codex skills.
 
 ## Install for Codex
 
-Clone this repository, then install a language-specific skill variant into your local Codex home.
+Clone this repository, then install one or more skills into your local Codex home.
 
 ```bash
 scripts/install_codex_skill.sh --list
@@ -138,15 +153,31 @@ After installation the following skills are available:
 - `/code-workflow:source-analyzer`
 - `/code-workflow:github-flow`
 
-Plugin skills are bilingual — they detect the user's language and respond accordingly.
+Plugin skills are bilingual and detect the user's language automatically.
+
+## Publish Analysis to GitHub Wiki
+
+For this repository itself, use the root helper:
+
+```bash
+scripts/publish_wiki.sh --session-id analyze-20260308-120027
+scripts/publish_wiki.sh --dry-run
+```
+
+When `source-analyzer` is installed as a runtime skill, the distributed wiki publishers live at:
+
+- `codex/skills/source-analyzer/shared/scripts/publish_wiki.sh`
+- `claude-code/plugin/scripts/publish_wiki.sh`
+
+Those distributed scripts support `--project-dir <path>` so they can publish analysis outputs from another checked-out project.
 
 ## Skill Root Convention
 
 ### Codex skills
 
-```bash
+```text
 <skill-name>/
-  SKILL.md             # single skill file — auto-detects user's language
+  SKILL.md
   agents/
     openai.yaml
   shared/
@@ -156,19 +187,19 @@ Plugin skills are bilingual — they detect the user's language and respond acco
 
 ### Claude Code plugin skills
 
-```bash
+```text
 <skill-name>/
-  SKILL.md       # bilingual — detects user's language automatically
+  SKILL.md
 ```
 
 Shared references live in `claude-code/plugin/references/` and are referenced by all plugin skills.
 
-Use `.codex/skills/skill-generator` when you want to generate a new Codex skill that follows the language-variant convention.
+Use `.codex/skills/skill-generator` when you want to generate a new Codex skill that follows the repository convention.
 
 ## Notes
 
 - Codex discovers runtime skills from `~/.codex/skills`.
 - Claude Code installs skills via plugin marketplace.
-- The `.codex/skills/skill-generator` helper is repository-specific and intended for skill authors.
+- `.analysis/outputs/` contains publishable, git-trackable analysis outputs.
 - Release history is tracked in `CHANGELOG.md`.
 - Licensing is provided in `LICENSE`.

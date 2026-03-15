@@ -91,6 +91,16 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("/plugin marketplace add", readme)
         self.assertIn("/plugin install", readme)
 
+    def test_public_repo_readme_matches_current_release_and_flat_layout(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        version = (REPO_ROOT / "VERSION.txt").read_text(encoding="utf-8").strip()
+
+        self.assertIn(f"Current release: `{version}`", readme)
+        self.assertNotIn("skill-generator/\n      README.md", readme)
+        self.assertNotIn("ko/", readme)
+        self.assertNotIn("en/", readme)
+        self.assertIn("scripts/publish_wiki.sh", readme)
+
     # --- Plugin marketplace tests ---
 
     def test_plugin_manifest_exists_and_is_valid_json(self):
