@@ -9,6 +9,9 @@ SKILL_GENERATOR_ROOT = REPO_ROOT / ".codex" / "skills" / "skill-generator"
 PUBLIC_SKILLS_ROOT = REPO_ROOT / "codex" / "skills"
 CLAUDE_CODE_PLUGIN_ROOT = REPO_ROOT / "claude-code" / "plugin"
 MARKETPLACE_ROOT = REPO_ROOT / ".claude-plugin"
+CODEX_PLUGIN_MARKETPLACE_ROOT = REPO_ROOT / ".agents" / "plugins"
+CODEX_PLUGIN_ROOT = REPO_ROOT / "plugins" / "source-analyzer-tools"
+SOURCE_ANALYZER_MCP_ROOT = REPO_ROOT / "servers" / "source-analyzer-mcp"
 EXPECTED_PUBLIC_SKILLS = {
     "source-analyzer",
     "implement",
@@ -180,6 +183,60 @@ class SkillRepositoryContractTests(unittest.TestCase):
     def test_plugin_source_analyzer_uses_claude_plugin_root(self):
         content = (CLAUDE_CODE_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("CLAUDE_PLUGIN_ROOT", content)
+
+    def test_claude_plugin_mcp_config_exists(self):
+        self.assertTrue((CLAUDE_CODE_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing .mcp.json in Claude plugin")
+
+    def test_codex_plugin_marketplace_exists(self):
+        marketplace_path = CODEX_PLUGIN_MARKETPLACE_ROOT / "marketplace.json"
+        self.assertTrue(marketplace_path.exists(), msg="missing Codex marketplace.json")
+        import json
+
+        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+        plugin_names = {item["name"] for item in marketplace["plugins"]}
+        self.assertIn("source-analyzer-tools", plugin_names)
+
+    def test_codex_plugin_bundle_exists(self):
+        self.assertTrue((CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json").exists(), msg="missing Codex plugin manifest")
+        self.assertTrue((CODEX_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing Codex plugin MCP config")
+        self.assertTrue((CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py").exists())
+
+    def test_source_analyzer_search_script_exists(self):
+        self.assertTrue(
+            (SOURCE_ANALYZER_ROOT / "shared" / "scripts" / "source_analyzer_search.py").exists(),
+            msg="missing source_analyzer_search.py in codex distribution",
+        )
+
+    def test_source_analyzer_mcp_sync_script_exists(self):
+        self.assertTrue((REPO_ROOT / "scripts" / "sync_source_analyzer_mcp.sh").exists())
+
+    def test_source_analyzer_search_sources_are_synced(self):
+        canonical_search = (SOURCE_ANALYZER_MCP_ROOT / "source_analyzer_search.py").read_text(encoding="utf-8")
+        for path in [
+            SOURCE_ANALYZER_ROOT / "shared" / "scripts" / "source_analyzer_search.py",
+            SOURCE_ANALYZER_ROOT / "shared" / "mcp" / "source-analyzer-mcp" / "source_analyzer_search.py",
+            CLAUDE_CODE_PLUGIN_ROOT / "scripts" / "source_analyzer_search.py",
+            CLAUDE_CODE_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "source_analyzer_search.py",
+            CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "source_analyzer_search.py",
+        ]:
+            self.assertEqual(
+                canonical_search,
+                path.read_text(encoding="utf-8"),
+                msg=f"search source drift detected: {path}",
+            )
+
+    def test_source_analyzer_mcp_server_sources_are_synced(self):
+        canonical_server = (SOURCE_ANALYZER_MCP_ROOT / "server.py").read_text(encoding="utf-8")
+        for path in [
+            SOURCE_ANALYZER_ROOT / "shared" / "mcp" / "source-analyzer-mcp" / "server.py",
+            CLAUDE_CODE_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py",
+            CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py",
+        ]:
+            self.assertEqual(
+                canonical_server,
+                path.read_text(encoding="utf-8"),
+                msg=f"server source drift detected: {path}",
+            )
 
 
 if __name__ == "__main__":

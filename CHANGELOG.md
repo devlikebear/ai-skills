@@ -2,6 +2,28 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.0 - 2026-04-05
+
+### Added
+
+- Added a local `source-analyzer-search` MCP server under `servers/source-analyzer-mcp/`.
+  - Exposes overview, module lookup, hybrid search, dependency tracing, issue-candidate lookup, checkpoint reads, and session state queries.
+  - Supports direct-scan fallback when `.analysis/cache/source-analyzer-search/` is missing.
+- Added `generate-search-index` to `checkpoint_manager.py`.
+  - Produces `search-documents.jsonl`, `chunk-manifest.json`, `file-to-chunks.json`, `output-to-chunks.json`, and `index-metadata.json`.
+  - Tracks `dirty_files` and `last_indexed_commit` in session state for incremental retrieval context.
+- Added Claude Code MCP bundle support through `claude-code/plugin/.mcp.json`.
+- Added Codex MCP distribution artifacts:
+  - skill installer support via `scripts/install_codex_skill.sh source-analyzer --with-mcp`
+  - local plugin bundle under `plugins/source-analyzer-tools/`
+  - local marketplace manifest under `.agents/plugins/marketplace.json`
+- Added tests covering search index generation, MCP request handling, installer MCP registration, and repository contract checks for MCP assets.
+
+### Changed
+
+- Updated README and development guide for the new search MCP workflow, installation paths, and release metadata.
+- Updated `source-analyzer` skill docs in both Codex and Claude distributions to describe `.analysis/cache/source-analyzer-search/` and the post-analysis search-index step.
+
 ## 0.9.0 - 2026-03-15
 
 ### Added

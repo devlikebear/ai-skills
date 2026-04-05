@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.9.0`
+Current release: `0.10.0`
 
 ## Overview
 
@@ -10,6 +10,7 @@ Current release: `0.9.0`
 - Codex skills use a flat runtime layout: one `SKILL.md`, one `agents/openai.yaml`, and optional `shared/`.
 - Claude Code skills are distributed through the `code-workflow` plugin with bilingual `SKILL.md` files and shared `references/`.
 - `source-analyzer` produces resumable `.analysis/` outputs and now ships a wiki publisher alongside its checkpoint manager.
+- `source-analyzer` also ships a local search MCP server for querying analysis outputs and checkpoints.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 - Public Codex skill roots:
   - `codex/skills/source-analyzer`
@@ -52,6 +53,7 @@ claude-code/
   plugin/
     .claude-plugin/
       plugin.json
+    .mcp.json
     skills/
       source-analyzer/
       implement/
@@ -61,8 +63,19 @@ claude-code/
       github-flow/
     references/
     scripts/
+.agents/
+  plugins/
+    marketplace.json
 .claude-plugin/
   marketplace.json
+plugins/
+  source-analyzer-tools/
+    .codex-plugin/
+      plugin.json
+    .mcp.json
+    servers/
+servers/
+  source-analyzer-mcp/
 .codex/
   skills/
     skill-generator/
@@ -70,6 +83,7 @@ claude-code/
       agents/
 scripts/
   install_codex_skill.sh
+  sync_source_analyzer_mcp.sh
   publish_wiki.sh
 tests/
 ```
@@ -85,6 +99,8 @@ tests/
 - Produces resumable outputs under `.analysis/sessions/` and published outputs under `.analysis/outputs/`.
 - Supports `analyze`, `refactor-guide`, and `overhaul` modes.
 - Ships `checkpoint_manager.py` and `publish_wiki.sh` in both Codex and Claude Code distributions.
+- Can build a local search cache under `.analysis/cache/source-analyzer-search/`.
+- Ships a local MCP server that exposes search, module lookup, dependency tracing, and checkpoint/session queries.
 
 ### `implement`
 
@@ -125,12 +141,22 @@ Clone this repository, then install one or more skills into your local Codex hom
 ```bash
 scripts/install_codex_skill.sh --list
 scripts/install_codex_skill.sh source-analyzer
+scripts/install_codex_skill.sh source-analyzer --with-mcp
 scripts/install_codex_skill.sh implement
 scripts/install_codex_skill.sh --all
 ```
 
 By default the installer copies skills into `${CODEX_HOME:-$HOME/.codex}/skills`.
 Each skill is a single `SKILL.md` that responds in the user's language automatically.
+For `source-analyzer`, `--with-mcp` also registers `source-analyzer-search` via `codex mcp add ...`.
+
+The repo also includes a Codex plugin bundle artifact:
+
+- `.agents/plugins/marketplace.json`
+- `plugins/source-analyzer-tools/`
+
+Canonical MCP sources live under `servers/source-analyzer-mcp/`.
+Use `scripts/sync_source_analyzer_mcp.sh` when bundle copies need to be refreshed.
 
 ## Install via Plugin Marketplace (Claude Code)
 
@@ -154,6 +180,17 @@ After installation the following skills are available:
 - `/code-workflow:github-flow`
 
 Plugin skills are bilingual and detect the user's language automatically.
+The plugin now also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.
+
+## Build Search Cache
+
+After `source-analyzer` publishes outputs, generate the optional search cache for MCP retrieval:
+
+```bash
+python3 codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py generate-search-index
+```
+
+If the cache is missing, the MCP server can still fall back to direct scanning of `.analysis/outputs/`.
 
 ## Publish Analysis to GitHub Wiki
 
@@ -199,7 +236,9 @@ Use `.codex/skills/skill-generator` when you want to generate a new Codex skill 
 ## Notes
 
 - Codex discovers runtime skills from `~/.codex/skills`.
+- Codex MCP servers can be registered directly with `codex mcp add ...`.
 - Claude Code installs skills via plugin marketplace.
 - `.analysis/outputs/` contains publishable, git-trackable analysis outputs.
+- `.analysis/cache/source-analyzer-search/` contains local search indexes for MCP retrieval.
 - Release history is tracked in `CHANGELOG.md`.
 - Licensing is provided in `LICENSE`.
