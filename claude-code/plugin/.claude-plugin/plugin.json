@@ -10,14 +10,11 @@
   "keywords": ["code-review", "refactoring", "planning", "implementation", "source-analysis"],
   "mcpServers": {
     "source-analyzer-search": {
-      "command": "uvx",
+      "command": "/bin/zsh",
       "args": [
-        "--from", "git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp",
-        "source-analyzer-search"
-      ],
-      "env": {
-        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
-      }
+        "-l", "-c",
+        "exec uvx --from 'git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp' source-analyzer-search"
+      ]
     }
   }
 }
