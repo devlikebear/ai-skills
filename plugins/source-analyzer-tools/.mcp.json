@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "source-analyzer-search": {
+      "command": "python3",
+      "args": ["./servers/source-analyzer-mcp/server.py"]
+    }
+  }
+}

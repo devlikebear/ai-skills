@@ -7,6 +7,7 @@ Reusable AI-agent skills for code workflow automation. Ships two distributions:
 - **Claude Code plugin**: `claude-code/plugin/` — plugin with `skills/`, `references/`, `scripts/`
 
 Both distributions share the same `checkpoint_manager.py` — always keep them identical.
+Canonical MCP sources live under `servers/source-analyzer-mcp/` and should be copied into bundle/runtime locations with `scripts/sync_source_analyzer_mcp.sh`.
 
 ## Release workflow — MUST follow on every change
 
@@ -19,7 +20,8 @@ Update ALL of these files — they must stay in sync:
 1. `VERSION.txt`
 2. `.claude-plugin/marketplace.json` (two `"version"` fields)
 3. `claude-code/plugin/.claude-plugin/plugin.json` (one `"version"` field)
-4. `CHANGELOG.md` (add new entry at top with date and changes)
+4. `plugins/source-analyzer-tools/.codex-plugin/plugin.json` (one `"version"` field when the Codex bundle changes)
+5. `CHANGELOG.md` (add new entry at top with date and changes)
 
 ### Versioning scheme
 
@@ -42,6 +44,9 @@ When modifying source-analyzer or shared scripts:
 - `checkpoint_manager.py` must be identical in both locations:
   - `codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py`
   - `claude-code/plugin/scripts/checkpoint_manager.py`
+- `source_analyzer_search.py` must be identical in both locations:
+  - `codex/skills/source-analyzer/shared/scripts/source_analyzer_search.py`
+  - `claude-code/plugin/scripts/source_analyzer_search.py`
 - SKILL.md differs only in reference paths and checkpoint script path:
   - Codex: `shared/references/...`, `$CODEX_HOME` path
   - Claude: `../../references/...` relative links, `$CLAUDE_PLUGIN_ROOT` path
@@ -66,11 +71,15 @@ VERSION.txt                              ← single source of version
 CHANGELOG.md                             ← release notes
 .claude-plugin/marketplace.json          ← plugin marketplace manifest
 claude-code/plugin/.claude-plugin/plugin.json ← plugin manifest
+claude-code/plugin/.mcp.json             ← Claude plugin MCP config
 claude-code/plugin/skills/               ← Claude Code skills
 claude-code/plugin/references/           ← shared references (Claude)
 claude-code/plugin/scripts/              ← shared scripts (Claude)
+plugins/source-analyzer-tools/           ← Codex MCP plugin bundle
+.agents/plugins/marketplace.json         ← Codex local marketplace manifest
 codex/skills/                            ← Codex skills
 tests/                                   ← test suite
+scripts/sync_source_analyzer_mcp.sh      ← sync MCP server copies
 ```
 
 ## Codebase Analysis

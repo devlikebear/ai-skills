@@ -14,6 +14,7 @@ description: "Analyze existing source code and generate beginner-friendly archit
 - `shared/references/overhaul-template.md`: system overhaul proposal structure.
 - `shared/references/checkpoint-template.md`: manual checkpoint fallback.
 - `shared/scripts/checkpoint_manager.py`: resumable checkpoint session manager.
+- `shared/scripts/source_analyzer_search.py`: search chunk builder and retrieval helpers for MCP.
 - `shared/scripts/publish_wiki.sh`: publish analysis outputs to GitHub wiki.
 
 ## Language policy
@@ -27,6 +28,13 @@ description: "Analyze existing source code and generate beginner-friendly archit
 .analysis/
 ├── RESUME.md              ← resume pointer (git-tracked)
 ├── AI_CONTEXT.md          ← AI discovery file (git-tracked)
+├── cache/                 ← search index cache (git-ignored)
+│   └── source-analyzer-search/
+│       ├── search-documents.jsonl
+│       ├── chunk-manifest.json
+│       ├── file-to-chunks.json
+│       ├── output-to-chunks.json
+│       └── index-metadata.json
 ├── outputs/               ← published stable outputs (git-tracked)
 │   ├── overview.md
 │   ├── architecture.md
@@ -51,6 +59,7 @@ description: "Analyze existing source code and generate beginner-friendly archit
 ```
 
 - `sessions/` contains transient analysis state and should be in `.gitignore`.
+- `cache/` contains search indexes for MCP retrieval and should be in `.gitignore`.
 - `outputs/` at the root level contains published (stable) results and should be committed to git.
 - Outputs are published automatically when a checkpoint is written with status `paused` or `completed`.
 - Manual publish: `python3 "$CHECKPOINT_SCRIPT" publish`.
@@ -97,6 +106,8 @@ python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --statu
 python3 "$CHECKPOINT_SCRIPT" publish
 # Generate AI-consumable summary
 python3 "$CHECKPOINT_SCRIPT" generate-summary
+# Generate search index for MCP retrieval
+python3 "$CHECKPOINT_SCRIPT" generate-search-index
 ```
 
 ## Analyze mode
@@ -120,6 +131,7 @@ After completing each module analysis chunk, update the structured JSON outputs 
 - `dependency-graph.json`: for each visited source file, record its import/dependency targets as an array. Use relative paths from project root.
 - `module-map.json`: for each logical module (directory group), record path prefix, one-line responsibility, and list of key files.
 - `SUMMARY.json`: auto-generated via `python3 "$CHECKPOINT_SCRIPT" generate-summary`. Run this after the final checkpoint or at each pause.
+- Search index cache: generated via `python3 "$CHECKPOINT_SCRIPT" generate-search-index` and stored under `.analysis/cache/source-analyzer-search/`.
 
 ## Refactor-guide mode
 
@@ -221,7 +233,8 @@ When the session reaches `completed` or `paused` status, generate a context file
 
 1. Run `python3 "$CHECKPOINT_SCRIPT" generate-summary` to produce `outputs/SUMMARY.json`.
 2. Run `python3 "$CHECKPOINT_SCRIPT" publish` (or rely on auto-publish from checkpoint).
-3. Write `.analysis/AI_CONTEXT.md` with the following structure:
+3. Run `python3 "$CHECKPOINT_SCRIPT" generate-search-index` when MCP-based retrieval should use this analysis.
+4. Write `.analysis/AI_CONTEXT.md` with the following structure:
 
 ```markdown
 # Codebase Analysis Context
@@ -262,7 +275,26 @@ When the session reaches `completed` or `paused` status, generate a context file
    Read it first when you need to understand the project structure, dependencies, or key data flows.
    ```
 
-   If none of these files exist, create `AGENTS.md` with the block above and inform the user.
+If none of these files exist, create `AGENTS.md` with the block above and inform the user.
+
+## Search MCP integration
+
+- When the `source-analyzer-search` MCP server is installed, prefer MCP tools/resources over re-reading every analysis file.
+- Build or refresh the cache with:
+  ```bash
+  python3 "$CHECKPOINT_SCRIPT" generate-search-index
+  ```
+- If the cache is missing, the MCP server may fall back to direct scanning of `.analysis/outputs/` and checkpoints.
+- MCP resource examples:
+  - `analysis://overview`
+  - `analysis://architecture`
+  - `analysis://module-map`
+  - `analysis://modules/<name>`
+- MCP tool examples:
+  - `analysis.search`
+  - `analysis.get_module`
+  - `analysis.trace_dependencies`
+  - `analysis.get_issue_candidates`
 
 ## Publishing to GitHub Wiki
 
@@ -292,7 +324,7 @@ The script generates:
 ## Constraints
 
 - Never modify analyzed source files.
-- Update only `.analysis/` outputs while running this skill.
+- Update only `.analysis/` outputs and `.analysis/cache/` while running this skill.
 - Only analyze files committed to git (`git ls-tree -r HEAD --name-only`). Ignore uncommitted/unstaged changes.
 - Exclude non-source paths by default: `.analysis/`, `.codex/`, `.claude/`, `.git/`, `vendor/`, `node_modules/`, `.venv/`, `__pycache__/`, `dist/`, `build/`. Pass `--exclude` to add more patterns.
 - Every checkpoint must contain at least one of: visited files, output files, summary text, or next actions. Empty checkpoints are rejected.

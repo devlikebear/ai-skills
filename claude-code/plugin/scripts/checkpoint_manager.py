@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import shutil
@@ -118,9 +119,13 @@ def commit_hash_valid(commit: str) -> bool:
 def migrate_state(state: dict[str, Any]) -> dict[str, Any]:
     """v1 → v2 마이그레이션: commit_hash 필드 추가."""
     if state.get("version", 1) >= 2:
+        state.setdefault("dirty_files", [])
+        state.setdefault("last_indexed_commit", None)
         return state
     state["version"] = 2
     state["commit_hash"] = None
+    state["dirty_files"] = []
+    state["last_indexed_commit"] = None
     return state
 
 
@@ -293,6 +298,8 @@ def init_session(
         "frontier": [],
         "outputs": [],
         "checkpoints": [],
+        "dirty_files": [],
+        "last_indexed_commit": None,
     }
 
     save_state(analysis_dir, final_session_id, state)
@@ -458,6 +465,7 @@ def sync_session(
     state["visited"] = [v for v in state.get("visited", []) if v in visited_set]
 
     state["frontier"] = dedupe_keep_order(list(state.get("frontier", [])) + changed)
+    state["dirty_files"] = dedupe_keep_order(list(state.get("dirty_files", [])) + changed)
     state["commit_hash"] = new_commit
     state["updated_at"] = now_iso()
     save_state(analysis_dir, session_id, state)
@@ -580,6 +588,27 @@ def generate_summary(analysis_dir: Path, session_id: str) -> dict[str, Any]:
     return summary
 
 
+def load_search_module() -> Any:
+    module_path = Path(__file__).with_name("source_analyzer_search.py")
+    spec = importlib.util.spec_from_file_location("source_analyzer_search", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"failed to load search module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def generate_search_index_for_session(analysis_dir: Path, session_id: str) -> dict[str, Any]:
+    search_module = load_search_module()
+    result = search_module.generate_search_index(analysis_dir, session_id=session_id)
+    state = migrate_state(load_state(analysis_dir, session_id))
+    state["dirty_files"] = []
+    state["last_indexed_commit"] = state.get("commit_hash")
+    state["updated_at"] = now_iso()
+    save_state(analysis_dir, session_id, state)
+    return result
+
+
 def migrate_layout(analysis_dir: Path) -> dict[str, Any]:
     """Migrate from old layout (outputs inside sessions) to new layout.
 
@@ -678,6 +707,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     summary_parser.add_argument("--session-id")
     summary_parser.add_argument("--mode", choices=["analyze", "refactor-guide", "overhaul"])
 
+    search_index_parser = subparsers.add_parser("generate-search-index", help="Generate search index artifacts for MCP retrieval.")
+    search_index_parser.add_argument("--analysis-dir", default=".analysis")
+    search_index_parser.add_argument("--session-id")
+    search_index_parser.add_argument("--mode", choices=["analyze", "refactor-guide", "overhaul"])
+
     publish_parser = subparsers.add_parser("publish", help="Copy session outputs to .analysis/outputs/ for git tracking.")
     publish_parser.add_argument("--analysis-dir", default=".analysis")
     publish_parser.add_argument("--session-id")
@@ -750,6 +784,15 @@ def cli(argv: list[str]) -> int:
         resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
         summary = generate_summary(analysis_dir, resolved_session_id)
         print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "generate-search-index":
+        resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
+        result = generate_search_index_for_session(analysis_dir, resolved_session_id)
+        print(f"session_id={resolved_session_id}")
+        print(f"chunk_count={result['chunk_count']}")
+        print(f"output_count={result['output_count']}")
+        print(f"generated_at={result['generated_at']}")
         return 0
 
     if args.command == "publish":
