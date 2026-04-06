@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.10.1`
+Current release: `0.10.3`
 
 ## Overview
 
@@ -205,7 +205,8 @@ The plugin now also bundles `source-analyzer-search` through `claude-code/plugin
 
 ## Build Search Cache
 
-After `source-analyzer` publishes outputs, generate the optional search cache for MCP retrieval:
+`source-analyzer` now auto-generates the search cache when outputs are published on `paused` or `completed` checkpoints.
+If you already finished analysis earlier, you can still generate or rebuild the index manually:
 
 ```bash
 python3 codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py generate-search-index

@@ -527,7 +527,7 @@ def publish_outputs(analysis_dir: Path, session_id: str) -> dict[str, Any]:
     published_dir = analysis_dir / "outputs"
 
     if not session_outputs.exists():
-        return {"session_id": session_id, "published": [], "target": str(published_dir)}
+        return {"session_id": session_id, "published": [], "target": str(published_dir), "search_index": None}
 
     published_dir.mkdir(parents=True, exist_ok=True)
 
@@ -541,10 +541,13 @@ def publish_outputs(analysis_dir: Path, session_id: str) -> dict[str, Any]:
         shutil.copy2(item, dest)
         published.append(str(rel))
 
+    search_index = generate_search_index_for_session(analysis_dir, session_id)
+
     return {
         "session_id": session_id,
         "published": published,
         "target": str(published_dir),
+        "search_index": search_index,
     }
 
 

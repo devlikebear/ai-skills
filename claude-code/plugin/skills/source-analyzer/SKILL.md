@@ -133,7 +133,7 @@ After completing each module analysis chunk, update the structured JSON outputs 
 - `dependency-graph.json`: for each visited source file, record its import/dependency targets as an array. Use relative paths from project root.
 - `module-map.json`: for each logical module (directory group), record path prefix, one-line responsibility, and list of key files.
 - `SUMMARY.json`: auto-generated via `python3 "$CHECKPOINT_SCRIPT" generate-summary`. Run this after the final checkpoint or at each pause.
-- Search index cache: generated via `python3 "$CHECKPOINT_SCRIPT" generate-search-index` and stored under `.analysis/cache/source-analyzer-search/`.
+- Search index cache: auto-generated when outputs are published on `paused` or `completed` checkpoints, and can also be rebuilt manually via `python3 "$CHECKPOINT_SCRIPT" generate-search-index`. Files are stored under `.analysis/cache/source-analyzer-search/`.
 
 ## Refactor-guide mode
 
@@ -235,7 +235,7 @@ When the session reaches `completed` or `paused` status, generate a context file
 
 1. Run `python3 "$CHECKPOINT_SCRIPT" generate-summary` to produce `outputs/SUMMARY.json`.
 2. Run `python3 "$CHECKPOINT_SCRIPT" publish` (or rely on auto-publish from checkpoint).
-3. Run `python3 "$CHECKPOINT_SCRIPT" generate-search-index` when MCP-based retrieval should use this analysis.
+3. Search index generation happens automatically on publish. If this analysis was completed before the MCP cache existed, or if you need to rebuild it, run `python3 "$CHECKPOINT_SCRIPT" generate-search-index`.
 4. Write `.analysis/AI_CONTEXT.md` with the following structure:
 
 ```markdown
