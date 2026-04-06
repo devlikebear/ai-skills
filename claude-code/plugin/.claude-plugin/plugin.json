@@ -14,7 +14,10 @@
       "args": [
         "--from", "git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp",
         "source-analyzer-search"
-      ]
+      ],
+      "env": {
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
+      }
     }
   }
 }
