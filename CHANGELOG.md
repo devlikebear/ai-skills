@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.4 - 2026-04-07
+
+### Fixed
+
+- Move MCP server config from external `.mcp.json` to inline `mcpServers` in `plugin.json`, fixing `${CLAUDE_PLUGIN_ROOT}` template resolution failures. Claude Code only performs variable substitution on inline definitions, not on externally referenced `.mcp.json` files.
+- Revert the `bash -c` workaround from 0.10.3 back to the standard `python3` + `args` pattern, matching working plugins (claude-mnemonic, typegraph-mcp).
+
 ## 0.10.3 - 2026-04-06
 
 ### Fixed
