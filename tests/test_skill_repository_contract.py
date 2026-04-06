@@ -196,7 +196,9 @@ class SkillRepositoryContractTests(unittest.TestCase):
 
         config = json.loads((CLAUDE_CODE_PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
         server = config["mcpServers"]["source-analyzer-search"]
-        self.assertEqual(server["command"], "python3")
+        self.assertEqual(server["command"], "bash")
+        self.assertEqual(server["args"][0], "-c")
+        self.assertIn("$CLAUDE_PLUGIN_ROOT/servers/source-analyzer-mcp/server.py", server["args"][1])
         self.assertIn("PATH", server.get("env", {}))
 
     def test_codex_plugin_marketplace_exists(self):

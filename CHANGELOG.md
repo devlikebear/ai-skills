@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.3 - 2026-04-06
+
+### Fixed
+
+- Claude Code plugin MCP startup now uses a `bash -c` wrapper so `$CLAUDE_PLUGIN_ROOT` expands correctly when launching `source-analyzer-search`.
+- This avoids connection failures caused by `${CLAUDE_PLUGIN_ROOT}` being passed through literally inside `.mcp.json` args.
+
 ## 0.10.2 - 2026-04-06
 
 ### Fixed

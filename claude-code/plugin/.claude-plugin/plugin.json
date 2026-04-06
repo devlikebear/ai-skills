@@ -1,7 +1,7 @@
 {
   "name": "code-workflow",
   "description": "Code workflow skills for planning, implementing, reviewing, refactoring, and analyzing source code",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "author": {
     "name": "devlikebear"
   },
