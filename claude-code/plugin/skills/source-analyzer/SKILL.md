@@ -323,6 +323,53 @@ The script generates:
 - A `Home.md` with document and module tables.
 - A `_Sidebar.md` for navigation.
 
+## Setup MCP server (`--setup-mcp`)
+
+When the user runs `/code-workflow:source-analyzer --setup-mcp`, install the `source-analyzer-search` MCP server into the current project.
+
+### Steps
+
+1. **Find uvx or python3**:
+   ```bash
+   UVX_PATH=$(which uvx 2>/dev/null) && echo "found uvx: $UVX_PATH"
+   PYTHON_PATH=$(which python3 2>/dev/null) && echo "found python3: $PYTHON_PATH"
+   ```
+
+2. **Choose strategy** (prefer uvx, fallback to python3):
+   - If `uvx` found: use `uvx --from git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp source-analyzer-search`
+   - If only `python3` found: use `python3 ${CLAUDE_PLUGIN_ROOT}/servers/source-analyzer-mcp/server.py`
+
+3. **Test the server starts**:
+   ```bash
+   echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | python3 -c "
+   import json,sys
+   msg=json.dumps(json.loads(sys.stdin.read())).encode()
+   sys.stdout.buffer.write(f'Content-Length: {len(msg)}\r\n\r\n'.encode())
+   sys.stdout.buffer.write(msg)
+   sys.stdout.buffer.flush()
+   " | timeout 5 <CHOSEN_COMMAND> 2>&1
+   ```
+   Verify the response contains `"serverInfo"`.
+
+4. **Register via `claude mcp add`** using the absolute path found in step 1:
+   - uvx strategy:
+     ```bash
+     claude mcp add source-analyzer-search --scope project -- "$UVX_PATH" --from 'git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp' source-analyzer-search
+     ```
+   - python3 strategy:
+     ```bash
+     claude mcp add source-analyzer-search --scope project -- "$PYTHON_PATH" "${CLAUDE_PLUGIN_ROOT}/servers/source-analyzer-mcp/server.py"
+     ```
+
+5. **Verify** the `.mcp.json` was created in the project root and report success.
+
+6. **Generate search index** if `.analysis/outputs/` exists:
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py" generate-search-index
+   ```
+
+After setup, tell the user to run `/mcp` to connect. The MCP server will be project-scoped and use absolute paths that work on their machine.
+
 ## Constraints
 
 - Never modify analyzed source files.

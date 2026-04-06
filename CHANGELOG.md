@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.6 - 2026-04-07
+
+### Changed
+
+- Remove bundled `mcpServers` from `plugin.json`. The MCP server is no longer auto-started by the plugin because Claude Code desktop spawns subprocesses with a minimal PATH that may not include `uvx` or `python3` from Homebrew or user-installed locations.
+- Add `--setup-mcp` argument to the `source-analyzer` skill. This runs interactively in the user's shell, finds `uvx`/`python3` absolute paths, tests the server, and registers it via `claude mcp add --scope project` with absolute paths that work on the user's machine.
+
 ## 0.10.5 - 2026-04-07
 
 ### Fixed

@@ -1,20 +1,11 @@
 {
   "name": "code-workflow",
   "description": "Code workflow skills for planning, implementing, reviewing, refactoring, and analyzing source code",
-  "version": "0.10.5",
+  "version": "0.10.6",
   "author": {
     "name": "devlikebear"
   },
   "repository": "https://github.com/devlikebear/ai-skills",
   "license": "MIT",
-  "keywords": ["code-review", "refactoring", "planning", "implementation", "source-analysis"],
-  "mcpServers": {
-    "source-analyzer-search": {
-      "command": "/bin/zsh",
-      "args": [
-        "-l", "-c",
-        "exec uvx --from 'git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp' source-analyzer-search"
-      ]
-    }
-  }
+  "keywords": ["code-review", "refactoring", "planning", "implementation", "source-analysis"]
 }
