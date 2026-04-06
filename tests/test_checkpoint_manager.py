@@ -451,6 +451,8 @@ class PublishOutputsTests(unittest.TestCase):
             self.assertTrue((published_dir / "overview.md").exists())
             self.assertTrue((published_dir / "architecture.md").exists())
             self.assertTrue((published_dir / "modules" / "auth.md").exists())
+            self.assertIsNotNone(result["search_index"])
+            self.assertTrue((analysis_dir / "cache" / "source-analyzer-search" / "search-documents.jsonl").exists())
 
     def test_checkpoint_paused_auto_publishes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -467,9 +469,11 @@ class PublishOutputsTests(unittest.TestCase):
 
             self.assertIsNotNone(result["published"])
             self.assertIn("overview.md", result["published"]["published"])
+            self.assertIsNotNone(result["published"]["search_index"])
 
             # Verify published outputs exist
             self.assertTrue((analysis_dir / "outputs" / "overview.md").exists())
+            self.assertTrue((analysis_dir / "cache" / "source-analyzer-search" / "search-documents.jsonl").exists())
 
     def test_checkpoint_in_progress_does_not_publish(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -501,6 +505,7 @@ class PublishOutputsTests(unittest.TestCase):
 
             self.assertIsNotNone(result["published"])
             self.assertTrue((analysis_dir / "outputs" / "modules" / "auth.md").exists())
+            self.assertIsNotNone(result["published"]["search_index"])
 
     def test_ensure_layout_creates_outputs_dir(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
