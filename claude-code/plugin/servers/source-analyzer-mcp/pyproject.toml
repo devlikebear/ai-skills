@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "source-analyzer-search"
+version = "0.10.4"
+description = "MCP server for querying source-analyzer outputs and checkpoints"
+requires-python = ">=3.10"
+license = "MIT"
+
+[project.scripts]
+source-analyzer-search = "server:serve_stdio"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+only-include = ["server.py", "source_analyzer_search.py"]
