@@ -2,6 +2,12 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.5 - 2026-04-07
+
+### Fixed
+
+- Switch MCP server launch from `${CLAUDE_PLUGIN_ROOT}` path resolution to `uvx --from git+...` pattern. This eliminates all path-resolution issues by fetching the server as a Python package from the git repo at runtime (matching the trailofbits/serena pattern). Adds `pyproject.toml` with hatchling build and `source-analyzer-search` console script entry point.
+
 ## 0.10.4 - 2026-04-07
 
 ### Fixed
