@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.10.0`
+Current release: `0.10.1`
 
 ## Overview
 
@@ -150,6 +150,21 @@ By default the installer copies skills into `${CODEX_HOME:-$HOME/.codex}/skills`
 Each skill is a single `SKILL.md` that responds in the user's language automatically.
 For `source-analyzer`, `--with-mcp` also registers `source-analyzer-search` via `codex mcp add ...`.
 
+### Codex quickstart for `source-analyzer-search`
+
+```bash
+scripts/install_codex_skill.sh source-analyzer --with-mcp
+codex mcp list
+python3 ~/.codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py generate-search-index
+```
+
+After registration, Codex should list `source-analyzer-search` in `codex mcp list`.
+Once `.analysis/outputs/` and `.analysis/cache/source-analyzer-search/` exist, the agent can call:
+
+- `analysis.search` for natural-language retrieval across overview, architecture, module docs, issues, and checkpoints
+- `analysis.get_module` for a direct module doc or module-map lookup
+- `analysis.trace_dependencies` for dependency expansion from a file path
+
 The repo also includes a Codex plugin bundle artifact:
 
 - `.agents/plugins/marketplace.json`
@@ -182,6 +197,12 @@ After installation the following skills are available:
 Plugin skills are bilingual and detect the user's language automatically.
 The plugin now also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.
 
+### Claude Code quickstart for `source-analyzer-search`
+
+1. Run `/code-workflow:source-analyzer` and let it publish `.analysis/outputs/`.
+2. Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py" generate-search-index` inside the analyzed project.
+3. Ask Claude Code to use `analysis.search`, `analysis.get_module`, or `analysis.trace_dependencies` against that project.
+
 ## Build Search Cache
 
 After `source-analyzer` publishes outputs, generate the optional search cache for MCP retrieval:
@@ -191,6 +212,12 @@ python3 codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py genera
 ```
 
 If the cache is missing, the MCP server can still fall back to direct scanning of `.analysis/outputs/`.
+
+Example retrieval prompts once the MCP server is available:
+
+- `Use analysis.search to find the auth token validation flow.`
+- `Use analysis.get_module for auth and summarize the responsibilities.`
+- `Use analysis.trace_dependencies for src/auth.py with depth 2.`
 
 ## Publish Analysis to GitHub Wiki
 

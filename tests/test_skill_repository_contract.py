@@ -104,6 +104,12 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertNotIn("en/", readme)
         self.assertIn("scripts/publish_wiki.sh", readme)
 
+    def test_public_repo_readme_includes_mcp_usage_examples(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("codex mcp list", readme)
+        self.assertIn("analysis.search", readme)
+        self.assertIn("analysis.get_module", readme)
+
     # --- Plugin marketplace tests ---
 
     def test_plugin_manifest_exists_and_is_valid_json(self):
@@ -200,6 +206,11 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertTrue((CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json").exists(), msg="missing Codex plugin manifest")
         self.assertTrue((CODEX_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing Codex plugin MCP config")
         self.assertTrue((CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py").exists())
+
+    def test_codex_plugin_readme_includes_install_and_usage_examples(self):
+        plugin_readme = (CODEX_PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("scripts/install_codex_skill.sh source-analyzer --with-mcp", plugin_readme)
+        self.assertIn("codex mcp list", plugin_readme)
 
     def test_source_analyzer_search_script_exists(self):
         self.assertTrue(

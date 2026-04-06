@@ -2,6 +2,13 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.1 - 2026-04-06
+
+### Changed
+
+- Added more concrete install and usage examples for `source-analyzer-search` in the repository README and Codex plugin bundle README.
+- Bumped release metadata for the follow-up documentation release across marketplace and plugin manifests.
+
 ## 0.10.0 - 2026-04-05
 
 ### Added
