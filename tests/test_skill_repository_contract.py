@@ -65,6 +65,15 @@ class SkillRepositoryContractTests(unittest.TestCase):
                 msg=f"{skill_name} SKILL.md should use auto-detect language policy",
             )
 
+    def test_codex_source_analyzer_skill_documents_cli_and_mcp_search(self):
+        content = (SOURCE_ANALYZER_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("## Search CLI", content)
+        self.assertIn('python3 "$CHECKPOINT_SCRIPT" search "query text" --top-k 5', content)
+        self.assertIn('python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline', content)
+        self.assertIn("## Search MCP integration", content)
+        self.assertIn("analysis.search", content)
+        self.assertIn("If none of these files exist, create `AGENTS.md`", content)
+
     def test_skill_generator_wrapper_exists_in_dot_codex(self):
         self.assertTrue((SKILL_GENERATOR_ROOT / "SKILL.md").exists())
         self.assertTrue((SKILL_GENERATOR_ROOT / "agents" / "openai.yaml").exists())

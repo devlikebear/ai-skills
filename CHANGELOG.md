@@ -2,6 +2,14 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.8 - 2026-04-07
+
+### Changed
+
+- Sync the Codex `source-analyzer` distribution with the updated Claude plugin guidance while keeping Codex-specific MCP instructions intact.
+- Add JSON CLI search commands to the distributed Codex `checkpoint_manager.py`: `search`, `get-overview`, `get-module`, `trace-deps`, and `get-issues`.
+- Expand repository tests to cover the new Codex CLI commands and the combined CLI plus MCP documentation contract.
+
 ## 0.10.7 - 2026-04-07
 
 ### Changed

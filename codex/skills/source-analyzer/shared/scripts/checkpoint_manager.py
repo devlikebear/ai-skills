@@ -715,6 +715,32 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     search_index_parser.add_argument("--session-id")
     search_index_parser.add_argument("--mode", choices=["analyze", "refactor-guide", "overhaul"])
 
+    search_parser = subparsers.add_parser("search", help="Search published analysis outputs and checkpoints.")
+    search_parser.add_argument("--analysis-dir", default=".analysis")
+    search_parser.add_argument("--session-id")
+    search_parser.add_argument("query", nargs="?")
+    search_parser.add_argument("--query", dest="query_option")
+    search_parser.add_argument("--top-k", type=int, default=5)
+    search_parser.add_argument("--kinds", nargs="*", default=[])
+
+    overview_parser = subparsers.add_parser("get-overview", help="Get the published overview document.")
+    overview_parser.add_argument("--analysis-dir", default=".analysis")
+
+    module_parser = subparsers.add_parser("get-module", help="Get a published module document or module-map entry.")
+    module_parser.add_argument("--analysis-dir", default=".analysis")
+    module_parser.add_argument("--session-id")
+    module_parser.add_argument("name_or_path")
+
+    trace_parser = subparsers.add_parser("trace-deps", help="Trace dependencies for a file from dependency-graph.json.")
+    trace_parser.add_argument("--analysis-dir", default=".analysis")
+    trace_parser.add_argument("--session-id")
+    trace_parser.add_argument("path")
+    trace_parser.add_argument("--depth", type=int, default=1)
+
+    issues_parser = subparsers.add_parser("get-issues", help="List published issue candidates.")
+    issues_parser.add_argument("--analysis-dir", default=".analysis")
+    issues_parser.add_argument("--type", dest="issue_type")
+
     publish_parser = subparsers.add_parser("publish", help="Copy session outputs to .analysis/outputs/ for git tracking.")
     publish_parser.add_argument("--analysis-dir", default=".analysis")
     publish_parser.add_argument("--session-id")
@@ -796,6 +822,49 @@ def cli(argv: list[str]) -> int:
         print(f"chunk_count={result['chunk_count']}")
         print(f"output_count={result['output_count']}")
         print(f"generated_at={result['generated_at']}")
+        return 0
+
+    if args.command == "search":
+        search_module = load_search_module()
+        query = (getattr(args, "query_option", None) or getattr(args, "query", None) or "").strip()
+        if not query:
+            raise ValueError("search query is required")
+        results = search_module.search_analysis(
+            analysis_dir=analysis_dir,
+            query=query,
+            top_k=args.top_k,
+            kinds=args.kinds or None,
+            session_id=args.session_id,
+        )
+        print(json.dumps(results, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "get-overview":
+        search_module = load_search_module()
+        print(json.dumps(search_module.get_overview(analysis_dir), indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "get-module":
+        search_module = load_search_module()
+        result = search_module.get_module(analysis_dir, args.name_or_path)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "trace-deps":
+        search_module = load_search_module()
+        result = search_module.trace_dependencies(
+            analysis_dir=analysis_dir,
+            path=args.path,
+            depth=args.depth,
+            session_id=args.session_id,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "get-issues":
+        search_module = load_search_module()
+        result = search_module.get_issue_candidates(analysis_dir, issue_type=args.issue_type)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
     if args.command == "publish":

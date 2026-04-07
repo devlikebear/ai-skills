@@ -1,4 +1,6 @@
+import contextlib
 import importlib.util
+import io
 import json
 import tempfile
 import unittest
@@ -513,6 +515,151 @@ class PublishOutputsTests(unittest.TestCase):
             self.module.ensure_layout(analysis_dir)
             self.assertTrue((analysis_dir / "sessions").is_dir())
             self.assertTrue((analysis_dir / "outputs").is_dir())
+
+
+class SearchCliTests(unittest.TestCase):
+    def setUp(self):
+        self.module = load_module()
+
+    def _create_analysis_fixture(self, root: Path) -> tuple[Path, str]:
+        analysis_dir = root / ".analysis"
+        session_id = "analyze-20260407-120000"
+        with patch.object(self.module, "get_head_commit", return_value="abc123"):
+            self.module.init_session(
+                analysis_dir=analysis_dir,
+                mode="analyze",
+                scope="src",
+                session_id=session_id,
+                resume_if_exists=False,
+            )
+
+        outputs_dir = analysis_dir / "outputs"
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+        (outputs_dir / "overview.md").write_text(
+            "# Overview\n\n## Runtime\n\nThe runtime coordinates authentication and request handling.\n",
+            encoding="utf-8",
+        )
+        modules_dir = outputs_dir / "modules"
+        modules_dir.mkdir(parents=True, exist_ok=True)
+        (modules_dir / "auth.md").write_text(
+            "# Auth Module\n\nHandles authentication token validation and session lookups.\n",
+            encoding="utf-8",
+        )
+        (outputs_dir / "issue-candidates.md").write_text(
+            "### SEC-001: Missing auth validation\n\n"
+            "- Module: `src/auth.py`\n"
+            "- Type: `SEC`\n"
+            "- Evidence: Request tokens are accepted without validation.\n"
+            "- Suggested action: Enforce token verification before handler execution.\n",
+            encoding="utf-8",
+        )
+        (outputs_dir / "module-map.json").write_text(
+            json.dumps(
+                {
+                    "auth": {
+                        "path": "src/auth.py",
+                        "responsibility": "Validate tokens and load sessions.",
+                        "key_files": ["src/auth.py", "src/session_store.py"],
+                    }
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (outputs_dir / "dependency-graph.json").write_text(
+            json.dumps({"src/auth.py": ["src/session_store.py"]}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        self.module.generate_summary(analysis_dir, session_id)
+        self.module.generate_search_index_for_session(analysis_dir, session_id)
+        return analysis_dir, session_id
+
+    def _run_cli(self, argv: list[str]) -> tuple[int, str]:
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            exit_code = self.module.cli(argv)
+        return exit_code, stdout.getvalue()
+
+    def test_search_cli_returns_json_hits(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir, session_id = self._create_analysis_fixture(Path(tmp_dir))
+
+            exit_code, output = self._run_cli(
+                [
+                    "search",
+                    "--analysis-dir",
+                    str(analysis_dir),
+                    "--session-id",
+                    session_id,
+                    "--query",
+                    "missing auth validation",
+                    "--top-k",
+                    "2",
+                ]
+            )
+
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(output)
+            self.assertGreaterEqual(len(payload), 1)
+            self.assertEqual(payload[0]["kind"], "issue-candidate")
+
+    def test_get_module_cli_returns_module_content(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir, _session_id = self._create_analysis_fixture(Path(tmp_dir))
+
+            exit_code, output = self._run_cli(
+                [
+                    "get-module",
+                    "--analysis-dir",
+                    str(analysis_dir),
+                    "auth",
+                ]
+            )
+
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(output)
+            self.assertEqual(payload["path"], "outputs/modules/auth.md")
+            self.assertIn("token validation", payload["content"])
+
+    def test_trace_deps_cli_returns_dependency_chain(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir, _session_id = self._create_analysis_fixture(Path(tmp_dir))
+
+            exit_code, output = self._run_cli(
+                [
+                    "trace-deps",
+                    "--analysis-dir",
+                    str(analysis_dir),
+                    "src/auth.py",
+                    "--depth",
+                    "2",
+                ]
+            )
+
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(output)
+            self.assertEqual(payload["path"], "src/auth.py")
+            self.assertIn("src/session_store.py", payload["dependencies"])
+
+    def test_get_issues_cli_filters_by_type(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            analysis_dir, _session_id = self._create_analysis_fixture(Path(tmp_dir))
+
+            exit_code, output = self._run_cli(
+                [
+                    "get-issues",
+                    "--analysis-dir",
+                    str(analysis_dir),
+                    "--type",
+                    "SEC",
+                ]
+            )
+
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(output)
+            self.assertEqual(len(payload), 1)
+            self.assertEqual(payload[0]["issue_type"], "SEC")
 
 
 class MigrateLayoutTests(unittest.TestCase):
