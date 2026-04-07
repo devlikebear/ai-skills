@@ -14,7 +14,7 @@ description: "Analyze existing source code and generate beginner-friendly archit
 - `shared/references/overhaul-template.md`: system overhaul proposal structure.
 - `shared/references/checkpoint-template.md`: manual checkpoint fallback.
 - `shared/scripts/checkpoint_manager.py`: resumable checkpoint session manager.
-- `shared/scripts/source_analyzer_search.py`: search chunk builder and retrieval helpers for MCP.
+- `shared/scripts/source_analyzer_search.py`: search chunk builder and retrieval helpers for CLI and MCP.
 - `shared/scripts/publish_wiki.sh`: publish analysis outputs to GitHub wiki.
 
 ## Language policy
@@ -276,6 +276,40 @@ When the session reaches `completed` or `paused` status, generate a context file
    ```
 
 If none of these files exist, create `AGENTS.md` with the block above and inform the user.
+
+## Search CLI
+
+Use the built-in CLI search commands to query analysis outputs without opening files manually. All commands output JSON to stdout.
+
+```bash
+# Keyword search across all analysis outputs
+python3 "$CHECKPOINT_SCRIPT" search "query text" --top-k 5
+
+# Filter by chunk kind (section, issue, module, dependency-edges, etc.)
+python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --kinds section module
+
+# Get the published overview document
+python3 "$CHECKPOINT_SCRIPT" get-overview
+
+# Get a specific module document by name or path
+python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline
+python3 "$CHECKPOINT_SCRIPT" get-module internal/llm
+
+# Trace dependency chain for a file
+python3 "$CHECKPOINT_SCRIPT" trace-deps internal/llm/router.go --depth 3
+
+# List issue candidates (optionally filter by type: DUP, SEC, TIDY)
+python3 "$CHECKPOINT_SCRIPT" get-issues
+python3 "$CHECKPOINT_SCRIPT" get-issues --type SEC
+```
+
+The search index is built automatically when outputs are published on `paused` or `completed` checkpoints. To rebuild manually:
+
+```bash
+python3 "$CHECKPOINT_SCRIPT" generate-search-index
+```
+
+**Prefer CLI search over reading raw files** when you need to find specific topics, trace dependencies, or filter issues and MCP is unavailable.
 
 ## Search MCP integration
 
