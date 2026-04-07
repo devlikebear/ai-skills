@@ -1,11 +1,17 @@
 {
   "name": "code-workflow",
   "description": "Code workflow skills for planning, implementing, reviewing, refactoring, and analyzing source code",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "author": {
     "name": "devlikebear"
   },
   "repository": "https://github.com/devlikebear/ai-skills",
   "license": "MIT",
-  "keywords": ["code-review", "refactoring", "planning", "implementation", "source-analysis"]
+  "keywords": [
+    "code-review",
+    "refactoring",
+    "planning",
+    "implementation",
+    "source-analysis"
+  ]
 }

@@ -2,6 +2,14 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.10.7 - 2026-04-07
+
+### Changed
+
+- Replace MCP-based search with CLI subcommands on `checkpoint_manager.py`. New commands: `search`, `get-overview`, `get-module`, `trace-deps`, `get-issues`. All output JSON to stdout, work with any shell, require no MCP server setup.
+- Remove `--setup-mcp` skill argument and bundled MCP server auto-start. The MCP server code remains for users who want it, but the default path is now CLI.
+- Update `source-analyzer` SKILL.md: replace "Search MCP integration" section with "Search CLI" section documenting the new commands.
+
 ## 0.10.6 - 2026-04-07
 
 ### Changed

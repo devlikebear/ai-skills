@@ -279,24 +279,39 @@ When the session reaches `completed` or `paused` status, generate a context file
 
 If none of these files exist, create `CLAUDE.md` with the block above and inform the user.
 
-## Search MCP integration
+## Search CLI
 
-- When the bundled `source-analyzer-search` MCP server is enabled, prefer MCP tools/resources over reopening every analysis file manually.
-- Build or refresh the cache with:
-  ```bash
-  python3 "$CHECKPOINT_SCRIPT" generate-search-index
-  ```
-- If the cache is missing, the MCP server may fall back to direct scanning of `.analysis/outputs/` and checkpoints.
-- MCP resource examples:
-  - `analysis://overview`
-  - `analysis://architecture`
-  - `analysis://module-map`
-  - `analysis://modules/<name>`
-- MCP tool examples:
-  - `analysis.search`
-  - `analysis.get_module`
-  - `analysis.trace_dependencies`
-  - `analysis.get_issue_candidates`
+Use the built-in CLI search commands to query analysis outputs without opening files manually. All commands output JSON to stdout.
+
+```bash
+# Keyword search across all analysis outputs
+python3 "$CHECKPOINT_SCRIPT" search "query text" --top-k 5
+
+# Filter by chunk kind (section, issue, module, dependency-edges, etc.)
+python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --kinds section module
+
+# Get the published overview document
+python3 "$CHECKPOINT_SCRIPT" get-overview
+
+# Get a specific module document by name or path
+python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline
+python3 "$CHECKPOINT_SCRIPT" get-module internal/llm
+
+# Trace dependency chain for a file
+python3 "$CHECKPOINT_SCRIPT" trace-deps internal/llm/router.go --depth 3
+
+# List issue candidates (optionally filter by type: DUP, SEC, TIDY)
+python3 "$CHECKPOINT_SCRIPT" get-issues
+python3 "$CHECKPOINT_SCRIPT" get-issues --type SEC
+```
+
+The search index is built automatically when outputs are published on `paused` or `completed` checkpoints. To rebuild manually:
+
+```bash
+python3 "$CHECKPOINT_SCRIPT" generate-search-index
+```
+
+**Prefer CLI search over reading raw files** when you need to find specific topics, trace dependencies, or filter issues. The search index covers all published outputs, checkpoints, and structured data.
 
 ## Publishing to GitHub Wiki
 
@@ -322,53 +337,6 @@ The script generates:
 - Per-module pages with `module-` prefix.
 - A `Home.md` with document and module tables.
 - A `_Sidebar.md` for navigation.
-
-## Setup MCP server (`--setup-mcp`)
-
-When the user runs `/code-workflow:source-analyzer --setup-mcp`, install the `source-analyzer-search` MCP server into the current project.
-
-### Steps
-
-1. **Find uvx or python3**:
-   ```bash
-   UVX_PATH=$(which uvx 2>/dev/null) && echo "found uvx: $UVX_PATH"
-   PYTHON_PATH=$(which python3 2>/dev/null) && echo "found python3: $PYTHON_PATH"
-   ```
-
-2. **Choose strategy** (prefer uvx, fallback to python3):
-   - If `uvx` found: use `uvx --from git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp source-analyzer-search`
-   - If only `python3` found: use `python3 ${CLAUDE_PLUGIN_ROOT}/servers/source-analyzer-mcp/server.py`
-
-3. **Test the server starts**:
-   ```bash
-   echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | python3 -c "
-   import json,sys
-   msg=json.dumps(json.loads(sys.stdin.read())).encode()
-   sys.stdout.buffer.write(f'Content-Length: {len(msg)}\r\n\r\n'.encode())
-   sys.stdout.buffer.write(msg)
-   sys.stdout.buffer.flush()
-   " | timeout 5 <CHOSEN_COMMAND> 2>&1
-   ```
-   Verify the response contains `"serverInfo"`.
-
-4. **Register via `claude mcp add`** using the absolute path found in step 1:
-   - uvx strategy:
-     ```bash
-     claude mcp add source-analyzer-search --scope project -- "$UVX_PATH" --from 'git+https://github.com/devlikebear/ai-skills#subdirectory=claude-code/plugin/servers/source-analyzer-mcp' source-analyzer-search
-     ```
-   - python3 strategy:
-     ```bash
-     claude mcp add source-analyzer-search --scope project -- "$PYTHON_PATH" "${CLAUDE_PLUGIN_ROOT}/servers/source-analyzer-mcp/server.py"
-     ```
-
-5. **Verify** the `.mcp.json` was created in the project root and report success.
-
-6. **Generate search index** if `.analysis/outputs/` exists:
-   ```bash
-   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py" generate-search-index
-   ```
-
-After setup, tell the user to run `/mcp` to connect. The MCP server will be project-scoped and use absolute paths that work on their machine.
 
 ## Constraints
 
