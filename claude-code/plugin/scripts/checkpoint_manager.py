@@ -728,6 +728,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     search_parser.add_argument("query", help="Search query text.")
     search_parser.add_argument("--top-k", type=int, default=5)
     search_parser.add_argument("--kinds", nargs="*", help="Filter by chunk kind (e.g. section, issue, module).")
+    search_parser.add_argument("--snippet-only", action="store_true", help="Return lightweight results with snippet instead of full text.")
+    search_parser.add_argument("--snippet-len", type=int, default=240, help="Snippet length in characters (default: 240).")
     search_parser.add_argument("--analysis-dir", default=".analysis")
     search_parser.add_argument("--session-id")
 
@@ -746,6 +748,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     issues_parser = subparsers.add_parser("get-issues", help="List published issue candidates.")
     issues_parser.add_argument("--type", dest="issue_type", help="Filter by type: DUP, SEC, TIDY.")
     issues_parser.add_argument("--analysis-dir", default=".analysis")
+
+    brief_parser = subparsers.add_parser("brief", help="Print compact project context (overview + modules + issues) in a single call.")
+    brief_parser.add_argument("--analysis-dir", default=".analysis")
 
     return parser.parse_args(argv)
 
@@ -858,6 +863,8 @@ def cli(argv: list[str]) -> int:
         results = _search().search_analysis(
             analysis_dir, query=args.query, top_k=args.top_k,
             kinds=args.kinds, session_id=getattr(args, "session_id", None),
+            snippet_only=getattr(args, "snippet_only", False),
+            snippet_len=getattr(args, "snippet_len", 240),
         )
         print(json.dumps(results, indent=2, ensure_ascii=False))
         return 0
@@ -879,6 +886,11 @@ def cli(argv: list[str]) -> int:
 
     if args.command == "get-issues":
         result = _search().get_issue_candidates(analysis_dir, issue_type=args.issue_type)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "brief":
+        result = _search().get_brief(analysis_dir)
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 

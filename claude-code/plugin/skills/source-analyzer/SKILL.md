@@ -102,15 +102,16 @@ This copies the latest session's outputs to `.analysis/outputs/` and prints a `.
 ## Required workflow
 
 1. Decide the mode: `analyze`, `refactor-guide`, or `overhaul`.
-2. Capture the current commit: `COMMIT=$(git rev-parse HEAD)`.
-3. Start or resume a session: pass `--commit "$COMMIT"` to init.
-4. If resuming, run `sync` to detect new commits and update the frontier.
-5. Use `git ls-tree -r HEAD --name-only -- <scope>` to enumerate files (committed files only).
-6. Filter out files matching exclude patterns (see Constraints).
-7. Traverse first-party source with BFS in small chunks.
-8. Update `.analysis/sessions/<session-id>/outputs/` after each chunk.
-9. Write a checkpoint after each chunk (must include at least one of: visited-add, outputs, summary, or next-actions).
-10. On `paused` or `completed` checkpoint, outputs are auto-published to `.analysis/outputs/`.
+2. If prior analysis exists, run `brief` first to get the project context in one call.
+3. Capture the current commit: `COMMIT=$(git rev-parse HEAD)`.
+4. Start or resume a session: pass `--commit "$COMMIT"` to init.
+5. If resuming, run `sync` to detect new commits and update the frontier.
+6. Use `git ls-tree -r HEAD --name-only -- <scope>` to enumerate files (committed files only).
+7. Filter out files matching exclude patterns (see Constraints).
+8. Traverse first-party source with BFS in small chunks.
+9. Update `.analysis/sessions/<session-id>/outputs/` after each chunk.
+10. Write a checkpoint after each chunk (must include at least one of: visited-add, outputs, summary, or next-actions).
+11. On `paused` or `completed` checkpoint, outputs are auto-published to `.analysis/outputs/`.
 
 ## Analyze mode
 
@@ -147,10 +148,11 @@ After completing each module analysis chunk, update the structured JSON outputs 
 
 When `issue-candidates.md` exists (from a prior analyze session):
 
-1. Read `.analysis/outputs/issue-candidates.md` first.
+1. Run `get-issues` to load all issue candidates (or `get-issues --type SEC` to filter).
 2. Use each candidate as the seed for a WO — copy the issue code, module, and evidence into the WO's `Source Issue` field.
-3. Expand each candidate with full analysis: read the actual source files, verify the issue, and fill all required WO fields.
-4. Remove candidates that turn out to be false positives and note the reason.
+3. Use `search "<issue topic>" --snippet-only --snippet-len 600` to pull relevant context from prior analysis instead of re-reading full output files.
+4. Expand each candidate with full analysis: read the actual source files, verify the issue, and fill all required WO fields.
+5. Remove candidates that turn out to be false positives and note the reason.
 
 ### Starting from scratch
 
@@ -173,11 +175,12 @@ When no `issue-candidates.md` exists, perform BFS analysis in refactor-guide mod
 
 When analyze outputs exist (from a prior analyze session):
 
-1. Read `.analysis/outputs/architecture.md`, `module-map.json`, and `dependency-graph.json` first.
-2. Read `issue-candidates.md` if available — `DUP-*`/`SEC-*`/`TIDY-*` issues that indicate deeper architectural problems feed into `ARCH-*`/`DEBT-*` classifications.
-3. Diagnose root problems at the architecture level, not individual code-level symptoms.
-4. Design the target architecture based on the diagnosis.
-5. Produce OH work orders for the transition.
+1. Run `brief` to load the project context (overview, modules, issues) in one call.
+2. Use `search "<architecture topic>" --snippet-only --snippet-len 600` to pull specific sections from `architecture.md` and `module-map.json` without reading full files.
+3. Run `get-issues` to load issue candidates — `DUP-*`/`SEC-*`/`TIDY-*` issues that indicate deeper architectural problems feed into `ARCH-*`/`DEBT-*` classifications.
+4. Diagnose root problems at the architecture level, not individual code-level symptoms.
+5. Design the target architecture based on the diagnosis.
+6. Produce OH work orders for the transition.
 
 ### Starting from scratch
 
@@ -221,11 +224,11 @@ When `sync` detects changed files:
 
 ## Resume protocol
 
-1. Open `.analysis/RESUME.md`.
-2. Open the referenced `index.md`, latest checkpoint, and `state.json`.
-3. Run `sync` to detect new commits.
+1. Run `brief` to load the project context (modules, issues, status) in one call.
+2. Run `sync` to detect new commits.
    - `status=synced`: changed files added to frontier for re-analysis.
    - `status=unchanged`: continue BFS from existing frontier.
+3. Use `search "<topic>" --snippet-only --snippet-len 600 --top-k 3` to recall specific topics from prior analysis instead of re-reading raw output files.
 4. Continue from `frontier` and pending `next actions`.
 5. Write the next checkpoint before ending.
 
@@ -283,24 +286,38 @@ If none of these files exist, create `CLAUDE.md` with the block above and inform
 
 Use the built-in CLI search commands to query analysis outputs without opening files manually. All commands output JSON to stdout.
 
+### Recommended usage pattern
+
+1. Start every session with `brief` to load the full project context in one call.
+2. Use `search --snippet-only --snippet-len 600` for focused topic lookups — this returns lightweight results with module context, avoiding full-text overhead.
+3. Use `get-module` or `get-overview` only when you need the complete document content.
+4. Use `trace-deps` to explore dependency chains before diving into source files.
+
+### Commands
+
 ```bash
-# Keyword search across all analysis outputs
+# 1. Project context in one call — start here
+python3 "$CHECKPOINT_SCRIPT" brief
+
+# 2. Focused search with snippet + module context (recommended default)
+python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --top-k 3 --snippet-only --snippet-len 600
+
+# 3. Full-text search (use only when snippets are insufficient)
 python3 "$CHECKPOINT_SCRIPT" search "query text" --top-k 5
 
-# Filter by chunk kind (section, issue, module, dependency-edges, etc.)
-python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --kinds section module
+# 4. Filter by chunk kind
+python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --kinds section module --snippet-only --snippet-len 600
 
-# Get the published overview document
+# 5. Module document (full content)
+python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline
+
+# 6. Overview document (full content)
 python3 "$CHECKPOINT_SCRIPT" get-overview
 
-# Get a specific module document by name or path
-python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline
-python3 "$CHECKPOINT_SCRIPT" get-module internal/llm
-
-# Trace dependency chain for a file
+# 7. Dependency chain
 python3 "$CHECKPOINT_SCRIPT" trace-deps internal/llm/router.go --depth 3
 
-# List issue candidates (optionally filter by type: DUP, SEC, TIDY)
+# 8. Issue candidates
 python3 "$CHECKPOINT_SCRIPT" get-issues
 python3 "$CHECKPOINT_SCRIPT" get-issues --type SEC
 ```
@@ -311,7 +328,7 @@ The search index is built automatically when outputs are published on `paused` o
 python3 "$CHECKPOINT_SCRIPT" generate-search-index
 ```
 
-**Prefer CLI search over reading raw files** when you need to find specific topics, trace dependencies, or filter issues. The search index covers all published outputs, checkpoints, and structured data.
+**Prefer CLI search over reading raw output files.** The `brief` + `search --snippet-only` combination minimizes token usage while providing sufficient context. Only fall back to full-text commands or direct file reads when snippets are insufficient.
 
 ## Publishing to GitHub Wiki
 

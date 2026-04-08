@@ -382,12 +382,60 @@ def score_document(doc: dict[str, Any], query: str, query_tokens: list[str]) -> 
     return score
 
 
+def _slim_result(doc: dict[str, Any], snippet_len: int = 240, module_context: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return a lightweight result with snippet instead of full text."""
+    text = doc.get("text", "")
+    result: dict[str, Any] = {
+        "id": doc.get("id", ""),
+        "kind": doc.get("kind", ""),
+        "title": doc.get("title", ""),
+        "snippet": text[:snippet_len],
+        "source_path": doc.get("source_path", ""),
+        "score": doc.get("score", 0),
+    }
+    if module_context:
+        result["module_context"] = module_context
+    return result
+
+
+def _build_module_context_map(analysis_dir: Path) -> dict[str, dict[str, Any]]:
+    """Build a map from module name to its summary for enriching search results."""
+    context_map: dict[str, dict[str, Any]] = {}
+    module_map_path = analysis_dir / "outputs" / "module-map.json"
+    if not module_map_path.exists():
+        return context_map
+    module_map = load_json(module_map_path)
+    for name, payload in module_map.items():
+        context_map[name] = {
+            "module": name,
+            "path": payload.get("path", ""),
+            "responsibility": payload.get("responsibility", ""),
+            "key_files": payload.get("key_files", []),
+        }
+    return context_map
+
+
+def _find_module_context(doc: dict[str, Any], context_map: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    """Find the module context entry that best matches a document."""
+    module_name = doc.get("module", "")
+    if module_name and module_name in context_map:
+        return context_map[module_name]
+    source_path = doc.get("source_path", "")
+    for name, ctx in context_map.items():
+        module_path = ctx.get("path", "")
+        if module_path and source_path.startswith(module_path):
+            return ctx
+    return None
+
+
 def search_analysis(
     analysis_dir: Path,
     query: str,
     top_k: int = 5,
     kinds: list[str] | None = None,
     session_id: str | None = None,
+    snippet_only: bool = False,
+    snippet_len: int = 240,
 ) -> list[dict[str, Any]]:
     analysis_dir = analysis_dir.resolve()
     documents = load_index_documents(analysis_dir)
@@ -409,12 +457,58 @@ def search_analysis(
         scored.append((score, doc))
 
     scored.sort(key=lambda item: (-item[0], item[1].get("title", "")))
+
+    module_context_map: dict[str, dict[str, Any]] | None = None
+    if snippet_only:
+        module_context_map = _build_module_context_map(analysis_dir)
+
     results: list[dict[str, Any]] = []
     for score, doc in scored[:top_k]:
         result = dict(doc)
         result["score"] = score
+        if snippet_only and module_context_map is not None:
+            ctx = _find_module_context(doc, module_context_map)
+            result = _slim_result(result, snippet_len=snippet_len, module_context=ctx)
         results.append(result)
     return results
+
+
+def get_brief(analysis_dir: Path) -> dict[str, Any]:
+    """Return a compact project context in a single call."""
+    analysis_dir = analysis_dir.resolve()
+    result: dict[str, Any] = {}
+
+    overview_path = analysis_dir / "outputs" / "overview.md"
+    if overview_path.exists():
+        text = overview_path.read_text(encoding="utf-8")
+        result["overview_snippet"] = text[:600]
+
+    module_map_path = analysis_dir / "outputs" / "module-map.json"
+    if module_map_path.exists():
+        module_map = load_json(module_map_path)
+        result["modules"] = {
+            name: {
+                "path": payload.get("path", ""),
+                "responsibility": payload.get("responsibility", ""),
+                "key_files": payload.get("key_files", []),
+            }
+            for name, payload in module_map.items()
+        }
+
+    issue_path = analysis_dir / "outputs" / "issue-candidates.md"
+    if issue_path.exists():
+        issues = parse_issue_candidates("outputs/issue-candidates.md", issue_path.read_text(encoding="utf-8"))
+        result["issue_count"] = len(issues)
+        result["issue_titles"] = [issue.get("title", "") for issue in issues[:10]]
+
+    summary_path = analysis_dir / "outputs" / "SUMMARY.json"
+    if summary_path.exists():
+        summary = load_json(summary_path)
+        result["status"] = summary.get("status", "")
+        result["commit"] = summary.get("commit", "")
+        result["visited_count"] = summary.get("visited_count", 0)
+
+    return result
 
 
 def trace_dependencies(

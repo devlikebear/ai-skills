@@ -71,6 +71,8 @@ class SourceAnalyzerMcpServer:
                         "query": {"type": "string"},
                         "top_k": {"type": "integer", "minimum": 1, "default": 5},
                         "kinds": {"type": "array", "items": {"type": "string"}},
+                        "snippet_only": {"type": "boolean", "default": False, "description": "Return lightweight results with snippet instead of full text."},
+                        "snippet_len": {"type": "integer", "minimum": 50, "default": 240, "description": "Snippet length in characters when snippet_only is true."},
                         "session_id": {"type": "string"},
                         "analysis_dir": {"type": "string"},
                     },
@@ -148,6 +150,16 @@ class SourceAnalyzerMcpServer:
                     },
                 },
             },
+            {
+                "name": "analysis.brief",
+                "description": "Get compact project context: overview snippet, module list with responsibilities, and issue summary in a single call.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "analysis_dir": {"type": "string"},
+                    },
+                },
+            },
         ]
 
     def _resolve_analysis_dir(self, arguments: dict[str, Any]) -> Path:
@@ -169,6 +181,8 @@ class SourceAnalyzerMcpServer:
                 top_k=int(arguments.get("top_k", 5)),
                 kinds=arguments.get("kinds"),
                 session_id=arguments.get("session_id"),
+                snippet_only=bool(arguments.get("snippet_only", False)),
+                snippet_len=int(arguments.get("snippet_len", 240)),
             )
         if name == "analysis.trace_dependencies":
             return search.trace_dependencies(
@@ -196,6 +210,8 @@ class SourceAnalyzerMcpServer:
                 session_id=arguments.get("session_id"),
                 checkpoint_id=arguments.get("checkpoint_id"),
             )
+        if name == "analysis.brief":
+            return search.get_brief(analysis_dir)
         raise KeyError(f"unknown tool: {name}")
 
     def handle_request(self, request: dict[str, Any]) -> dict[str, Any] | None:
