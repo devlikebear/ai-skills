@@ -1,28 +1,36 @@
-# 모듈: 릴리스/온보딩 문서
+# 모듈: release-docs (릴리스 문서)
+
+버전 관리 및 릴리스 관련 파일 모음.
 
 ## 역할
 
-저장소의 버전, 설치 경로, 운영 규칙, 라이선스, 마켓플레이스 진입점을 사람과 AI 모두가 빠르게 찾을 수 있게 정리한다.
+프로젝트의 버전, 변경 이력, 라이선스를 관리합니다.
 
-## 핵심 경로
+## 핵심 파일
 
-- `README.md`
-- `CLAUDE.md`
-- `CHANGELOG.md`
-- `VERSION.txt`
-- `LICENSE`
-- `.claude-plugin/marketplace.json`
+| 파일 | 역할 |
+|------|------|
+| `VERSION.txt` | 단일 버전 소스 (현재: 0.10.8) |
+| `CHANGELOG.md` | 전체 릴리스 히스토리 (0.1.0 ~ 0.10.8) |
+| `LICENSE` | MIT 라이선스 |
+| `CLAUDE.md` | 개발 가이드 (버전 범프 체크리스트, 커밋 규칙) |
 
-## 구조적 특징
+## 버전 관리 규칙
 
-1. 실제 버전 진실 공급원은 `VERSION.txt`와 두 JSON 매니페스트다.
-2. `CHANGELOG.md`는 릴리스별 기능 추가와 구조 변경 배경을 설명한다.
-3. `CLAUDE.md`는 개발 시 반드시 지켜야 할 버전 동기화와 배포 동기화 규칙을 적는다.
-4. `.claude-plugin/marketplace.json`은 이 저장소를 Claude Code 플러그인 마켓플레이스로 노출한다.
+- **PATCH** (0.x.Y): 버그 수정, 문구 변경
+- **MINOR** (0.X.0): 새 기능, 새 출력, 새 CLI 명령
+- **MAJOR** (X.0.0): 스킬 인터페이스/체크포인트 형식 호환성 변경
 
-## 입문자가 먼저 볼 파일
+## 동기화 필수 파일 (5곳)
 
 1. `VERSION.txt`
-2. `CHANGELOG.md`
-3. `README.md`
-4. `CLAUDE.md`
+2. `.claude-plugin/marketplace.json` (version × 2)
+3. `claude-code/plugin/.claude-plugin/plugin.json`
+4. `plugins/source-analyzer-tools/.codex-plugin/plugin.json` (Codex 번들 변경 시)
+5. `CHANGELOG.md`
+
+## 커밋 규칙
+
+- `feat:` → minor 범프
+- `fix:` → patch 범프
+- `chore:` → 버전 범프 커밋 자체 또는 docs-only

@@ -1,147 +1,134 @@
-# 클론 코딩 가이드: 비슷한 AI 스킬 저장소 만들기
+# AI Skills — 클론 코딩 가이드
 
-> 대상 독자: 현재 저장소를 참고해 유사한 저장소를 새로 만들 개발자
-> 예상 시간: 90분
-> 기준 세션: `analyze-20260310-133920` / `checkpoint-004`
+이 가이드는 AI Skills와 유사한 구조의 AI 에이전트 스킬 저장소를 처음부터 만드는 방법을 설명합니다.
 
-## 목표
+## Phase 1: 기본 구조 설정
 
-Codex와 Claude Code 플러그인을 함께 지원하고, 분석 결과를 publish 가능한 문서로 남기는 최소 스킬 저장소를 직접 만든다.
-
-## 준비물
-
-- Git
-- Bash 또는 Zsh
-- Python 3
-- 참고 파일:
-  - `codex/skills/source-analyzer/SKILL.md`
-  - `claude-code/plugin/skills/source-analyzer/SKILL.md`
-  - `scripts/install_codex_skill.sh`
-  - `tests/test_skill_repository_contract.py`
-
-## Step 1. 저장소 뼈대 만들기
+### 1.1 저장소 초기화
 
 ```bash
-mkdir my-ai-skills
-cd my-ai-skills
+mkdir my-ai-skills && cd my-ai-skills
 git init
-mkdir -p codex/skills
-mkdir -p claude-code/plugin/.claude-plugin
-mkdir -p claude-code/plugin/skills
-mkdir -p claude-code/plugin/references
-mkdir -p claude-code/plugin/scripts
-mkdir -p .claude-plugin
-mkdir -p .analysis/outputs
-mkdir -p .analysis/sessions
-mkdir -p scripts
-mkdir -p tests
 ```
 
-다음 기본 파일도 만든다.
+### 1.2 핵심 파일 생성
 
-```bash
-printf '0.1.0\n' > VERSION.txt
-touch README.md CHANGELOG.md LICENSE .gitignore CLAUDE.md
+```
+VERSION.txt          → 0.1.0
+CHANGELOG.md         → 릴리스 노트
+CLAUDE.md            → 개발 가이드
+LICENSE              → MIT
+.gitignore           → __pycache__/, .analysis/sessions/
 ```
 
-`.gitignore`에는 최소한 `.analysis/sessions/`, `.install_test_home`, `__pycache__/`를 넣는다.
+## Phase 2: 첫 번째 Codex 스킬
 
-## Step 2. Codex 스킬 하나를 평평한 구조로 만들기
+### 2.1 스킬 디렉토리 생성
 
-예를 들어 `plan` 성격의 스킬을 만든다면 아래처럼 시작한다.
-
-```text
-codex/skills/plan/
+```
+codex/skills/my-skill/
   SKILL.md
   agents/openai.yaml
-  shared/references/work-order.md
+  shared/references/
 ```
 
-핵심 규칙:
+### 2.2 SKILL.md 작성
 
-- `SKILL.md`는 하나만 둔다.
-- language policy는 사용자 언어 자동 대응 규칙을 적는다.
-- 공용 템플릿은 `shared/`로 뺀다.
+```markdown
+---
+name: my-skill
+description: "My first AI skill"
+---
 
-## Step 3. 같은 기능을 Claude Code 플러그인으로도 패키징하기
+# My Skill
 
-플러그인 쪽은 같은 역할을 하되 `agents/openai.yaml` 없이 단일 `SKILL.md`만 둔다.
+## Language policy
+- Respond in the same language the user writes in.
 
-```text
+## Workflow
+1. ...
+2. ...
+
+## Output
+- ...
+```
+
+### 2.3 에이전트 설정
+
+```yaml
+# agents/openai.yaml
+display_name: "My Skill"
+```
+
+## Phase 3: Claude Code 플러그인 추가
+
+### 3.1 플러그인 구조
+
+```
 claude-code/plugin/
   .claude-plugin/plugin.json
-  skills/plan/SKILL.md
-  references/work-order.md
+  skills/my-skill/SKILL.md
+  references/
 ```
 
-그리고 저장소 루트에는 마켓플레이스 등록 파일을 둔다.
+### 3.2 마켓플레이스 매니페스트
 
-```text
-.claude-plugin/marketplace.json
+```json
+// .claude-plugin/marketplace.json
+{
+  "name": "my-skills",
+  "owner": {"name": "your-name"},
+  "plugins": [{
+    "name": "my-plugin",
+    "source": "./claude-code/plugin"
+  }]
+}
 ```
 
-## Step 4. source-analyzer 스타일의 세션 도구 추가하기
+## Phase 4: 설치 스크립트
 
-분석 스킬을 만들 계획이라면 `checkpoint_manager.py` 같은 보조 스크립트를 두는 편이 좋다. 최소한 아래 파일과 명령 흐름은 갖춰야 한다.
+### 4.1 Codex 인스톨러
 
-```text
-.analysis/
-  RESUME.md
-  AI_CONTEXT.md
-  outputs/
-    overview.md
-    architecture.md
-    SUMMARY.json
-    dependency-graph.json
-    module-map.json
-    modules/
-  sessions/<session-id>/
-    state.json
-    index.md
-    checkpoints/
-    outputs/
-```
+`scripts/install_codex_skill.sh` 구현:
+- 스킬 이름 검증 (path traversal 방어)
+- `SKILL.md` + `agents/` + `shared/` 복사
+- `$CODEX_HOME/skills/<name>/`에 설치
 
-스크립트는 최소한 아래 명령을 제공하게 만든다.
+## Phase 5: source-analyzer 추가 (고급)
 
-- `init`
-- `sync`
-- `checkpoint`
-- `status`
-- `publish`
-- `generate-summary`
-- `migrate`(구형 레이아웃 호환이 필요하면)
+가장 복잡한 스킬. 다음 컴포넌트가 필요합니다:
 
-## Step 5. 운영 스크립트와 계약 테스트 추가하기
+1. **checkpoint_manager.py**: 세션 init/sync/checkpoint/publish CLI
+2. **source_analyzer_search.py**: 검색 인덱스 빌더
+3. **SKILL.md**: BFS 워크플로, 3개 모드 정의
+4. **레퍼런스 템플릿**: refactor-template, overhaul-template 등
 
-최소 두 가지 자동화가 있으면 좋다.
+### 핵심 구현 순서
 
-1. Codex 설치 스크립트
-2. 저장소 구조를 검증하는 테스트
+1. `init_session()` / `load_state()` / `save_state()`
+2. `add_checkpoint()` with markdown 생성
+3. `sync_session()` with git diff 연동
+4. `publish_outputs()` — session → published 복사
+5. `generate_search_index()` — JSONL 문서 생성
+6. CLI `parse_args()` + `cli()` 함수
 
-분석 산출물을 공유할 계획이라면 위키 게시 스크립트도 별도 두는 편이 좋다.
+## Phase 6: 테스트
 
-## Step 6. 실제 검증 명령 준비하기
+최소 3개 테스트 스위트:
+- **구조 계약 테스트**: 모든 스킬이 올바른 구조를 따르는지 검증
+- **릴리스 계약 테스트**: 버전 일관성, 인스톨러 작동
+- **기능 테스트**: checkpoint_manager 세션 라이프사이클
 
-현재 저장소에서는 아래 두 명령이 가장 기본이다.
+## Phase 7: 배포 동기화
 
-```bash
-scripts/install_codex_skill.sh --list
-python3 -m unittest discover -s tests
-```
+공유 스크립트를 여러 배포판에 복사해야 하는 경우:
+- 정식 소스(canonical) 위치를 하나 정하고
+- 동기화 스크립트로 다른 위치에 복사
+- 테스트에서 동기화 상태를 검증
 
-클론 코딩 결과도 최소한 같은 종류의 명령을 제공해야 온보딩이 쉽다.
+## 핵심 설계 원칙
 
-## 자가검증 체크리스트
-
-- [ ] Codex와 Claude Code 배포 구조를 둘 다 만들었다.
-- [ ] 하나 이상의 `shared/references/*` 문서를 두었다.
-- [ ] 설치 스크립트가 스킬 이름을 검증한다.
-- [ ] 분석형 스킬이라면 `.analysis/sessions/`와 `.analysis/outputs/`를 분리했다.
-- [ ] 테스트가 파일 구조와 릴리스 메타데이터를 검사한다.
-
-## 확장 미션
-
-1. `github-flow`와 같은 상위 오케스트레이션 스킬을 추가한다.
-2. 분석 산출물을 위키로 게시하는 `publish_wiki.sh`와 비슷한 스크립트를 만든다.
-3. 저장소 전용 작성 보조 스킬을 `.codex/skills/` 아래에 따로 둔다.
+1. **스킬은 지침서**: 코드가 아닌 워크플로 설명
+2. **듀얼 배포**: 하나의 소스에서 Codex + Claude Code 모두 지원
+3. **점진적 분석**: 대규모 코드베이스를 청크 단위로 분석하고 재개 가능
+4. **zero 외부 의존성**: Python 표준 라이브러리만 사용

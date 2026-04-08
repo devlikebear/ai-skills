@@ -1,34 +1,53 @@
-# 모듈: scripts
+# 모듈: scripts (공유 스크립트)
+
+프로젝트 전반에서 사용되는 Python/Bash 스크립트 모음.
 
 ## 역할
 
-저장소의 공개 배포와 분석 결과 게시를 운영하는 Bash 스크립트 모음이다.
+체크포인트 관리, 검색 인덱스, Wiki 발행, 스킬 설치, MCP 동기화 기능을 제공합니다.
 
-## 파일
+## 핵심 파일
 
-### `scripts/install_codex_skill.sh`
+### checkpoint_manager.py (~900줄)
 
-Codex 공개 스킬을 `${CODEX_HOME:-$HOME/.codex}/skills`에 설치한다.
+source-analyzer의 핵심 인프라. 세션 관리와 CLI 검색을 모두 처리합니다.
 
-- `--list`: 공개 스킬 목록 출력
-- `--all`: 모든 공개 스킬 설치
-- `<skill-name>`: 하나의 스킬 설치
+주요 함수:
+- `init_session()`: 세션 생성 또는 기존 세션 재개
+- `add_checkpoint()`: 체크포인트 markdown 생성 + 상태 업데이트
+- `sync_session()`: git diff로 변경 파일 감지, frontier 업데이트
+- `publish_outputs()`: 세션 outputs → `.analysis/outputs/` 복사
+- `generate_summary()`: SUMMARY.json 생성
+- `generate_search_index_for_session()`: 검색 인덱스 생성
+- `migrate_layout()`: 구 레이아웃 마이그레이션
+- `cli()`: 전체 CLI 엔트리포인트
 
-보안상 스킬 이름은 `^[a-z0-9][a-z0-9-]*$` 정규식으로 검증한다. 설치 시에는 `SKILL.md`, `shared/`, `agents/`를 복사하고 `__pycache__`를 제거한다.
+### source_analyzer_search.py (~614줄)
 
-### `scripts/publish_wiki.sh`
+검색 인덱스 빌더 겸 MCP 서버 백엔드.
 
-가장 최근 또는 지정한 `.analysis` 세션의 산출물을 GitHub Wiki 페이지로 변환해 푸시한다.
+주요 함수:
+- `build_documents()`: 모든 outputs에서 검색 문서 추출
+- `generate_search_index()`: JSONL + 매니페스트 파일 생성
+- `search_analysis()`: 키워드 기반 스코어링 검색
+- `trace_dependencies()`: 의존성 그래프 BFS 추적
+- `get_module()`, `get_overview()`, `get_issue_candidates()`: 직접 조회
 
-- 기본 입력: `.analysis/sessions/<session-id>/outputs/`
-- 옵션: `--session-id <id>`, `--dry-run`
-- 동작: 위키 저장소 clone -> 문서 복사 및 `Home.md`/`_Sidebar.md` 생성 -> Git commit -> push
+### publish_wiki.sh (~450줄)
 
-이 스크립트는 분석 문서 파일 이름과 각 모듈 문서의 `## 역할` 단락을 기준으로 위키 네비게이션을 만든다.
+GitHub Wiki 발행 스크립트.
+- `find_latest_session()`: 최신 세션 탐색
+- `build_sidebar()` / `build_home()`: Wiki 네비게이션 생성
+- 페이지 정렬 (01-overview, 02-architecture 등)
+- `--dry-run` / `--project-dir` / `--session-id` 옵션
 
-## 입문자가 먼저 볼 파일
+### install_codex_skill.sh (~140줄)
 
-1. `scripts/install_codex_skill.sh`
-2. `scripts/publish_wiki.sh`
-3. `tests/test_release_contract.py`
-4. `tests/test_publish_wiki.py`
+Codex 스킬 인스톨러.
+- `validate_skill_name()`: path traversal 방어
+- `copy_skill()`: SKILL.md + agents + shared 복사
+- `register_source_analyzer_mcp()`: `--with-mcp` 옵션으로 MCP 서버 등록
+
+### sync_source_analyzer_mcp.sh (~25줄)
+
+정식 MCP 소스(`servers/source-analyzer-mcp/`)를 5개 배포 위치에 동기화.

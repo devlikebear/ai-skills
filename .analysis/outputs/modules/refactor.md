@@ -1,30 +1,30 @@
 # 모듈: refactor
 
+동작 보존 리팩토링 스킬.
+
 ## 역할
 
-동작을 바꾸지 않고 구조만 개선하도록 유도하는 리팩터링 스킬이다.
+기존 동작을 변경하지 않으면서 코드 구조를 개선합니다. source-analyzer의 `issue-candidates.md`와 연동하여 기존 분석 결과를 기반으로 리팩토링을 시작할 수 있습니다.
 
-## 핵심 경로
+## ��심 파일
 
-- Codex: `codex/skills/refactor/SKILL.md`
-- Codex 참조: `codex/skills/refactor/shared/references/work-order.md`
-- Codex 체크리스트: `codex/skills/refactor/shared/references/refactoring-checklist.md`
-- Codex 패턴 가이드: `codex/skills/refactor/shared/references/refactoring-patterns.md`
-- Claude Code 플러그인: `claude-code/plugin/skills/refactor/SKILL.md`
+| 파일 | 역할 |
+|------|------|
+| `claude-code/plugin/skills/refactor/SKILL.md` | Claude Code 스킬 |
+| `codex/skills/refactor/SKILL.md` | Codex 스킬 |
+| `references/refactor-work-order.md` | 리팩토링 WO 형식 |
+| `references/refactoring-checklist.md` | 안전 체크리스트 |
+| `references/refactoring-patterns.md` | 패턴 선택 가이드 |
 
-## 안전 장치
+## Pre-flight
 
-- 기능 추가 금지
-- 공개 API 변경 금지
-- 파일 접점 5개 이하 유지
-- 단계마다 테스트 전후 비교
+`.analysis/outputs/`가 있으면:
+1. `issue-candidates.md` 읽고 이슈 제시
+2. 기존 `refactor-*.md` WO 읽고 이어서 진행
 
-## 저장소에서의 의미
+## 안전 규칙
 
-이 저장소는 구조적 일관성이 중요하다. `refactor` 스킬은 스킬 디렉터리, 공용 참조, 설치 스크립트, 테스트 사이의 중복을 줄일 때 사용하는 운영 도구에 가깝다.
-
-## 입문자가 먼저 볼 파일
-
-1. `codex/skills/refactor/SKILL.md`
-2. `codex/skills/refactor/shared/references/refactoring-checklist.md`
-3. `codex/skills/refactor/shared/references/refactoring-patterns.md`
+- 기능 변경 금지
+- 공개 API 변경 금지 (명시적 승인 없이)
+- 대규모 포맷 변경 금지
+- 테스트를 항상 전후로 실행

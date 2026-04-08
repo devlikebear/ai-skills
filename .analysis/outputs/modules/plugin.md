@@ -1,53 +1,46 @@
-# 모듈: Claude Code 플러그인
+# 모듈: plugin (배포 인프라)
+
+Claude Code 플러그인 마켓플레이스와 Codex 플러그인 배포 인프라.
 
 ## 역할
 
-`code-workflow`라는 이름으로 여러 스킬을 하나의 Claude Code 플러그인과 마켓플레이스 엔트리로 묶어 배포한다.
+스킬들을 Claude Code 플러그인과 Codex 런타임으로 배포하는 매니페스트, 설정, 설치 스크립트를 관리합니다.
 
-## 핵심 경로
+## 핵심 파일
 
-- 마켓플레이스 등록: `.claude-plugin/marketplace.json`
-- 플러그인 매니페스트: `claude-code/plugin/.claude-plugin/plugin.json`
-- 플러그인 스킬: `claude-code/plugin/skills/*`
-- 공용 참조: `claude-code/plugin/references/*`
-- 플러그인 스크립트: `claude-code/plugin/scripts/checkpoint_manager.py`
+| 파일 | 역할 |
+|------|------|
+| `.claude-plugin/marketplace.json` | Claude Code 마켓플레이스 매니페스트 |
+| `claude-code/plugin/.claude-plugin/plugin.json` | code-workflow 플러그인 매니페스트 |
+| `claude-code/plugin/.mcp.json` | MCP 서버 설정 |
+| `.agents/plugins/marketplace.json` | Codex 로컬 마켓플레이스 |
+| `plugins/source-analyzer-tools/` | Codex MCP 플러그인 번들 |
+| `scripts/install_codex_skill.sh` | Codex 스킬 인스톨러 |
+| `scripts/sync_source_analyzer_mcp.sh` | MCP 소스 동기화 |
 
-## 포함 스킬
+## Claude Code 설치 흐름
 
-- `plan`
-- `implement`
-- `review`
-- `refactor`
-- `source-analyzer`
-- `github-flow`
+```
+/plugin marketplace add devlikebear/ai-skills
+  → .claude-plugin/marketplace.json 읽기
+  → source: ./claude-code/plugin 참조
+/plugin install code-workflow@ai-skills
+  → plugin.json + skills/ + references/ + scripts/ 설치
+```
 
-## 구조적 특징
+## Codex 설치 흐름
 
-1. 각 스킬은 단일 `SKILL.md`만 가진다.
-2. 공용 문서는 `references/` 한 곳에만 둔다.
-3. `source-analyzer`는 `${CLAUDE_PLUGIN_ROOT}`를 기준으로 체크포인트 스크립트를 찾는다.
-4. Codex 전용 `agents/openai.yaml`은 포함하지 않는다.
-5. 현재 버전은 매니페스트와 마켓플레이스 양쪽에서 `0.6.1`로 맞춰져 있다.
+```
+scripts/install_codex_skill.sh source-analyzer [--with-mcp]
+  → codex/skills/source-analyzer/ → ~/.codex/skills/source-analyzer/ 복사
+  → --with-mcp: codex mcp add source-analyzer-search -- python3 server.py
+```
 
-## 실제 참조 파일
+## 동기화
 
-`claude-code/plugin/references/`에는 현재 11개 문서가 있다.
-
-- `work-order.md`
-- `refactor-work-order.md`
-- `review-checklist.md`
-- `refactoring-checklist.md`
-- `refactoring-patterns.md`
-- `checkpoint-template.md`
-- `refactor-template.md`
-- `tidy-first-rules.md`
-- `security-triage-checklist.md`
-- `tutorial-template.md`
-- `github-flow-checklist.md`
-
-## 입문자가 먼저 볼 파일
-
-1. `claude-code/plugin/.claude-plugin/plugin.json`
-2. `claude-code/plugin/skills/source-analyzer/SKILL.md`
-3. `claude-code/plugin/skills/github-flow/SKILL.md`
-4. `.claude-plugin/marketplace.json`
+`sync_source_analyzer_mcp.sh`가 `servers/source-analyzer-mcp/`의 정식 소스를 5곳에 복사:
+- `codex/.../shared/scripts/` (search.py)
+- `codex/.../shared/mcp/` (server.py + search.py)
+- `claude-code/plugin/scripts/` (search.py)
+- `claude-code/plugin/servers/` (server.py + search.py)
+- `plugins/source-analyzer-tools/servers/` (server.py + search.py)

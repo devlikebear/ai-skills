@@ -1,96 +1,73 @@
 {
-  "session_id": "analyze-20260310-133920",
+  "session_id": "analyze-20260408-012720",
   "mode": "analyze",
   "scope": ".",
-  "status": "completed",
-  "commit": "03eff382a1ef50e97ede4efbdf51331ba7b38439",
-  "visited_count": 60,
+  "status": "in_progress",
+  "commit": "aa8a98c823dddede62877db12e107b053bfc2348",
+  "visited_count": 51,
   "frontier_count": 0,
   "modules": [
     {
       "name": "github-flow",
       "file": "outputs/modules/github-flow.md",
-      "summary": "브랜치 생성부터 PR, 머지, 릴리스까지 GitHub Flow 전체를 한 스킬로 묶은 운영 스킬이다."
+      "summary": "전체 GitHub Flow 라이프사이클을 관리하는 스킬."
     },
     {
       "name": "implement",
       "file": "outputs/modules/implement.md",
-      "summary": "승인된 work order 하나를 받아 작고 검증 가능한 코드 변경으로 끝내는 실행 스킬이다."
+      "summary": "승인된 작업 지시서를 직접 실행하는 스킬."
     },
     {
       "name": "plan",
       "file": "outputs/modules/plan.md",
-      "summary": "사용자 요청을 바로 구현하지 않고, 작고 검증 가능한 work order로 나누는 스킬이다."
+      "summary": "요청을 실행 가능한 작업 지시서(Work Order)로 분할하는 스킬."
     },
     {
       "name": "plugin",
       "file": "outputs/modules/plugin.md",
-      "summary": "`code-workflow`라는 이름으로 여러 스킬을 하나의 Claude Code 플러그인과 마켓플레이스 엔트리로 묶어 배포한다."
+      "summary": "Claude Code 플러그인 마켓플레이스와 Codex 플러그인 배포 인프라."
     },
     {
       "name": "refactor",
       "file": "outputs/modules/refactor.md",
-      "summary": "동작을 바꾸지 않고 구조만 개선하도록 유도하는 리팩터링 스킬이다."
+      "summary": "동작 보존 리팩토링 스킬."
     },
     {
       "name": "reference-templates",
       "file": "outputs/modules/reference-templates.md",
-      "summary": "계획, 구현, 리뷰, 리팩터링, 분석 작업에서 반복되는 체크리스트와 문서 틀을 재사용 가능한 Markdown 템플릿으로 제공한다."
+      "summary": "스킬들이 참조하는 14개 레퍼런스 템플릿 모음."
     },
     {
       "name": "release-docs",
       "file": "outputs/modules/release-docs.md",
-      "summary": "저장소의 버전, 설치 경로, 운영 규칙, 라이선스, 마켓플레이스 진입점을 사람과 AI 모두가 빠르게 찾을 수 있게 정리한다."
+      "summary": "버전 관리 및 릴리스 관련 파일 모음."
     },
     {
       "name": "review",
       "file": "outputs/modules/review.md",
-      "summary": "변경된 코드에 대해 회귀, 보안, 테스트 누락을 먼저 찾는 검토 스킬이다."
+      "summary": "diff 기반 코드 리뷰 스킬."
     },
     {
       "name": "scripts",
       "file": "outputs/modules/scripts.md",
-      "summary": "저장소의 공개 배포와 분석 결과 게시를 운영하는 Bash 스크립트 모음이다."
+      "summary": "프로젝트 전반에서 사용되는 Python/Bash 스크립트 모음."
     },
     {
       "name": "skill-generator",
       "file": "outputs/modules/skill-generator.md",
-      "summary": "이 저장소 안에서 새 Codex 스킬을 만들 때 upstream `skill-creator` 흐름을 재사용하면서, 이 저장소 전용 구조 규칙을 덧붙이는 로컬 래퍼다."
+      "summary": "저장소 전용 Codex 스킬 생성 래퍼."
     },
     {
       "name": "source-analyzer",
       "file": "outputs/modules/source-analyzer.md",
-      "summary": "기존 코드베이스를 수정하지 않고 읽어서 입문자용 구조 문서와 후속 리팩터링 입력을 만드는 분석 스킬이다."
+      "summary": "BFS 기반 코드베이스 분석 스킬. 소스 파일을 수정하지 않고 아키텍처 문서, 리팩토링 제안, 시스템 오버홀 계획을 생성합니다."
     },
     {
       "name": "tests",
       "file": "outputs/modules/tests.md",
-      "summary": "이 저장소가 약속한 파일 구조, 릴리스 메타데이터, 체크포인트 세션 동작, 위키 게시 흐름을 자동으로 검증한다."
+      "summary": "프로젝트의 테스트 스위트."
     }
   ],
-  "outputs": [
-    "outputs/overview.md",
-    "outputs/architecture.md",
-    "outputs/technologies.md",
-    "outputs/modules/source-analyzer.md",
-    "outputs/modules/plan.md",
-    "outputs/modules/implement.md",
-    "outputs/modules/review.md",
-    "outputs/modules/refactor.md",
-    "outputs/modules/github-flow.md",
-    "outputs/modules/skill-generator.md",
-    "outputs/modules/plugin.md",
-    "outputs/modules/scripts.md",
-    "outputs/modules/tests.md",
-    "outputs/glossary.md",
-    "outputs/tutorial.md",
-    "outputs/clone-coding.md",
-    "outputs/implementation-checklist.md",
-    "outputs/modules/release-docs.md",
-    "outputs/modules/reference-templates.md",
-    "outputs/module-map.json",
-    "outputs/dependency-graph.json",
-    "outputs/issue-candidates.md"
-  ],
-  "checkpoints_count": 4
+  "outputs": [],
+  "checkpoints_count": 5
 }

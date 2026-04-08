@@ -1,36 +1,30 @@
 # 모듈: github-flow
 
+전체 GitHub Flow 라이프사이클을 관리하는 스킬.
+
 ## 역할
 
-브랜치 생성부터 PR, 머지, 릴리스까지 GitHub Flow 전체를 한 스킬로 묶은 운영 스킬이다.
+branch → develop → PR → merge → release의 전체 GitHub Flow를 5개 단계로 안내합니다. Phase 2에서 plan → implement → review → commit 내부 루프를 반복합니다.
 
-## 핵심 경로
+## 핵심 파일
 
-- Codex: `codex/skills/github-flow/SKILL.md`
-- Codex 체크리스트: `codex/skills/github-flow/shared/references/github-flow-checklist.md`
-- Codex 메타데이터: `codex/skills/github-flow/agents/openai.yaml`
-- Claude Code 플러그인: `claude-code/plugin/skills/github-flow/SKILL.md`
+| 파일 | 역할 |
+|------|------|
+| `claude-code/plugin/skills/github-flow/SKILL.md` | Claude Code 스킬 |
+| `codex/skills/github-flow/SKILL.md` | Codex 스킬 |
+| `references/github-flow-checklist.md` | 단계별 체크리스트 |
 
-## 단계 구성
+## 5개 Phase
 
-1. Branch
-2. Develop
-3. Push & Pull Request
-4. Merge
-5. Tag & Release
+1. **Branch**: base에서 feature 브랜치 생성
+2. **Develop**: plan → implement → review → commit (내부 루프)
+3. **Push & PR**: `gh pr create`로 PR 생성
+4. **Merge**: CI/리뷰 통과 후 머지
+5. **Tag & Release** (선택): SemVer 태그 + GitHub 릴리스
 
-가운데 Develop 단계는 다시 `plan -> implement -> review -> commit`의 내부 루프로 쪼개진다.
+## 규칙
 
-## 저장소에서 중요한 이유
-
-이 저장소는 공개 배포용 스킬 모음이기 때문에 개별 기능보다 배포 절차와 릴리스 일관성이 중요하다. `github-flow`는 그 운영 절차를 스킬 자체로 명시해 둔 사례다.
-
-## 입문자가 먼저 볼 파일
-
-1. `codex/skills/github-flow/SKILL.md`
-2. `codex/skills/github-flow/shared/references/github-flow-checklist.md`
-3. `CHANGELOG.md`
-
-## 관찰 포인트
-
-`README.md`에는 포함되어 있지만 `scripts/publish_wiki.sh`의 홈/사이드바 템플릿은 아직 `github-flow` 모듈 링크를 만들지 않는다. 저장소 문서를 확장할 때 같이 확인할 항목이다.
+- main/master에 force-push 금지
+- `--no-verify` 금지 (명시적 승인 없이)
+- 파괴적 작업 전 항상 확인
+- PR 당 하나의 논리적 변경

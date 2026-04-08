@@ -1,46 +1,38 @@
 # 모듈: tests
 
+프로젝트의 테스트 스위트.
+
 ## 역할
 
-이 저장소가 약속한 파일 구조, 릴리스 메타데이터, 체크포인트 세션 동작, 위키 게시 흐름을 자동으로 검증한다.
+저장소 구조 계약, 릴리스 계약, 기능 동작을 검증하는 6개 테스트 파일로 구성됩니다.
 
-## 실제 실행 결과
+## 핵심 파일
 
-`python3 -m unittest discover -s tests`를 실행해 `48`개 테스트가 통과했다.
+| 파일 | 테스트 수 (대략) | 범위 |
+|------|-----------------|------|
+| `test_checkpoint_manager.py` | 25+ | 세션 init/checkpoint/sync/publish/migrate |
+| `test_skill_repository_contract.py` | 25+ | 구조, 동기화, 마켓플레이스, MCP |
+| `test_release_contract.py` | 4 | 버전, changelog, gitignore, 인스톨러 |
+| `test_source_analyzer_search.py` | 10+ | 검색 인덱스 생성, 스코어링, 조회 |
+| `test_codex_mcp_install.py` | 3+ | Codex MCP 설치 흐름 |
+| `test_publish_wiki.py` | 5+ | Wiki 페이지 생성 검증 |
 
-## 파일별 책임
+## 테스트 패턴
 
-### `tests/test_skill_repository_contract.py`
+- `unittest` 프레임워크 (외부 의존성 없음)
+- `tempfile.TemporaryDirectory`로 격리된 파일시스템 테스트
+- `unittest.mock.patch`로 git 명령 모킹
+- `importlib.util`로 checkpoint_manager.py 동적 로드
 
-`15`개 테스트가 공개 Codex 스킬, 로컬 skill-generator, Claude Code 플러그인, 마켓플레이스 JSON의 구조 계약을 검증한다.
+## 핵심 계약 테스트
 
-핵심 검증:
+- **구조 계약**: 모든 SKILL.md의 frontmatter description이 따옴표로 감싸져 있는지, flat 구조인지, 언어 정책이 올바른지
+- **동기화 계약**: `source_analyzer_search.py`가 5곳에서 동일한지, `server.py`가 3곳에서 동일한지
+- **마켓플레이스 계약**: marketplace.json, plugin.json이 올바른 구조인지
+- **릴리스 계약**: VERSION.txt 형식, CHANGELOG에 버전 포함, 인스톨러가 path traversal 거부
 
-- 모든 `SKILL.md`의 `description` frontmatter가 쌍따옴표인지
-- 공개 Codex 스킬 6개가 평평한 구조를 지키는지
-- 플러그인 스킬 6개가 존재하고 bilingual 정책을 가지는지
-- 플러그인 스킬이 `CODEX_HOME`을 참조하지 않는지
-- `source-analyzer`가 `CLAUDE_PLUGIN_ROOT`를 사용하는지
+## 실행
 
-### `tests/test_checkpoint_manager.py`
-
-`28`개 테스트가 `checkpoint_manager.py`의 세션 생성, 체크포인트 기록, Git helper, exclude 규칙, `sync`, `publish`, `migrate`, `generate-summary`를 검증한다.
-
-### `tests/test_release_contract.py`
-
-`4`개 테스트가 `VERSION.txt`, `CHANGELOG.md`, `LICENSE`, `.gitignore`, 설치 스크립트 보안 규칙을 검증한다.
-
-### `tests/test_publish_wiki.py`
-
-`1`개 테스트가 `scripts/publish_wiki.sh`가 세션 outputs에서 모듈 링크와 Home/Sidebar를 올바르게 생성하는지 검증한다.
-
-## 입문자가 먼저 볼 파일
-
-1. `tests/test_skill_repository_contract.py`
-2. `tests/test_checkpoint_manager.py`
-3. `tests/test_release_contract.py`
-4. `tests/test_publish_wiki.py`
-
-## 테스트 철학
-
-이 저장소는 애플리케이션 런타임보다 배포 구조가 중요하므로, 테스트도 기능 테스트보다 계약 테스트 비중이 높다.
+```bash
+python3 -m unittest discover tests -v
+```

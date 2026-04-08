@@ -1,35 +1,27 @@
 # 모듈: plan
 
+요청을 실행 가능한 작업 지시서(Work Order)로 분할하는 스킬.
+
 ## 역할
 
-사용자 요청을 바로 구현하지 않고, 작고 검증 가능한 work order로 나누는 스킬이다.
+사용자의 요청을 분석하여 최대 3개의 작업 지시서로 나눕니다. 각 WO는 30-90분, 최대 5개 터치포인트로 범위가 제한됩니다.
 
-## 핵심 경로
+## 핵심 파일
 
-- Codex: `codex/skills/plan-for-codex/SKILL.md`
-- Codex 참조: `codex/skills/plan-for-codex/shared/references/work-order.md`
-- Claude Code 플러그인: `claude-code/plugin/skills/plan/SKILL.md`
-- 플러그인 참조: `claude-code/plugin/references/work-order.md`
+| 파일 | 역할 |
+|------|------|
+| `claude-code/plugin/skills/plan/SKILL.md` | Claude Code 스킬 |
+| `codex/skills/plan-for-codex/SKILL.md` | Codex 스킬 |
+| `references/work-order.md` | 작업 지시서 템플릿 |
 
-## 책임
+## 워크플로
 
-1. 요청의 명시적 제약을 추출한다.
-2. 작업을 최대 3개의 work order로 분할한다.
-3. 각 work order에 수용 기준과 검증 명령을 넣는다.
-4. API 변경이나 큰 리팩터링은 명시 승인 없이는 막는다.
+1. 요청의 명시적 제약 조건 파악
+2. ≤3개 작업 지시서로 분할
+3. 측정 가능한 수락 기준 작성
+4. 검증 명령 포함
+5. API 변경/광범위 리팩토링은 차단 표시
 
-## Codex와 Claude Code의 차이
+## 출력
 
-- Codex 스킬 이름은 `plan-for-codex`다.
-- Claude Code 플러그인 명령은 `/code-workflow:plan`이다.
-- 핵심 워크플로우는 같고, 호출 이름만 다르다.
-
-## 입문자가 먼저 볼 파일
-
-1. `codex/skills/plan-for-codex/SKILL.md`
-2. `codex/skills/plan-for-codex/shared/references/work-order.md`
-3. `claude-code/plugin/skills/plan/SKILL.md`
-
-## 연결되는 다음 단계
-
-이 스킬의 출력은 보통 `implement`나 `github-flow` Phase 2의 입력이 된다.
+- 계획 요약 + 작업 지시서 1-3개 + `/implement` 제안

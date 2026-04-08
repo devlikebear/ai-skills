@@ -1,29 +1,30 @@
 # 모듈: implement
 
+승인된 작업 지시서를 직접 실행하는 스킬.
+
 ## 역할
 
-승인된 work order 하나를 받아 작고 검증 가능한 코드 변경으로 끝내는 실행 스킬이다.
+plan 스킬이 생성한 작업 지시서(WO)를 하나씩 실행합니다. 범위를 WO 내로 엄격히 제한하며, 범위가 확장되면 중단하고 보고합니다.
 
-## 핵심 경로
+## 핵심 파일
 
-- Codex: `codex/skills/implement/SKILL.md`
-- Codex 참조: `codex/skills/implement/shared/references/work-order.md`
-- Codex 메타데이터: `codex/skills/implement/agents/openai.yaml`
-- Claude Code 플러그인: `claude-code/plugin/skills/implement/SKILL.md`
+| 파일 | 역할 |
+|------|------|
+| `claude-code/plugin/skills/implement/SKILL.md` | Claude Code 스킬 |
+| `codex/skills/implement/SKILL.md` | Codex 스킬 |
+| `references/work-order.md` | 작업 지시서 템플릿 |
 
-## 책임
+## 워크플로
 
-1. 구현 목표를 1-2문장으로 다시 적는다.
-2. 범위를 하나의 작업 단위로 제한한다.
-3. work order에 적힌 검증 명령을 실제로 실행한다.
-4. 검증 실패가 국소적일 때만 좁게 재시도한다.
+1. 구현 목표 1-2문장으로 재서술
+2. WO 확인 또는 재작성
+3. 범위: 1개 작업 단위, 30-90분, ≤5개 터치포인트
+4. 직접 구현
+5. 검증 실패 시 최대 2회 재시도
+6. 범위 확대 시 즉시 중단
 
-## 저장소 관점에서 중요한 이유
+## 규칙
 
-이 저장소의 다른 스킬들은 문서나 절차를 만든다. `implement`만 실제 파일 변경을 수행하므로, 다른 스킬과 비교해 가장 실행 지향적이다.
-
-## 입문자가 먼저 볼 파일
-
-1. `codex/skills/implement/SKILL.md`
-2. `codex/skills/implement/agents/openai.yaml`
-3. `claude-code/plugin/skills/implement/SKILL.md`
+- 최소 변경 선호
+- 비목표(non-goals)는 절대 제약 조건
+- 검증 명령 실행 필수

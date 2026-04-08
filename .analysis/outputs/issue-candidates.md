@@ -1,20 +1,38 @@
-### TIDY-001: README 버전과 레이아웃 설명 동기화
+# Issue Candidates
 
-- Module: `.`
-- Type: `TIDY`
-- Evidence: `README.md`는 현재 릴리스를 `0.4.0`으로 적고 있고 `.codex/skills/skill-generator/README.md`, `ko/`, `en/` 구조를 예시로 보여 준다. 하지만 실제 기준 파일인 `VERSION.txt`와 현재 트리는 `0.6.1` 및 flat layout을 사용한다.
-- Suggested action: `README.md`의 현재 버전, 저장소 레이아웃 스니펫, skill-generator 설명을 `VERSION.txt`와 실제 디렉터리 구조에 맞게 갱신한다.
+source-analyzer analyze 모드에서 발견한 리팩토링/정리 후보입니다.
 
-### TIDY-002: 위키 게시 입력을 안정 산출물로 전환
+### DUP-001: checkpoint_manager.py 듀얼 배포 중복
 
-- Module: `scripts/`
-- Type: `TIDY`
-- Evidence: `scripts/publish_wiki.sh`는 `.analysis/sessions/<session-id>/outputs/`를 직접 읽는다. 반면 `source-analyzer`의 현재 publish 모델은 `.analysis/outputs/`를 Git 추적용 안정 결과로 사용한다.
-- Suggested action: 위키 게시 스크립트가 기본적으로 `.analysis/outputs/`를 읽고, 필요하면 구형 세션 출력만 fallback 하도록 정리한다.
-
-### DUP-001: 체크포인트 매니저 단일 소스 강제
-
-- Module: `codex/skills/source-analyzer/shared/scripts`
+- Module: `claude-code/plugin/scripts/`
 - Type: `DUP`
-- Evidence: `codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py`와 `claude-code/plugin/scripts/checkpoint_manager.py`는 현재 동일하지만 수동으로 두 벌 유지된다. `CLAUDE.md`도 두 파일을 항상 동일하게 유지하라고 별도 규칙으로 강제한다.
-- Suggested action: 한 파일을 원본으로 생성하거나, 최소한 두 파일의 바이트 단위 동일성을 검증하는 전용 계약 테스트를 추가한다.
+- Evidence: checkpoint_manager.py가 codex와 claude-code 두 곳에 동일한 내용으로 유지되어야 하며, CLAUDE.md에서 수동 동기화를 요구합니다. sync 스크립트가 search/server만 커버하고 checkpoint_manager는 커버하지 않습니다.
+- Suggested action: sync_source_analyzer_mcp.sh를 확장하여 checkpoint_manager.py��� canonical source에서 동기화하거나, 두 배포판이 동일 파일을 심볼릭 링크로 참조하도록 변경.
+
+### DUP-002: MCP server.py 5곳 복사
+
+- Module: `servers/source-analyzer-mcp/`
+- Type: `DUP`
+- Evidence: server.py와 source_analyzer_search.py가 각각 3곳, 5곳에 동일하게 복사됩니다. sync 스크립트가 있지만 수동 실행이 필요하며, 동기화 누락 시 drift 발생 가능.
+- Suggested action: CI/pre-commit hook에서 sync 상태를 자동 검증하거나, 번들 복사 수를 줄이는 방안 검토.
+
+### TIDY-001: .gitignore에 .analysis/cache/ 누락
+
+- Module: `.gitignore`
+- Type: `TIDY`
+- Evidence: SKILL.md에서 cache/ 디렉토리는 git-ignored여야 한다고 명시하지만, .gitignore에 `.analysis/cache/` 패턴이 없습니다. 현재 `.analysis/sessions/`만 무시됩니다.
+- Suggested action: `.gitignore`에 `.analysis/cache/` 추가.
+
+### TIDY-002: Codex source-analyzer SKILL.md의 Prefer rg 라인
+
+- Module: `codex/skills/source-analyzer/`
+- Type: `TIDY`
+- Evidence: CLAUDE.md에서 "Codex SKILL.md includes Prefer rg, sed... in constraints"라고 명시하지만, 실제 Codex SKILL.md에서 이 라인이 Constraints 섹션 내에 포함되어 있는지 확인 필요.
+- Suggested action: Codex와 Claude SKILL.md의 Constraints 섹션 diff를 검증하는 계약 테스트 추가 검토.
+
+### TIDY-003: publish_wiki.sh에서 outputs fallback 경로 로직
+
+- Module: `claude-code/plugin/scripts/publish_wiki.sh`
+- Type: `TIDY`
+- Evidence: wiki 발행 스크립트가 세션 outputs → published outputs 두 단계로 폴백하는데, 0.6.0 이후 outputs가 항상 `.analysis/outputs/`에 publish되므로 세션 내부 outputs 경로를 먼저 시도하는 로직은 불필요할 수 있음.
+- Suggested action: 세션 outputs 직접 참조를 제거하고 published outputs만 사용하도록 단순화.
