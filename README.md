@@ -4,6 +4,18 @@ Public repository for reusable AI-agent skills, supporting both Codex and Claude
 
 Current release: `0.11.0`
 
+### Search CLI: A/B tested for token efficiency
+
+`source-analyzer` ships a built-in search CLI (`brief`, `search --snippet-only`) that was A/B tested against raw file reads with identical questions across sub-agents:
+
+| Metric | v0.10 (full text) | v0.11 (brief + snippet) | Raw file reads |
+|--------|-------------------|------------------------|----------------|
+| **Tokens** | 36,110 | **26,251** | 26,600 |
+| **Tool calls** | 11 | **9** | 10 |
+| **Duration** | 46s | **42s** | 49s |
+
+The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file efficiency on small projects and scales better on large codebases — the agent reads only what it needs instead of full documents.
+
 ## Overview
 
 - Supports both Codex runtime skills and a Claude Code plugin marketplace.
