@@ -2,6 +2,31 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.11.0 - 2026-04-08
+
+### Added
+
+- `brief` CLI command: returns overview snippet, module list with responsibilities, and issue summary in a single call for minimal token usage.
+- `--snippet-only` flag for `search`: returns lightweight results with snippet instead of full text.
+- `--snippet-len N` flag for `search`: configurable snippet length (default 240 chars).
+- Module context auto-attached to snippet-only search results (module name, responsibility, key files).
+- `analysis.brief` MCP tool matching the CLI `brief` command.
+- Korean (Unicode) tokenization support in search index — `tokenize()` now uses `\w` with `re.UNICODE`.
+
+### Changed
+
+- SKILL.md (both Codex and Claude Code) updated to actively use CLI search:
+  - Required workflow starts with `brief` when prior analysis exists.
+  - Resume protocol uses `brief` + `search --snippet-only` instead of reading raw files.
+  - Refactor-guide and overhaul modes use CLI for loading issue candidates and architecture context.
+  - Search CLI section documents recommended usage pattern: brief → snippet search → full only if needed.
+
+### Fixed
+
+- Resolved 5 analysis issues: DUP-001 (checkpoint_manager sync), DUP-002 (sync contract test), TIDY-001 (.gitignore cache), TIDY-002 (constraints diff test), TIDY-003 (publish_wiki simplification).
+- `sync_source_analyzer_mcp.sh` now also syncs `checkpoint_manager.py` from canonical source.
+- `publish_wiki.sh` simplified to use published outputs directory directly.
+
 ## 0.10.8 - 2026-04-07
 
 ### Changed
