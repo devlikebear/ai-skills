@@ -46,7 +46,7 @@ def parse_resume_session_id(resume_path: Path) -> str | None:
 
 
 def tokenize(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9_./-]+", text.lower())
+    return re.findall(r"[\w_./-]+", text.lower(), re.UNICODE)
 
 
 def first_heading(text: str, fallback: str) -> str:
