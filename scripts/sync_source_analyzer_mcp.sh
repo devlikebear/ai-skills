@@ -22,3 +22,7 @@ copy_file "${CANONICAL_ROOT}/source_analyzer_search.py" "${REPO_ROOT}/plugins/so
 copy_file "${CANONICAL_ROOT}/server.py" "${REPO_ROOT}/codex/skills/source-analyzer/shared/mcp/source-analyzer-mcp/server.py"
 copy_file "${CANONICAL_ROOT}/server.py" "${REPO_ROOT}/claude-code/plugin/servers/source-analyzer-mcp/server.py"
 copy_file "${CANONICAL_ROOT}/server.py" "${REPO_ROOT}/plugins/source-analyzer-tools/servers/source-analyzer-mcp/server.py"
+
+# Sync checkpoint_manager.py (canonical: claude-code/plugin/scripts/)
+CHECKPOINT_CANONICAL="${REPO_ROOT}/claude-code/plugin/scripts/checkpoint_manager.py"
+copy_file "${CHECKPOINT_CANONICAL}" "${REPO_ROOT}/codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py"

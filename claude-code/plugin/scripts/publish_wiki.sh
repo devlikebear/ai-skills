@@ -335,16 +335,11 @@ main() {
     session_id=$(find_latest_session)
   fi
 
-  local outputs_dir="${ANALYSIS_DIR}/sessions/${session_id}/outputs"
+  local outputs_dir="${ANALYSIS_DIR}/outputs"
   if [[ ! -d "${outputs_dir}" ]]; then
-    # Fallback: try published outputs
-    outputs_dir="${ANALYSIS_DIR}/outputs"
-    if [[ ! -d "${outputs_dir}" ]]; then
-      echo "error: no outputs directory found for session ${session_id}" >&2
-      echo "hint: run a checkpoint with status 'paused' or 'completed' first" >&2
-      exit 1
-    fi
-    echo "note: using published outputs from ${outputs_dir}"
+    echo "error: no published outputs directory found at ${outputs_dir}" >&2
+    echo "hint: run a checkpoint with status 'paused' or 'completed' first to publish outputs" >&2
+    exit 1
   fi
 
   echo "session: ${session_id}"

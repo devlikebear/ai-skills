@@ -1,6 +1,7 @@
 __pycache__/
 .DS_Store
 .analysis/sessions/
+.analysis/cache/
 .analysis/RESUME.md
 .drafts/
 .pytest_cache/

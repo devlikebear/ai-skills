@@ -715,32 +715,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     search_index_parser.add_argument("--session-id")
     search_index_parser.add_argument("--mode", choices=["analyze", "refactor-guide", "overhaul"])
 
-    search_parser = subparsers.add_parser("search", help="Search published analysis outputs and checkpoints.")
-    search_parser.add_argument("--analysis-dir", default=".analysis")
-    search_parser.add_argument("--session-id")
-    search_parser.add_argument("query", nargs="?")
-    search_parser.add_argument("--query", dest="query_option")
-    search_parser.add_argument("--top-k", type=int, default=5)
-    search_parser.add_argument("--kinds", nargs="*", default=[])
-
-    overview_parser = subparsers.add_parser("get-overview", help="Get the published overview document.")
-    overview_parser.add_argument("--analysis-dir", default=".analysis")
-
-    module_parser = subparsers.add_parser("get-module", help="Get a published module document or module-map entry.")
-    module_parser.add_argument("--analysis-dir", default=".analysis")
-    module_parser.add_argument("--session-id")
-    module_parser.add_argument("name_or_path")
-
-    trace_parser = subparsers.add_parser("trace-deps", help="Trace dependencies for a file from dependency-graph.json.")
-    trace_parser.add_argument("--analysis-dir", default=".analysis")
-    trace_parser.add_argument("--session-id")
-    trace_parser.add_argument("path")
-    trace_parser.add_argument("--depth", type=int, default=1)
-
-    issues_parser = subparsers.add_parser("get-issues", help="List published issue candidates.")
-    issues_parser.add_argument("--analysis-dir", default=".analysis")
-    issues_parser.add_argument("--type", dest="issue_type")
-
     publish_parser = subparsers.add_parser("publish", help="Copy session outputs to .analysis/outputs/ for git tracking.")
     publish_parser.add_argument("--analysis-dir", default=".analysis")
     publish_parser.add_argument("--session-id")
@@ -748,6 +722,30 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
     migrate_parser = subparsers.add_parser("migrate", help="Migrate old layout: publish latest session outputs to .analysis/outputs/.")
     migrate_parser.add_argument("--analysis-dir", default=".analysis")
+
+    # --- CLI search commands (replaces MCP server) ---
+    search_parser = subparsers.add_parser("search", help="Search analysis outputs by keyword query.")
+    search_parser.add_argument("query", help="Search query text.")
+    search_parser.add_argument("--top-k", type=int, default=5)
+    search_parser.add_argument("--kinds", nargs="*", help="Filter by chunk kind (e.g. section, issue, module).")
+    search_parser.add_argument("--analysis-dir", default=".analysis")
+    search_parser.add_argument("--session-id")
+
+    overview_parser = subparsers.add_parser("get-overview", help="Print published overview document.")
+    overview_parser.add_argument("--analysis-dir", default=".analysis")
+
+    get_module_parser = subparsers.add_parser("get-module", help="Print a specific module document.")
+    get_module_parser.add_argument("name", help="Module name or file path.")
+    get_module_parser.add_argument("--analysis-dir", default=".analysis")
+
+    trace_parser = subparsers.add_parser("trace-deps", help="Trace dependency chain for a file.")
+    trace_parser.add_argument("file", help="File path to trace.")
+    trace_parser.add_argument("--depth", type=int, default=2)
+    trace_parser.add_argument("--analysis-dir", default=".analysis")
+
+    issues_parser = subparsers.add_parser("get-issues", help="List published issue candidates.")
+    issues_parser.add_argument("--type", dest="issue_type", help="Filter by type: DUP, SEC, TIDY.")
+    issues_parser.add_argument("--analysis-dir", default=".analysis")
 
     return parser.parse_args(argv)
 
@@ -824,49 +822,6 @@ def cli(argv: list[str]) -> int:
         print(f"generated_at={result['generated_at']}")
         return 0
 
-    if args.command == "search":
-        search_module = load_search_module()
-        query = (getattr(args, "query_option", None) or getattr(args, "query", None) or "").strip()
-        if not query:
-            raise ValueError("search query is required")
-        results = search_module.search_analysis(
-            analysis_dir=analysis_dir,
-            query=query,
-            top_k=args.top_k,
-            kinds=args.kinds or None,
-            session_id=args.session_id,
-        )
-        print(json.dumps(results, indent=2, ensure_ascii=False))
-        return 0
-
-    if args.command == "get-overview":
-        search_module = load_search_module()
-        print(json.dumps(search_module.get_overview(analysis_dir), indent=2, ensure_ascii=False))
-        return 0
-
-    if args.command == "get-module":
-        search_module = load_search_module()
-        result = search_module.get_module(analysis_dir, args.name_or_path)
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        return 0
-
-    if args.command == "trace-deps":
-        search_module = load_search_module()
-        result = search_module.trace_dependencies(
-            analysis_dir=analysis_dir,
-            path=args.path,
-            depth=args.depth,
-            session_id=args.session_id,
-        )
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        return 0
-
-    if args.command == "get-issues":
-        search_module = load_search_module()
-        result = search_module.get_issue_candidates(analysis_dir, issue_type=args.issue_type)
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        return 0
-
     if args.command == "publish":
         resolved_session_id = resolve_session_id(analysis_dir, args.session_id, mode=args.mode)
         result = publish_outputs(analysis_dir, resolved_session_id)
@@ -888,6 +843,43 @@ def cli(argv: list[str]) -> int:
         for f in result["published"]:
             print(f"  {f}")
         print("\nAdd to .gitignore:  .analysis/sessions/")
+        return 0
+
+    # --- CLI search commands ---
+    search_mod = None
+
+    def _search():
+        nonlocal search_mod
+        if search_mod is None:
+            search_mod = load_search_module()
+        return search_mod
+
+    if args.command == "search":
+        results = _search().search_analysis(
+            analysis_dir, query=args.query, top_k=args.top_k,
+            kinds=args.kinds, session_id=getattr(args, "session_id", None),
+        )
+        print(json.dumps(results, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "get-overview":
+        result = _search().get_overview(analysis_dir)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "get-module":
+        result = _search().get_module(analysis_dir, args.name)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "trace-deps":
+        result = _search().trace_dependencies(analysis_dir, args.file, depth=args.depth)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "get-issues":
+        result = _search().get_issue_candidates(analysis_dir, issue_type=args.issue_type)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
     return 1

@@ -588,12 +588,11 @@ class SearchCliTests(unittest.TestCase):
             exit_code, output = self._run_cli(
                 [
                     "search",
+                    "missing auth validation",
                     "--analysis-dir",
                     str(analysis_dir),
                     "--session-id",
                     session_id,
-                    "--query",
-                    "missing auth validation",
                     "--top-k",
                     "2",
                 ]

@@ -253,6 +253,27 @@ class SkillRepositoryContractTests(unittest.TestCase):
                 msg=f"search source drift detected: {path}",
             )
 
+    def test_source_analyzer_constraints_codex_has_prefer_rg(self):
+        codex_content = (SOURCE_ANALYZER_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        claude_content = (CLAUDE_CODE_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("Prefer `rg", codex_content, msg="Codex source-analyzer should include 'Prefer rg' in constraints")
+        self.assertNotIn("Prefer `rg", claude_content, msg="Claude source-analyzer should not include 'Prefer rg' in constraints")
+
+    def test_source_analyzer_fallback_file_codex_creates_agents_md(self):
+        codex_content = (SOURCE_ANALYZER_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        claude_content = (CLAUDE_CODE_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("create `AGENTS.md`", codex_content)
+        self.assertIn("create `CLAUDE.md`", claude_content)
+
+    def test_checkpoint_manager_sources_are_synced(self):
+        canonical = (CLAUDE_CODE_PLUGIN_ROOT / "scripts" / "checkpoint_manager.py").read_text(encoding="utf-8")
+        codex_copy = (SOURCE_ANALYZER_ROOT / "shared" / "scripts" / "checkpoint_manager.py").read_text(encoding="utf-8")
+        self.assertEqual(
+            canonical,
+            codex_copy,
+            msg="checkpoint_manager.py drift detected between Claude and Codex distributions",
+        )
+
     def test_source_analyzer_mcp_server_sources_are_synced(self):
         canonical_server = (SOURCE_ANALYZER_MCP_ROOT / "server.py").read_text(encoding="utf-8")
         for path in [

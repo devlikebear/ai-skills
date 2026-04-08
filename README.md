@@ -9,8 +9,9 @@ Current release: `0.10.8`
 - Supports both Codex runtime skills and a Claude Code plugin marketplace.
 - Codex skills use a flat runtime layout: one `SKILL.md`, one `agents/openai.yaml`, and optional `shared/`.
 - Claude Code skills are distributed through the `code-workflow` plugin with bilingual `SKILL.md` files and shared `references/`.
-- `source-analyzer` produces resumable `.analysis/` outputs and now ships a wiki publisher alongside its checkpoint manager.
-- `source-analyzer` also ships a local search MCP server for querying analysis outputs and checkpoints.
+- `source-analyzer` produces resumable `.analysis/` outputs and ships a wiki publisher alongside its checkpoint manager.
+- `source-analyzer` provides built-in CLI search commands for querying analysis outputs and checkpoints.
+- A local MCP server is also available for agents that support MCP-based tool discovery.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 - Public Codex skill roots:
   - `codex/skills/source-analyzer`
@@ -25,67 +26,37 @@ Current release: `0.10.8`
 ```text
 codex/
   skills/
-    source-analyzer/
-      SKILL.md
-      agents/
-      shared/
-    implement/
-      SKILL.md
-      agents/
-      shared/
-    plan-for-codex/
-      SKILL.md
-      agents/
-      shared/
-    refactor/
-      SKILL.md
-      agents/
-      shared/
-    review/
-      SKILL.md
-      agents/
-      shared/
-    github-flow/
-      SKILL.md
-      agents/
-      shared/
+    source-analyzer/       # BFS codebase analysis (3 modes)
+    implement/             # Work order execution
+    plan-for-codex/        # Request → work orders
+    refactor/              # Behavior-preserving refactoring
+    review/                # Diff-based code review
+    github-flow/           # Full GitHub Flow lifecycle
 claude-code/
   plugin/
     .claude-plugin/
-      plugin.json
-    .mcp.json
-    skills/
-      source-analyzer/
-      implement/
-      plan/
-      refactor/
-      review/
-      github-flow/
-    references/
-    scripts/
+      plugin.json          # code-workflow plugin manifest
+    .mcp.json              # MCP server config (optional)
+    skills/                # 6 Claude Code skills
+    references/            # 14 shared reference templates
+    scripts/               # checkpoint_manager.py (canonical), search, wiki
+    servers/               # MCP server bundle (synced copy)
 .agents/
   plugins/
-    marketplace.json
+    marketplace.json       # Codex local marketplace
 .claude-plugin/
-  marketplace.json
+  marketplace.json         # Claude Code marketplace
 plugins/
-  source-analyzer-tools/
-    .codex-plugin/
-      plugin.json
-    .mcp.json
-    servers/
+  source-analyzer-tools/   # Codex MCP plugin bundle
 servers/
-  source-analyzer-mcp/
+  source-analyzer-mcp/     # Canonical MCP server sources
 .codex/
   skills/
-    skill-generator/
-      SKILL.md
-      agents/
+    skill-generator/       # Skill authoring wrapper
 scripts/
-  install_codex_skill.sh
-  sync_source_analyzer_mcp.sh
-  publish_wiki.sh
-tests/
+  install_codex_skill.sh   # Codex skill installer
+  sync_source_analyzer_mcp.sh  # Sync canonical sources to all bundles
+tests/                     # 6 test suites
 ```
 
 `codex/skills/<skill-name>` stores the Codex source layout with flat runtime files only.
@@ -99,8 +70,8 @@ tests/
 - Produces resumable outputs under `.analysis/sessions/` and published outputs under `.analysis/outputs/`.
 - Supports `analyze`, `refactor-guide`, and `overhaul` modes.
 - Ships `checkpoint_manager.py` and `publish_wiki.sh` in both Codex and Claude Code distributions.
-- Can build a local search cache under `.analysis/cache/source-analyzer-search/`.
-- Ships a local MCP server that exposes search, module lookup, dependency tracing, and checkpoint/session queries.
+- Provides CLI search commands: `search`, `get-overview`, `get-module`, `trace-deps`, `get-issues`.
+- Also ships a local MCP server under `servers/source-analyzer-mcp/` for MCP-capable agents.
 
 ### `implement`
 
@@ -115,6 +86,7 @@ tests/
 ### `refactor`
 
 - Performs safe, behavior-preserving refactoring.
+- Integrates with `source-analyzer` via `issue-candidates.md` for analysis-driven refactoring.
 - Uses shared checklists and refactoring patterns.
 
 ### `review`
@@ -195,17 +167,43 @@ After installation the following skills are available:
 - `/code-workflow:github-flow`
 
 Plugin skills are bilingual and detect the user's language automatically.
-The plugin now also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.
+The plugin also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.
 
 ### Claude Code quickstart for `source-analyzer-search`
 
 1. Run `/code-workflow:source-analyzer` and let it publish `.analysis/outputs/`.
-2. Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py" generate-search-index` inside the analyzed project.
-3. Ask Claude Code to use `analysis.search`, `analysis.get_module`, or `analysis.trace_dependencies` against that project.
+2. The search index is generated automatically on publish. To rebuild manually:
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py" generate-search-index
+   ```
+3. Use the built-in CLI search commands or the MCP tools to query the analysis.
+
+## CLI Search Commands
+
+`checkpoint_manager.py` provides CLI subcommands for querying analysis outputs without requiring an MCP server:
+
+```bash
+CHECKPOINT_SCRIPT="path/to/checkpoint_manager.py"
+
+# Keyword search across all analysis outputs
+python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --top-k 5
+
+# Get the published overview document
+python3 "$CHECKPOINT_SCRIPT" get-overview
+
+# Get a specific module document by name
+python3 "$CHECKPOINT_SCRIPT" get-module auth
+
+# Trace dependency chain for a file
+python3 "$CHECKPOINT_SCRIPT" trace-deps src/auth.py --depth 3
+
+# List issue candidates (optionally filter by type)
+python3 "$CHECKPOINT_SCRIPT" get-issues --type SEC
+```
 
 ## Build Search Cache
 
-`source-analyzer` now auto-generates the search cache when outputs are published on `paused` or `completed` checkpoints.
+`source-analyzer` auto-generates the search cache when outputs are published on `paused` or `completed` checkpoints.
 If you already finished analysis earlier, you can still generate or rebuild the index manually:
 
 ```bash
@@ -213,12 +211,6 @@ python3 codex/skills/source-analyzer/shared/scripts/checkpoint_manager.py genera
 ```
 
 If the cache is missing, the MCP server can still fall back to direct scanning of `.analysis/outputs/`.
-
-Example retrieval prompts once the MCP server is available:
-
-- `Use analysis.search to find the auth token validation flow.`
-- `Use analysis.get_module for auth and summarize the responsibilities.`
-- `Use analysis.trace_dependencies for src/auth.py with depth 2.`
 
 ## Publish Analysis to GitHub Wiki
 
@@ -235,6 +227,24 @@ When `source-analyzer` is installed as a runtime skill, the distributed wiki pub
 - `claude-code/plugin/scripts/publish_wiki.sh`
 
 Those distributed scripts support `--project-dir <path>` so they can publish analysis outputs from another checked-out project.
+
+## Dual-Distribution Sync
+
+Shared scripts must stay identical across distributions. The canonical sources and their sync targets:
+
+| Canonical Source | Sync Targets |
+|-----------------|--------------|
+| `claude-code/plugin/scripts/checkpoint_manager.py` | `codex/.../shared/scripts/checkpoint_manager.py` |
+| `servers/source-analyzer-mcp/source_analyzer_search.py` | 5 locations (see sync script) |
+| `servers/source-analyzer-mcp/server.py` | 3 locations (see sync script) |
+
+Run the sync script after modifying any canonical source:
+
+```bash
+scripts/sync_source_analyzer_mcp.sh
+```
+
+Contract tests in `tests/test_skill_repository_contract.py` verify all copies stay in sync.
 
 ## Skill Root Convention
 
@@ -267,6 +277,7 @@ Use `.codex/skills/skill-generator` when you want to generate a new Codex skill 
 - Codex MCP servers can be registered directly with `codex mcp add ...`.
 - Claude Code installs skills via plugin marketplace.
 - `.analysis/outputs/` contains publishable, git-trackable analysis outputs.
-- `.analysis/cache/source-analyzer-search/` contains local search indexes for MCP retrieval.
+- `.analysis/cache/source-analyzer-search/` contains local search indexes (git-ignored).
+- `.analysis/sessions/` contains transient working state (git-ignored).
 - Release history is tracked in `CHANGELOG.md`.
 - Licensing is provided in `LICENSE`.
