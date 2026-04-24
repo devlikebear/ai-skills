@@ -113,7 +113,8 @@
       "CHANGELOG.md",
       "CLAUDE.md",
       "LICENSE",
-      "README.md"
+      "README.md",
+      ".gitignore"
     ]
   }
 }

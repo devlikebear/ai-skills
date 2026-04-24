@@ -89,6 +89,7 @@
     "LICENSE",
     "scripts/install_codex_skill.sh"
   ],
+  ".gitignore": [],
   ".claude-plugin/marketplace.json": [
     "claude-code/plugin/"
   ],

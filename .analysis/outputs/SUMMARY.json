@@ -2,9 +2,9 @@
   "session_id": "analyze-20260408-012720",
   "mode": "analyze",
   "scope": ".",
-  "status": "in_progress",
-  "commit": "aa8a98c823dddede62877db12e107b053bfc2348",
-  "visited_count": 51,
+  "status": "completed",
+  "commit": "f235f295a41cf3fafff8fb9aebe7309d5f04bafc",
+  "visited_count": 78,
   "frontier_count": 0,
   "modules": [
     {
@@ -68,6 +68,30 @@
       "summary": "프로젝트의 테스트 스위트."
     }
   ],
-  "outputs": [],
-  "checkpoints_count": 5
+  "outputs": [
+    "overview.md",
+    "architecture.md",
+    "technologies.md",
+    "glossary.md",
+    "tutorial.md",
+    "clone-coding.md",
+    "implementation-checklist.md",
+    "issue-candidates.md",
+    "SUMMARY.json",
+    "dependency-graph.json",
+    "module-map.json",
+    "modules/source-analyzer.md",
+    "modules/plan.md",
+    "modules/implement.md",
+    "modules/review.md",
+    "modules/refactor.md",
+    "modules/github-flow.md",
+    "modules/plugin.md",
+    "modules/scripts.md",
+    "modules/tests.md",
+    "modules/reference-templates.md",
+    "modules/skill-generator.md",
+    "modules/release-docs.md"
+  ],
+  "checkpoints_count": 7
 }
