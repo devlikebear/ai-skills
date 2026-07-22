@@ -2,6 +2,75 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.14.1 - 2026-07-22
+
+### Changed
+
+- Made Claude Code and Codex MCP manifests launch Python directly without
+  `bash -c`, Homebrew paths, or hard-coded Unix PATH injection.
+- Reframed Codex installation around the `code-workflow` plugin and modern
+  `.agents/skills` discovery while documenting the legacy installer boundary.
+- Added update, rollback, and macOS/Linux/Windows support guidance.
+
+### Fixed
+
+- Added one release contract that verifies every marketplace and plugin manifest
+  plus the MCP server handshake uses the exact `VERSION.txt` value.
+- Made the standalone Codex MCP plugin resolve its server through `PLUGIN_ROOT`
+  and added the required install-surface default prompts.
+
+## 0.14.0 - 2026-07-22
+
+### Added
+
+- Added explicit-only `register-analysis-context` skills for Codex and Claude Code
+  to register an existing analysis without coupling instruction-file edits to analysis.
+- Added explicit-only `publish-analysis-wiki` skills with mandatory dry-run review
+  before any GitHub Wiki push.
+- Added routing evaluations for both new side-effecting skills and their confusion
+  boundaries.
+
+### Changed
+
+- Restricted `source-analyzer` to `.analysis/` updates and moved operational detail
+  into focused reference documents.
+- Configured the Claude Code analyzer to run in an isolated fork context.
+- Expanded the Codex `code-workflow` plugin bundle to include all eight skills.
+
+## 0.13.0 - 2026-07-22
+
+### Added
+
+- Added the repo-local Codex `code-workflow` plugin with all six workflow skills
+  and the bundled `source-analyzer-search` MCP server.
+- Added `scripts/sync_codex_workflow_plugin.sh` to generate the Codex plugin skill
+  bundle from canonical `codex/skills` sources with plugin-relative runtime paths.
+- Added contract tests for the Codex plugin manifest, marketplace registration,
+  components, and canonical skill drift.
+
+### Changed
+
+- Marked `scripts/install_codex_skill.sh` as a legacy compatibility path while
+  preserving its existing behavior for current users.
+
+## 0.12.0 - 2026-07-22
+
+### Added
+
+- Added `evals/skill-routing.json` with positive, negative, and adjacent-skill
+  confusion prompts for all six workflow skills.
+- Added repository contracts for routing fixture coverage, unique case IDs, and
+  required evaluation fields.
+
+### Changed
+
+- Made `github-flow` explicitly invocable on both Codex and Claude Code instead
+  of allowing implicit model invocation.
+- Updated both `github-flow` distributions to inspect and preserve the working
+  tree before checkout or pull, use fast-forward-only base updates, and require
+  explicit user intent for push, PR, merge, branch deletion, tag, and release phases.
+- Added the four-phase skill platform modernization plan under `docs/plans/`.
+
 ## 0.11.0 - 2026-04-08
 
 ### Added

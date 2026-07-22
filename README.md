@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.11.0`
+Current release: `0.14.1`
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -21,12 +21,15 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
 - Supports both Codex runtime skills and a Claude Code plugin marketplace.
 - Codex skills use a flat runtime layout: one `SKILL.md`, one `agents/openai.yaml`, and optional `shared/`.
 - Claude Code skills are distributed through the `code-workflow` plugin with bilingual `SKILL.md` files and shared `references/`.
-- `source-analyzer` produces resumable `.analysis/` outputs and ships a wiki publisher alongside its checkpoint manager.
+- `source-analyzer` produces resumable `.analysis/` outputs and never changes files outside `.analysis/`.
+- Instruction registration and GitHub Wiki publishing are explicit-only companion skills.
 - `source-analyzer` provides built-in CLI search commands for querying analysis outputs and checkpoints.
 - A local MCP server is also available for agents that support MCP-based tool discovery.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 - Public Codex skill roots:
   - `codex/skills/source-analyzer`
+  - `codex/skills/register-analysis-context`
+  - `codex/skills/publish-analysis-wiki`
   - `codex/skills/implement`
   - `codex/skills/plan-for-codex`
   - `codex/skills/refactor`
@@ -39,6 +42,8 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
 codex/
   skills/
     source-analyzer/       # BFS codebase analysis (3 modes)
+    register-analysis-context/ # Explicit instruction registration
+    publish-analysis-wiki/ # Explicit Wiki preview and publishing
     implement/             # Work order execution
     plan-for-codex/        # Request → work orders
     refactor/              # Behavior-preserving refactoring
@@ -49,8 +54,8 @@ claude-code/
     .claude-plugin/
       plugin.json          # code-workflow plugin manifest
     .mcp.json              # MCP server config (optional)
-    skills/                # 6 Claude Code skills
-    references/            # 14 shared reference templates
+    skills/                # 8 Claude Code skills
+    references/            # Shared reference templates
     scripts/               # checkpoint_manager.py (canonical), search, wiki
     servers/               # MCP server bundle (synced copy)
 .agents/
@@ -59,6 +64,7 @@ claude-code/
 .claude-plugin/
   marketplace.json         # Claude Code marketplace
 plugins/
+  code-workflow/           # Codex workflow plugin (8 skills + MCP)
   source-analyzer-tools/   # Codex MCP plugin bundle
 servers/
   source-analyzer-mcp/     # Canonical MCP server sources
@@ -81,9 +87,19 @@ tests/                     # 6 test suites
 - Analyzes an existing codebase without modifying source files.
 - Produces resumable outputs under `.analysis/sessions/` and published outputs under `.analysis/outputs/`.
 - Supports `analyze`, `refactor-guide`, and `overhaul` modes.
-- Ships `checkpoint_manager.py` and `publish_wiki.sh` in both Codex and Claude Code distributions.
+- Ships `checkpoint_manager.py`; publishing is owned by the explicit-only `publish-analysis-wiki` skill.
 - Provides CLI search commands: `search`, `get-overview`, `get-module`, `trace-deps`, `get-issues`.
 - Also ships a local MCP server under `servers/source-analyzer-mcp/` for MCP-capable agents.
+
+### `register-analysis-context`
+
+- Explicitly registers an existing `.analysis/AI_CONTEXT.md` pointer in project instruction files.
+- Preserves existing guidance and never runs implicitly.
+
+### `publish-analysis-wiki`
+
+- Previews reviewed `.analysis/outputs/` and publishes them to GitHub Wiki only on explicit request.
+- Requires a reviewed dry-run before any push.
 
 ### `implement`
 
@@ -120,19 +136,63 @@ tests/                     # 6 test suites
 
 ## Install for Codex
 
-Clone this repository, then install one or more skills into your local Codex home.
+The recommended distribution is the `code-workflow` plugin. Add the repository
+marketplace, install the plugin, and verify the installed version:
 
 ```bash
-scripts/install_codex_skill.sh --list
-scripts/install_codex_skill.sh source-analyzer
-scripts/install_codex_skill.sh source-analyzer --with-mcp
-scripts/install_codex_skill.sh implement
-scripts/install_codex_skill.sh --all
+codex plugin marketplace add devlikebear/ai-skills
+codex plugin add code-workflow@ai-skills-local
+codex plugin list
 ```
 
-By default the installer copies skills into `${CODEX_HOME:-$HOME/.codex}/skills`.
-Each skill is a single `SKILL.md` that responds in the user's language automatically.
-For `source-analyzer`, `--with-mcp` also registers `source-analyzer-search` via `codex mcp add ...`.
+For local development, use `codex plugin marketplace add <absolute-repo-path>`.
+The repo marketplace is `.agents/plugins/marketplace.json`, and the installed
+bundle contains all eight skills plus `source-analyzer-search` MCP configuration.
+
+Codex also discovers repo-local authoring skills from `.agents/skills/` and
+personal skills from `$HOME/.agents/skills/`. Use those locations for a single
+local workflow; use the plugin when distributing this full skill set.
+
+### Update Codex plugin
+
+Refresh a Git-backed marketplace and reinstall the plugin so its versioned cache
+is rebuilt:
+
+```bash
+codex plugin marketplace upgrade ai-skills-local
+codex plugin remove code-workflow@ai-skills-local
+codex plugin add code-workflow@ai-skills-local
+codex plugin list
+```
+
+For a local-path marketplace, update the checkout, remove and add the plugin,
+then restart Codex or open a new task.
+
+### Roll back Codex plugin
+
+Pin the marketplace to a known Git tag or commit, then reinstall:
+
+```bash
+codex plugin remove code-workflow@ai-skills-local
+codex plugin marketplace remove ai-skills-local
+codex plugin marketplace add devlikebear/ai-skills --ref <known-good-tag>
+codex plugin add code-workflow@ai-skills-local
+```
+
+Confirm the selected version with `codex plugin list` before resuming work.
+
+### Legacy standalone installer
+
+`scripts/install_codex_skill.sh` remains a legacy compatibility path for users
+already installed under `${CODEX_HOME:-$HOME/.codex}/skills`. It supports the
+existing `--with-mcp` flow, but new installs should use the plugin or modern
+`.agents/skills` locations. It will not be removed before a future major release
+with an announced migration window.
+
+```bash
+scripts/install_codex_skill.sh source-analyzer --with-mcp
+scripts/install_codex_skill.sh --all
+```
 
 ### Codex quickstart for `source-analyzer-search`
 
@@ -176,10 +236,20 @@ After installation the following skills are available:
 - `/code-workflow:review`
 - `/code-workflow:refactor`
 - `/code-workflow:source-analyzer`
+- `/code-workflow:register-analysis-context`
+- `/code-workflow:publish-analysis-wiki`
 - `/code-workflow:github-flow`
 
 Plugin skills are bilingual and detect the user's language automatically.
 The plugin also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.
+
+### Update or roll back Claude Code plugin
+
+Use `/plugin` in Claude Code to refresh the marketplace and reinstall
+`code-workflow@ai-skills`. For rollback, check out or register a marketplace ref
+at the required tag, uninstall the current plugin, and install it again. Restart
+Claude Code after changing a bundled MCP server and verify the available skills
+before continuing.
 
 ### Claude Code quickstart for `source-analyzer-search`
 
@@ -233,12 +303,28 @@ scripts/publish_wiki.sh --session-id analyze-20260308-120027
 scripts/publish_wiki.sh --dry-run
 ```
 
-When `source-analyzer` is installed as a runtime skill, the distributed wiki publishers live at:
+The explicit `publish-analysis-wiki` workflow uses these distributed publishers:
 
-- `codex/skills/source-analyzer/shared/scripts/publish_wiki.sh`
+- `codex/skills/publish-analysis-wiki/shared/scripts/publish_wiki.sh`
 - `claude-code/plugin/scripts/publish_wiki.sh`
 
 Those distributed scripts support `--project-dir <path>` so they can publish analysis outputs from another checked-out project.
+
+## Platform support
+
+The skill documents and Python MCP server are platform-neutral. The release
+contract statically checks every MCP manifest and the full test suite performs
+the runtime smoke test on the release host.
+
+| Platform | Skills and plugin | MCP launcher | Notes |
+|---|---|---|---|
+| macOS | Supported | `python3` direct launch | Full tests and install smoke run on the release host. |
+| Linux | Supported | `python3` direct launch | Requires Python 3 on `PATH`. |
+| Windows | Supported through WSL or Git Bash | `python3` direct launch | Native environments must expose a `python3` command; WSL is the recommended compatibility route. |
+
+No MCP manifest injects Homebrew paths or wraps the server with `bash -c`.
+Platform-specific package managers and Python aliases remain the user's runtime
+responsibility.
 
 ## Dual-Distribution Sync
 
@@ -285,7 +371,8 @@ Use `.codex/skills/skill-generator` when you want to generate a new Codex skill 
 
 ## Notes
 
-- Codex discovers runtime skills from `~/.codex/skills`.
+- Codex discovers authored skills from repo or user `.agents/skills` locations;
+  `${CODEX_HOME:-$HOME/.codex}/skills` is supported here only by the legacy installer.
 - Codex MCP servers can be registered directly with `codex mcp add ...`.
 - Claude Code installs skills via plugin marketplace.
 - `.analysis/outputs/` contains publishable, git-trackable analysis outputs.

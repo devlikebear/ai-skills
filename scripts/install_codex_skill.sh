@@ -26,6 +26,9 @@ Examples:
   scripts/install_codex_skill.sh source-analyzer
   scripts/install_codex_skill.sh source-analyzer --with-mcp
   CODEX_HOME="$HOME/.codex" scripts/install_codex_skill.sh --all
+
+Legacy compatibility installer. For new installations, prefer the repository's
+Codex code-workflow plugin from .agents/plugins/marketplace.json.
 EOF
 }
 
@@ -86,6 +89,7 @@ register_source_analyzer_mcp() {
 }
 
 main() {
+  echo "warning: install_codex_skill.sh is a legacy compatibility path; prefer the code-workflow Codex plugin" >&2
   local with_mcp=0
   local positional=()
   while [[ $# -gt 0 ]]; do

@@ -1,0 +1,26 @@
+{
+  "name": "code-workflow",
+  "version": "0.14.1",
+  "description": "Safe, test-driven workflows for planning, implementation, review, refactoring, source analysis, and GitHub Flow.",
+  "author": {
+    "name": "devlikebear"
+  },
+  "repository": "https://github.com/devlikebear/ai-skills",
+  "license": "MIT",
+  "keywords": ["planning", "implementation", "review", "refactoring", "source-analysis", "github-flow"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Code Workflow",
+    "shortDescription": "Safe, test-driven coding workflows",
+    "longDescription": "Plan bounded work, implement with verification, review changes, refactor safely, analyze source code, and run explicitly authorized GitHub Flow phases.",
+    "developerName": "devlikebear",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "Plan this change as small, verifiable work orders.",
+      "Review the current diff for regressions and missing tests.",
+      "Analyze this codebase and produce resumable architecture docs."
+    ]
+  }
+}

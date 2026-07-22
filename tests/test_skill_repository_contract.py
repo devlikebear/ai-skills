@@ -11,9 +11,12 @@ CLAUDE_CODE_PLUGIN_ROOT = REPO_ROOT / "claude-code" / "plugin"
 MARKETPLACE_ROOT = REPO_ROOT / ".claude-plugin"
 CODEX_PLUGIN_MARKETPLACE_ROOT = REPO_ROOT / ".agents" / "plugins"
 CODEX_PLUGIN_ROOT = REPO_ROOT / "plugins" / "source-analyzer-tools"
+CODEX_WORKFLOW_PLUGIN_ROOT = REPO_ROOT / "plugins" / "code-workflow"
 SOURCE_ANALYZER_MCP_ROOT = REPO_ROOT / "servers" / "source-analyzer-mcp"
 EXPECTED_PUBLIC_SKILLS = {
     "source-analyzer",
+    "register-analysis-context",
+    "publish-analysis-wiki",
     "implement",
     "plan-for-codex",
     "refactor",
@@ -22,6 +25,8 @@ EXPECTED_PUBLIC_SKILLS = {
 }
 EXPECTED_PLUGIN_SKILLS = {
     "source-analyzer",
+    "register-analysis-context",
+    "publish-analysis-wiki",
     "implement",
     "plan",
     "refactor",
@@ -72,7 +77,8 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn('python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline', content)
         self.assertIn("## Search MCP integration", content)
         self.assertIn("analysis.search", content)
-        self.assertIn("If none of these files exist, create `AGENTS.md`", content)
+        self.assertNotIn("create `AGENTS.md`", content)
+        self.assertNotIn("## Publishing to GitHub Wiki", content)
 
     def test_skill_generator_wrapper_exists_in_dot_codex(self):
         self.assertTrue((SKILL_GENERATOR_ROOT / "SKILL.md").exists())
@@ -170,6 +176,46 @@ class SkillRepositoryContractTests(unittest.TestCase):
                 msg=f"plugin skill {skill_path} should not reference CODEX_HOME",
             )
 
+    def test_github_flow_requires_explicit_invocation_on_both_platforms(self):
+        codex_agent = (
+            PUBLIC_SKILLS_ROOT / "github-flow" / "agents" / "openai.yaml"
+        ).read_text(encoding="utf-8")
+        claude_skill = (
+            CLAUDE_CODE_PLUGIN_ROOT / "skills" / "github-flow" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("allow_implicit_invocation: false", codex_agent)
+        self.assertRegex(
+            claude_skill,
+            re.compile(r"^disable-model-invocation:\s*true$", re.MULTILINE),
+        )
+
+    def test_github_flow_checks_worktree_before_checkout_or_pull(self):
+        skill_paths = [
+            PUBLIC_SKILLS_ROOT / "github-flow" / "SKILL.md",
+            CLAUDE_CODE_PLUGIN_ROOT / "skills" / "github-flow" / "SKILL.md",
+        ]
+
+        for skill_path in skill_paths:
+            content = skill_path.read_text(encoding="utf-8")
+            status_position = content.find("git status --short --branch")
+            checkout_position = content.find("git checkout")
+            pull_position = content.find("git pull")
+
+            self.assertGreaterEqual(
+                status_position,
+                0,
+                msg=f"missing worktree preflight in {skill_path}",
+            )
+            self.assertTrue(
+                checkout_position < 0 or status_position < checkout_position,
+                msg=f"git status must precede checkout in {skill_path}",
+            )
+            self.assertTrue(
+                pull_position < 0 or status_position < pull_position,
+                msg=f"git status must precede pull in {skill_path}",
+            )
+
     def test_plugin_references_directory_exists(self):
         refs_dir = CLAUDE_CODE_PLUGIN_ROOT / "references"
         self.assertTrue(refs_dir.is_dir(), msg="missing references directory in plugin")
@@ -198,6 +244,9 @@ class SkillRepositoryContractTests(unittest.TestCase):
     def test_plugin_source_analyzer_uses_claude_plugin_root(self):
         content = (CLAUDE_CODE_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("CLAUDE_PLUGIN_ROOT", content)
+        self.assertNotIn("create `CLAUDE.md`", content)
+        self.assertNotIn("## Publishing to GitHub Wiki", content)
+        self.assertRegex(content, re.compile(r"^context:\s*fork$", re.MULTILINE))
 
     def test_claude_plugin_mcp_config_exists(self):
         self.assertTrue((CLAUDE_CODE_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing .mcp.json in Claude plugin")
@@ -205,10 +254,12 @@ class SkillRepositoryContractTests(unittest.TestCase):
 
         config = json.loads((CLAUDE_CODE_PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
         server = config["mcpServers"]["source-analyzer-search"]
-        self.assertEqual(server["command"], "bash")
-        self.assertEqual(server["args"][0], "-c")
-        self.assertIn("$CLAUDE_PLUGIN_ROOT/servers/source-analyzer-mcp/server.py", server["args"][1])
-        self.assertIn("PATH", server.get("env", {}))
+        self.assertEqual(server["command"], "python3")
+        self.assertEqual(
+            server["args"],
+            ["${CLAUDE_PLUGIN_ROOT}/servers/source-analyzer-mcp/server.py"],
+        )
+        self.assertNotIn("env", server)
 
     def test_codex_plugin_marketplace_exists(self):
         marketplace_path = CODEX_PLUGIN_MARKETPLACE_ROOT / "marketplace.json"
@@ -220,9 +271,112 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("source-analyzer-tools", plugin_names)
 
     def test_codex_plugin_bundle_exists(self):
-        self.assertTrue((CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json").exists(), msg="missing Codex plugin manifest")
+        manifest_path = CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        self.assertTrue(manifest_path.exists(), msg="missing Codex plugin manifest")
         self.assertTrue((CODEX_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing Codex plugin MCP config")
         self.assertTrue((CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py").exists())
+        import json
+
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertTrue(manifest["interface"]["defaultPrompt"])
+
+    def test_codex_workflow_plugin_manifest_and_components(self):
+        import json
+
+        manifest_path = CODEX_WORKFLOW_PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        version = (REPO_ROOT / "VERSION.txt").read_text(encoding="utf-8").strip()
+
+        self.assertEqual(manifest["name"], "code-workflow")
+        self.assertEqual(manifest["version"], version)
+        self.assertEqual(manifest["skills"], "./skills/")
+        self.assertEqual(manifest["mcpServers"], "./.mcp.json")
+        self.assertEqual(manifest["interface"]["displayName"], "Code Workflow")
+
+        bundled_skills = {
+            path.name
+            for path in (CODEX_WORKFLOW_PLUGIN_ROOT / "skills").iterdir()
+            if path.is_dir()
+        }
+        self.assertEqual(bundled_skills, EXPECTED_PUBLIC_SKILLS)
+        self.assertTrue((CODEX_WORKFLOW_PLUGIN_ROOT / ".mcp.json").exists())
+
+        analyzer_skill = (
+            CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("${PLUGIN_ROOT}/skills/source-analyzer", analyzer_skill)
+        self.assertNotIn("CODEX_HOME", analyzer_skill)
+
+        mcp_config = json.loads(
+            (CODEX_WORKFLOW_PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8")
+        )
+        server = mcp_config["mcpServers"]["source-analyzer-search"]
+        self.assertIn("${PLUGIN_ROOT}/skills/source-analyzer", " ".join(server["args"]))
+
+    def test_codex_workflow_plugin_is_registered_in_marketplace(self):
+        import json
+
+        marketplace = json.loads(
+            (CODEX_PLUGIN_MARKETPLACE_ROOT / "marketplace.json").read_text(encoding="utf-8")
+        )
+        entries = {item["name"]: item for item in marketplace["plugins"]}
+        entry = entries["code-workflow"]
+
+        self.assertEqual(entry["source"]["path"], "./plugins/code-workflow")
+        self.assertEqual(entry["policy"]["installation"], "AVAILABLE")
+        self.assertEqual(entry["policy"]["authentication"], "ON_INSTALL")
+
+    def test_codex_workflow_plugin_skill_bundle_matches_canonical_sources(self):
+        for skill_name in EXPECTED_PUBLIC_SKILLS - {"source-analyzer", "publish-analysis-wiki"}:
+            canonical_root = PUBLIC_SKILLS_ROOT / skill_name
+            bundled_root = CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / skill_name
+            canonical_files = {
+                path.relative_to(canonical_root)
+                for path in canonical_root.rglob("*")
+                if path.is_file()
+            }
+            bundled_files = {
+                path.relative_to(bundled_root)
+                for path in bundled_root.rglob("*")
+                if path.is_file()
+            }
+
+            self.assertEqual(canonical_files, bundled_files)
+            for relative_path in canonical_files:
+                self.assertEqual(
+                    (canonical_root / relative_path).read_bytes(),
+                    (bundled_root / relative_path).read_bytes(),
+                    msg=f"Codex plugin skill drift: {skill_name}/{relative_path}",
+                )
+
+        canonical_analyzer = PUBLIC_SKILLS_ROOT / "source-analyzer"
+        bundled_analyzer = CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / "source-analyzer"
+        for relative_path in [
+            "agents/openai.yaml",
+            "shared/scripts/checkpoint_manager.py",
+            "shared/scripts/source_analyzer_search.py",
+        ]:
+            self.assertEqual(
+                (canonical_analyzer / relative_path).read_bytes(),
+                (bundled_analyzer / relative_path).read_bytes(),
+                msg=f"Codex plugin analyzer drift: {relative_path}",
+            )
+
+        canonical_publish = PUBLIC_SKILLS_ROOT / "publish-analysis-wiki"
+        bundled_publish = CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / "publish-analysis-wiki"
+        for relative_path in [
+            "agents/openai.yaml",
+            "shared/scripts/publish_wiki.sh",
+        ]:
+            self.assertEqual(
+                (canonical_publish / relative_path).read_bytes(),
+                (bundled_publish / relative_path).read_bytes(),
+                msg=f"Codex plugin publish skill drift: {relative_path}",
+            )
+
+        bundled_publish_skill = (bundled_publish / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("${PLUGIN_ROOT}/skills/publish-analysis-wiki", bundled_publish_skill)
+        self.assertNotIn("CODEX_HOME", bundled_publish_skill)
 
     def test_codex_plugin_readme_includes_install_and_usage_examples(self):
         plugin_readme = (CODEX_PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
@@ -259,11 +413,34 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("Prefer `rg", codex_content, msg="Codex source-analyzer should include 'Prefer rg' in constraints")
         self.assertNotIn("Prefer `rg", claude_content, msg="Claude source-analyzer should not include 'Prefer rg' in constraints")
 
-    def test_source_analyzer_fallback_file_codex_creates_agents_md(self):
+    def test_analysis_side_effects_are_split_into_explicit_skills(self):
         codex_content = (SOURCE_ANALYZER_ROOT / "SKILL.md").read_text(encoding="utf-8")
         claude_content = (CLAUDE_CODE_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("create `AGENTS.md`", codex_content)
-        self.assertIn("create `CLAUDE.md`", claude_content)
+        self.assertNotIn("create `AGENTS.md`", codex_content)
+        self.assertNotIn("create `CLAUDE.md`", claude_content)
+        self.assertNotIn("publish_wiki.sh", codex_content)
+        self.assertNotIn("publish_wiki.sh", claude_content)
+
+        for skill_name in ["register-analysis-context", "publish-analysis-wiki"]:
+            codex_skill = PUBLIC_SKILLS_ROOT / skill_name
+            claude_skill = CLAUDE_CODE_PLUGIN_ROOT / "skills" / skill_name / "SKILL.md"
+            codex_agent = (codex_skill / "agents" / "openai.yaml").read_text(encoding="utf-8")
+            claude_content = claude_skill.read_text(encoding="utf-8")
+
+            self.assertIn("allow_implicit_invocation: false", codex_agent)
+            self.assertRegex(
+                claude_content,
+                re.compile(r"^disable-model-invocation:\s*true$", re.MULTILINE),
+            )
+
+        publish_script = (
+            PUBLIC_SKILLS_ROOT
+            / "publish-analysis-wiki"
+            / "shared"
+            / "scripts"
+            / "publish_wiki.sh"
+        )
+        self.assertTrue(publish_script.exists())
 
     def test_checkpoint_manager_sources_are_synced(self):
         canonical = (CLAUDE_CODE_PLUGIN_ROOT / "scripts" / "checkpoint_manager.py").read_text(encoding="utf-8")

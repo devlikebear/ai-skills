@@ -1,0 +1,43 @@
+---
+name: refactor
+description: "Perform safe, test-driven refactoring without behavior changes. Use when users call `/refactor`, ask for structure cleanup, or want duplication and technical debt reduced."
+---
+
+# Refactor
+
+## Load only what you need
+
+- `shared/references/work-order.md`: refactoring work-order format.
+- `shared/references/refactoring-checklist.md`: safety checklist.
+- `shared/references/refactoring-patterns.md`: pattern selection guide.
+
+## Language policy
+
+- Respond in the same language the user writes in.
+- If the user explicitly requests a language, follow it.
+
+## Pre-flight: check for existing analysis
+
+Before starting, check if `.analysis/outputs/` exists in the project root.
+
+- If `.analysis/outputs/issue-candidates.md` exists, read it and present the discovered issues to the user. Ask which issues to address in this session.
+- If `.analysis/outputs/refactor-*.md` work orders exist, read them and resume from the first incomplete WO.
+- If neither exists, proceed with the standard workflow below.
+
+This integration allows the `source-analyzer` skill's analysis to feed directly into refactoring work.
+
+## Workflow
+
+1. Analyze the current state and existing tests.
+2. Confirm a behavior-preserving goal and strict non-goals.
+3. Limit the change to one refactoring pattern at a time.
+4. Keep the touch points to at most 5 files.
+5. Run tests before and after each step.
+6. Stop immediately if behavior changes or scope expands into new feature work.
+
+## Safety rules
+
+- No feature changes.
+- No public API changes unless explicitly approved.
+- No large formatting-only diffs.
+- Always summarize verification results.
