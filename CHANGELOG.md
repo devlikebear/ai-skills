@@ -2,6 +2,24 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.12.0 - 2026-07-22
+
+### Added
+
+- Added `evals/skill-routing.json` with positive, negative, and adjacent-skill
+  confusion prompts for all six workflow skills.
+- Added repository contracts for routing fixture coverage, unique case IDs, and
+  required evaluation fields.
+
+### Changed
+
+- Made `github-flow` explicitly invocable on both Codex and Claude Code instead
+  of allowing implicit model invocation.
+- Updated both `github-flow` distributions to inspect and preserve the working
+  tree before checkout or pull, use fast-forward-only base updates, and require
+  explicit user intent for push, PR, merge, branch deletion, tag, and release phases.
+- Added the four-phase skill platform modernization plan under `docs/plans/`.
+
 ## 0.11.0 - 2026-04-08
 
 ### Added

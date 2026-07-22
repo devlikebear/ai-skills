@@ -1,6 +1,7 @@
 ---
 name: github-flow
 description: "Run the full GitHub Flow lifecycle: branch → develop → PR → merge → release. Use when starting a new feature, bugfix, or refactor that follows GitHub Flow conventions, or when resuming any phase of an in-progress flow."
+disable-model-invocation: true
 ---
 
 # GitHub Flow
@@ -21,23 +22,35 @@ main → [feature branch] → commits → PR → merge → main → [tag/release
 ```
 
 Call this skill at any phase. If no phase is specified, start from Phase 1.
-State the current phase or describe where you are to resume mid-flow.
+State the current phase or describe where you are to resume mid-flow. Complete only
+the phase the user requested; never infer permission to push, open a PR, merge, or
+publish a release from an earlier phase.
 
 ---
 
 ## Phase 1 — Branch
 
-1. Confirm you are on `main` (or the agreed base branch) and it is up to date:
+1. Inspect the current branch and working tree before checkout, pull, or cleanup:
    ```bash
-   git checkout main && git pull
+   git status --short --branch
    ```
-2. Create a well-named feature branch:
+   - Preserve all tracked and untracked user changes.
+   - If the tree is dirty, do not checkout, pull, reset, or clean. Determine whether
+     a new branch can be created safely from the current state; otherwise stop and
+     report the exact conflict.
+2. When the tree is clean, confirm the agreed base branch and update it only with a
+   fast-forward pull:
+   ```bash
+   git checkout <base-branch>
+   git pull --ff-only
+   ```
+3. Create a well-named feature branch:
    - Format: `feat/<short-description>`, `fix/<short-description>`, `chore/<short-description>`, or `refactor/<short-description>`
    - Lowercase kebab-case. No issue numbers unless the project convention requires them.
    ```bash
    git checkout -b feat/<short-description>
    ```
-3. Report: branch name, base branch, working tree status.
+4. Report: branch name, base branch, working tree status.
 
 ---
 
@@ -146,6 +159,8 @@ Run this phase only when publishing a versioned release.
 - Stage specific files only — avoid accidentally committing secrets or large binaries.
 - One PR per logical change; keep PRs small and reviewable.
 - If work expands beyond the original scope, stop and re-run `/code-workflow:plan`.
+- Treat push, PR creation, merge, branch deletion, tag creation, and release
+  publication as separate externally visible phases that require explicit user intent.
 
 ---
 

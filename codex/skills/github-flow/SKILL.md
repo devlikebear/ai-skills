@@ -20,22 +20,34 @@ description: "Run the full GitHub Flow lifecycle: branch → develop → PR → 
 main → [feature branch] → commits → PR → merge → main → [tag/release]
 ```
 
-Call this skill at any phase. If no phase is specified, start from Phase 1.
+Call this skill at any phase. If no phase is specified, start from Phase 1. Complete
+only the phase the user requested; never infer permission to push, open a PR, merge,
+or publish a release from an earlier phase.
 
 ---
 
 ## Phase 1 — Branch
 
-1. Confirm on `main` (or the agreed base branch) and up to date:
+1. Inspect the current branch and working tree before checkout, pull, or cleanup:
    ```bash
-   git checkout main && git pull
+   git status --short --branch
    ```
-2. Create a well-named branch:
+   - Preserve all tracked and untracked user changes.
+   - If the tree is dirty, do not checkout, pull, reset, or clean. Determine whether
+     a new branch can be created safely from the current state; otherwise stop and
+     report the exact conflict.
+2. When the tree is clean, confirm the agreed base branch and update it only with a
+   fast-forward pull:
+   ```bash
+   git checkout <base-branch>
+   git pull --ff-only
+   ```
+3. Create a well-named branch:
    - Format: `feat/`, `fix/`, `chore/`, or `refactor/` + lowercase kebab-case
    ```bash
    git checkout -b feat/<short-description>
    ```
-3. Report: branch name, base branch, working tree status.
+4. Report: branch name, base branch, working tree status.
 
 ---
 
@@ -136,6 +148,8 @@ Merge only after CI passes and review is complete.
 - Stage specific files only — avoid secrets and binaries.
 - One PR per logical change.
 - If work expands beyond scope, stop and re-run `/plan-for-codex`.
+- Treat push, PR creation, merge, branch deletion, tag creation, and release
+  publication as separate externally visible phases that require explicit user intent.
 
 ## Output at each phase
 

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "description": "Seed prompts for measuring skill selection boundaries in fresh sessions.",
+  "cases": [
+    {
+      "id": "source-analyzer-positive-ko",
+      "kind": "positive",
+      "prompt": "이 저장소 구조와 주요 데이터 흐름을 분석해서 아키텍처 문서로 정리해줘.",
+      "expected_skill": "source-analyzer",
+      "must_not_select": []
+    },
+    {
+      "id": "source-analyzer-positive-en",
+      "kind": "positive",
+      "prompt": "Analyze this codebase with BFS and produce a resumable module map and architecture overview.",
+      "expected_skill": "source-analyzer",
+      "must_not_select": []
+    },
+    {
+      "id": "plan-positive-ko",
+      "kind": "positive",
+      "prompt": "구현 전에 이 요청을 작고 검증 가능한 작업지시서로 나눠줘.",
+      "expected_skill": "plan",
+      "must_not_select": []
+    },
+    {
+      "id": "plan-positive-en",
+      "kind": "positive",
+      "prompt": "Plan this change as bounded work orders with acceptance criteria, but do not edit code.",
+      "expected_skill": "plan",
+      "must_not_select": []
+    },
+    {
+      "id": "implement-positive-ko",
+      "kind": "positive",
+      "prompt": "승인한 작업지시서 1번을 테스트 우선으로 직접 구현해줘.",
+      "expected_skill": "implement",
+      "must_not_select": []
+    },
+    {
+      "id": "implement-positive-en",
+      "kind": "positive",
+      "prompt": "Implement the approved work order now and run its verification commands.",
+      "expected_skill": "implement",
+      "must_not_select": []
+    },
+    {
+      "id": "review-positive-ko",
+      "kind": "positive",
+      "prompt": "현재 diff를 회귀, 보안 문제, 누락 테스트 중심으로 리뷰해줘.",
+      "expected_skill": "review",
+      "must_not_select": []
+    },
+    {
+      "id": "review-positive-en",
+      "kind": "positive",
+      "prompt": "Review these changes and report only actionable findings with file and line evidence.",
+      "expected_skill": "review",
+      "must_not_select": []
+    },
+    {
+      "id": "refactor-positive-ko",
+      "kind": "positive",
+      "prompt": "동작은 유지하면서 이 모듈의 중복을 테스트 기반으로 제거해줘.",
+      "expected_skill": "refactor",
+      "must_not_select": []
+    },
+    {
+      "id": "refactor-positive-en",
+      "kind": "positive",
+      "prompt": "Refactor this package without changing behavior and verify tests before and after.",
+      "expected_skill": "refactor",
+      "must_not_select": []
+    },
+    {
+      "id": "github-flow-positive-ko",
+      "kind": "positive",
+      "prompt": "github-flow 스킬로 이 기능의 브랜치 단계만 시작해줘.",
+      "expected_skill": "github-flow",
+      "must_not_select": []
+    },
+    {
+      "id": "github-flow-positive-en",
+      "kind": "positive",
+      "prompt": "Use github-flow explicitly to resume the pull request phase for this branch.",
+      "expected_skill": "github-flow",
+      "must_not_select": []
+    },
+    {
+      "id": "review-not-analysis-or-refactor",
+      "kind": "confusion",
+      "prompt": "저장소 전체 분석이나 수정은 하지 말고 이 diff에서 실제 버그만 리뷰해줘.",
+      "expected_skill": "review",
+      "must_not_select": ["source-analyzer", "refactor"]
+    },
+    {
+      "id": "plan-not-implement",
+      "kind": "confusion",
+      "prompt": "아직 코드는 건드리지 말고 리팩터링 작업 순서만 계획해줘.",
+      "expected_skill": "plan",
+      "must_not_select": ["implement", "refactor"]
+    },
+    {
+      "id": "implement-not-plan",
+      "kind": "confusion",
+      "prompt": "계획은 이미 승인했으니 다시 계획하지 말고 작업지시서를 구현해줘.",
+      "expected_skill": "implement",
+      "must_not_select": ["plan"]
+    },
+    {
+      "id": "explain-github-flow-without-running",
+      "kind": "confusion",
+      "prompt": "GitHub Flow가 무엇인지 설명만 해줘. git 명령은 실행하지 마.",
+      "expected_skill": null,
+      "must_not_select": ["github-flow"]
+    },
+    {
+      "id": "architecture-not-diff-review",
+      "kind": "confusion",
+      "prompt": "변경 diff 말고 현재 시스템의 모듈 경계와 의존성 흐름을 분석해줘.",
+      "expected_skill": "source-analyzer",
+      "must_not_select": ["review"]
+    },
+    {
+      "id": "simple-question-no-workflow",
+      "kind": "negative",
+      "prompt": "이 함수 이름을 한국어로 번역하면 뭐야?",
+      "expected_skill": null,
+      "must_not_select": ["source-analyzer", "implement", "plan", "refactor", "review", "github-flow"]
+    }
+  ]
+}

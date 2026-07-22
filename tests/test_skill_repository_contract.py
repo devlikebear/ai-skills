@@ -170,6 +170,46 @@ class SkillRepositoryContractTests(unittest.TestCase):
                 msg=f"plugin skill {skill_path} should not reference CODEX_HOME",
             )
 
+    def test_github_flow_requires_explicit_invocation_on_both_platforms(self):
+        codex_agent = (
+            PUBLIC_SKILLS_ROOT / "github-flow" / "agents" / "openai.yaml"
+        ).read_text(encoding="utf-8")
+        claude_skill = (
+            CLAUDE_CODE_PLUGIN_ROOT / "skills" / "github-flow" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("allow_implicit_invocation: false", codex_agent)
+        self.assertRegex(
+            claude_skill,
+            re.compile(r"^disable-model-invocation:\s*true$", re.MULTILINE),
+        )
+
+    def test_github_flow_checks_worktree_before_checkout_or_pull(self):
+        skill_paths = [
+            PUBLIC_SKILLS_ROOT / "github-flow" / "SKILL.md",
+            CLAUDE_CODE_PLUGIN_ROOT / "skills" / "github-flow" / "SKILL.md",
+        ]
+
+        for skill_path in skill_paths:
+            content = skill_path.read_text(encoding="utf-8")
+            status_position = content.find("git status --short --branch")
+            checkout_position = content.find("git checkout")
+            pull_position = content.find("git pull")
+
+            self.assertGreaterEqual(
+                status_position,
+                0,
+                msg=f"missing worktree preflight in {skill_path}",
+            )
+            self.assertTrue(
+                checkout_position < 0 or status_position < checkout_position,
+                msg=f"git status must precede checkout in {skill_path}",
+            )
+            self.assertTrue(
+                pull_position < 0 or status_position < pull_position,
+                msg=f"git status must precede pull in {skill_path}",
+            )
+
     def test_plugin_references_directory_exists(self):
         refs_dir = CLAUDE_CODE_PLUGIN_ROOT / "references"
         self.assertTrue(refs_dir.is_dir(), msg="missing references directory in plugin")
