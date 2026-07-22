@@ -1,364 +1,91 @@
 ---
 name: source-analyzer
-description: "Analyze existing source code and generate beginner-friendly architecture documents, actionable refactoring work orders, or system overhaul proposals without modifying source files. Use when users ask for codebase analysis, clone-coding guides, BFS-style architecture/data-flow summaries, refactor proposals with DUP/SEC/TIDY issue codes, or system overhaul with ARCH/DEAD/OVER/DEBT issue codes."
+description: "Analyze existing source code and generate beginner-friendly architecture documents, actionable refactoring work orders, or system overhaul proposals without modifying source files. Use for codebase analysis, clone-coding guides, BFS architecture and data-flow summaries, refactor proposals, or overhaul proposals."
+context: fork
+agent: general-purpose
 ---
 
 # Source Analyzer
 
+Analyze `$ARGUMENTS` in an isolated context. Write only under `.analysis/`; instruction registration and GitHub Wiki publishing are separate explicit-only skills.
+
 ## References
 
-- [tutorial-template.md](../../references/tutorial-template.md): tutorial and clone-coding structure.
-- [refactor-template.md](../../references/refactor-template.md): refactor work-order structure.
-- [tidy-first-rules.md](../../references/tidy-first-rules.md): TIDY rule mapping.
+- [source-analyzer-operations.md](../../references/source-analyzer-operations.md): layout, migration, checkpoints, resume, and search.
+- [tutorial-template.md](../../references/tutorial-template.md): tutorials and clone coding.
+- [refactor-template.md](../../references/refactor-template.md): refactor work orders.
+- [tidy-first-rules.md](../../references/tidy-first-rules.md): TIDY classification.
 - [security-triage-checklist.md](../../references/security-triage-checklist.md): security fallback checks.
-- [overhaul-template.md](../../references/overhaul-template.md): system overhaul proposal structure.
-- [checkpoint-template.md](../../references/checkpoint-template.md): manual checkpoint fallback.
+- [overhaul-template.md](../../references/overhaul-template.md): overhaul proposals.
 
-Scripts:
-- Checkpoint session manager: `${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py`
-- Search chunk builder: `${CLAUDE_PLUGIN_ROOT}/scripts/source_analyzer_search.py`
-- Wiki publisher: `${CLAUDE_PLUGIN_ROOT}/scripts/publish_wiki.sh`
+## Language policy
 
-Checkpoint session manager script:
+- Detect the user's language from their request.
+- Respond in Korean for Korean input and English for English input.
+
+## Required workflow
+
+1. Choose `analyze`, `refactor-guide`, or `overhaul` mode.
+2. Read [source-analyzer-operations.md](../../references/source-analyzer-operations.md) and set:
 
 ```bash
 CHECKPOINT_SCRIPT="${CLAUDE_PLUGIN_ROOT}/scripts/checkpoint_manager.py"
 COMMIT=$(git rev-parse HEAD)
-python3 "$CHECKPOINT_SCRIPT" init --mode analyze --scope "." --commit "$COMMIT"
-# Resume: sync with latest HEAD
-python3 "$CHECKPOINT_SCRIPT" sync
-python3 "$CHECKPOINT_SCRIPT" checkpoint --title "service layer analyzed" --status paused
-# Manual publish (auto-runs on paused/completed checkpoint)
-python3 "$CHECKPOINT_SCRIPT" publish
-# Generate AI-consumable summary
-python3 "$CHECKPOINT_SCRIPT" generate-summary
-# Generate search index for MCP retrieval
-python3 "$CHECKPOINT_SCRIPT" generate-search-index
 ```
 
-## Language policy
-
-- Detect the user's language from their message and respond in the same language.
-- If the user explicitly requests a language, follow it.
-
-## Directory layout
-
-```
-.analysis/
-├── RESUME.md              ← resume pointer (git-tracked)
-├── AI_CONTEXT.md          ← AI discovery file (git-tracked)
-├── cache/                 ← search index cache (git-ignored)
-│   └── source-analyzer-search/
-│       ├── search-documents.jsonl
-│       ├── chunk-manifest.json
-│       ├── file-to-chunks.json
-│       ├── output-to-chunks.json
-│       └── index-metadata.json
-├── outputs/               ← published stable outputs (git-tracked)
-│   ├── overview.md
-│   ├── architecture.md
-│   ├── technologies.md
-│   ├── glossary.md
-│   ├── tutorial.md
-│   ├── clone-coding.md
-│   ├── implementation-checklist.md
-│   ├── issue-candidates.md
-│   ├── overhaul-<scope>.md
-│   ├── SUMMARY.json
-│   ├── dependency-graph.json
-│   ├── module-map.json
-│   └── modules/
-│       └── <name>.md
-└── sessions/              ← working state (git-ignored)
-    └── <session-id>/
-        ├── state.json
-        ├── index.md
-        ├── checkpoints/
-        └── outputs/       ← work-in-progress outputs
-```
-
-- `sessions/` contains transient analysis state and should be in `.gitignore`.
-- `cache/` contains search indexes for MCP retrieval and should be in `.gitignore`.
-- `outputs/` at the root level contains published (stable) results and should be committed to git.
-- Outputs are published automatically when a checkpoint is written with status `paused` or `completed`.
-- Manual publish: `python3 "$CHECKPOINT_SCRIPT" publish`.
-
-### Migrating from old layout
-
-If the project has existing analysis results under `.analysis/sessions/<id>/outputs/` (pre-0.6.0 layout), run:
-
-```bash
-python3 "$CHECKPOINT_SCRIPT" migrate --analysis-dir .analysis
-```
-
-This copies the latest session's outputs to `.analysis/outputs/` and prints a `.gitignore` reminder. Run this once before starting new analysis sessions.
-
-### Recommended .gitignore entry
-
-```gitignore
-.analysis/sessions/
-```
-
-## Required workflow
-
-1. Decide the mode: `analyze`, `refactor-guide`, or `overhaul`.
-2. If prior analysis exists, run `brief` first to get the project context in one call.
-3. Capture the current commit: `COMMIT=$(git rev-parse HEAD)`.
-4. Start or resume a session: pass `--commit "$COMMIT"` to init.
-5. If resuming, run `sync` to detect new commits and update the frontier.
-6. Use `git ls-tree -r HEAD --name-only -- <scope>` to enumerate files (committed files only).
-7. Filter out files matching exclude patterns (see Constraints).
-8. Traverse first-party source with BFS in small chunks.
-9. Update `.analysis/sessions/<session-id>/outputs/` after each chunk.
-10. Write a checkpoint after each chunk (must include at least one of: visited-add, outputs, summary, or next-actions).
-11. On `paused` or `completed` checkpoint, outputs are auto-published to `.analysis/outputs/`.
+3. Run `brief` when prior analysis exists, then initialize or resume a session.
+4. Enumerate committed files with `git ls-tree -r HEAD --name-only -- <scope>` and traverse first-party source with BFS.
+5. Update session outputs and checkpoint after every bounded chunk.
+6. On pause or completion, publish stable outputs inside `.analysis/outputs/`, generate the summary and search index, and update `.analysis/AI_CONTEXT.md`.
+7. Do not register project instructions or publish externally. Those require explicit invocation of `register-analysis-context` or `publish-analysis-wiki`.
 
 ## Analyze mode
 
-- Goal: produce newcomer-friendly architecture and clone-coding material.
-- Markdown outputs (human-readable):
-  - `overview.md`, `architecture.md`, `technologies.md`, `glossary.md`
-  - `tutorial.md`, `clone-coding.md`, `implementation-checklist.md`
-  - `modules/<name>.md`
-- Structured outputs (AI-consumable):
-  - `SUMMARY.json`: module list, key flows, known issues.
-  - `dependency-graph.json`: `{"file": ["imported_file", ...]}` mapping.
-  - `module-map.json`: `{"module_name": {"path": "...", "responsibility": "...", "key_files": [...]}}`.
-- All outputs are written to `.analysis/sessions/<session-id>/outputs/` during work, then published to `.analysis/outputs/` on pause/complete.
-- Use real file paths, short paragraphs, and plain language.
+Produce newcomer-friendly `overview.md`, `architecture.md`, technology and glossary documents, tutorials, clone-coding guidance, module documents, and implementation checklists. Maintain `SUMMARY.json`, `dependency-graph.json`, `module-map.json`, and verified `issue-candidates.md` incrementally.
 
-### Structured output rules
-
-After completing each module analysis chunk, update the structured JSON outputs incrementally:
-
-- `dependency-graph.json`: for each visited source file, record its import/dependency targets as an array. Use relative paths from project root.
-- `module-map.json`: for each logical module (directory group), record path prefix, one-line responsibility, and list of key files.
-- `SUMMARY.json`: auto-generated via `python3 "$CHECKPOINT_SCRIPT" generate-summary`. Run this after the final checkpoint or at each pause.
-- Search index cache: auto-generated when outputs are published on `paused` or `completed` checkpoints, and can also be rebuilt manually via `python3 "$CHECKPOINT_SCRIPT" generate-search-index`. Files are stored under `.analysis/cache/source-analyzer-search/`.
+Issue candidates use `DUP`, `SEC`, or `TIDY` codes and include module, evidence, and suggested action.
 
 ## Refactor-guide mode
 
-- Goal: produce actionable work orders with `DUP-*`, `SEC-*`, and `TIDY-*` codes.
 - Follow [refactor-template.md](../../references/refactor-template.md) exactly.
-- For each issue include evidence, completion criteria, and test criteria.
-- Check security references first, then fall back to [security-triage-checklist.md](../../references/security-triage-checklist.md).
-- Output: `.analysis/sessions/<session-id>/outputs/refactor-<scope>.md` (published to `.analysis/outputs/` on pause/complete).
-
-### Starting from issue-candidates
-
-When `issue-candidates.md` exists (from a prior analyze session):
-
-1. Run `get-issues` to load all issue candidates (or `get-issues --type SEC` to filter).
-2. Use each candidate as the seed for a WO — copy the issue code, module, and evidence into the WO's `Source Issue` field.
-3. Use `search "<issue topic>" --snippet-only --snippet-len 600` to pull relevant context from prior analysis instead of re-reading full output files.
-4. Expand each candidate with full analysis: read the actual source files, verify the issue, and fill all required WO fields.
-5. Remove candidates that turn out to be false positives and note the reason.
-
-### Starting from scratch
-
-When no `issue-candidates.md` exists, perform BFS analysis in refactor-guide mode directly and produce WOs as you discover issues.
+- Produce `DUP-*`, `SEC-*`, and `TIDY-*` work orders with evidence, completion criteria, and test criteria.
+- Verify prior issue candidates against source and document false-positive removal.
+- Write `.analysis/sessions/<session-id>/outputs/refactor-<scope>.md`.
 
 ## Overhaul mode
 
-- Goal: produce a system overhaul proposal that identifies architectural flaws, unnecessary features, and over-engineering, then proposes a redesigned architecture — even if it breaks backward compatibility.
 - Follow [overhaul-template.md](../../references/overhaul-template.md) exactly.
-- Issue classification codes:
-  - `ARCH-*`: architectural design flaws — incorrect layer separation, circular dependencies, mixed responsibilities, wrong abstraction boundaries.
-  - `DEAD-*`: unnecessary features/code — unused modules, obsolete features, legacy compatibility layers.
-  - `OVER-*`: over-engineering — unnecessary abstractions, excessive configurability, premature optimization.
-  - `DEBT-*`: accumulated technical debt — outdated patterns, deprecated API usage, inconsistent conventions.
-- Output: `.analysis/sessions/<session-id>/outputs/overhaul-<scope>.md` (published to `.analysis/outputs/` on pause/complete).
-- Each work order (OH-NNN) must include: current state, target state, migration path, instructions, completion criteria, and test criteria.
-- Every breaking change must have a documented migration path or an explicit "clean reimplementation" justification.
+- Use `ARCH-*`, `DEAD-*`, `OVER-*`, and `DEBT-*` classifications.
+- Document current state, target state, migration path, instructions, completion criteria, and tests for every work order.
+- Remove unnecessary scope first, rebuild foundations second, and verify each phase.
 
-### Starting from analyze outputs
+## Post-analysis context
 
-When analyze outputs exist (from a prior analyze session):
-
-1. Run `brief` to load the project context (overview, modules, issues) in one call.
-2. Use `search "<architecture topic>" --snippet-only --snippet-len 600` to pull specific sections from `architecture.md` and `module-map.json` without reading full files.
-3. Run `get-issues` to load issue candidates — `DUP-*`/`SEC-*`/`TIDY-*` issues that indicate deeper architectural problems feed into `ARCH-*`/`DEBT-*` classifications.
-4. Diagnose root problems at the architecture level, not individual code-level symptoms.
-5. Design the target architecture based on the diagnosis.
-6. Produce OH work orders for the transition.
-
-### Starting from scratch
-
-When no analyze outputs exist, perform BFS analysis in overhaul mode directly: first build an architectural understanding, then diagnose and propose redesign.
-
-### Execution order principles
-
-1. **Remove first**: eliminate unnecessary code/features to reduce scope before redesigning.
-2. **Foundation first**: redesign core architecture before adjusting dependent modules.
-3. **Verify per phase**: run full tests after each phase completes.
-
-## Analyze-to-refactor bridge
-
-When analyze mode completes (or pauses), scan the produced documents for refactor candidates and write:
-
-- `.analysis/sessions/<session-id>/outputs/issue-candidates.md`
-
-Format each candidate as:
-
-```markdown
-### <CODE>-<NNN>: <short title>
-
-- Module: `<module path>`
-- Type: `DUP` | `SEC` | `TIDY`
-- Evidence: <1-2 sentence observation from analyze outputs>
-- Suggested action: <brief description>
-```
-
-This file is published to `.analysis/outputs/issue-candidates.md` and serves as the starting point when the user later runs `refactor-guide` mode or the `refactor` skill.
-
-## Sync and incremental update
-
-When `sync` detects changed files:
-
-1. Changed files are added to the frontier for re-analysis.
-2. For each changed file that has an existing module document, prepend a notice:
-   ```
-   > **Updated since last analysis** — file changed between commits `<old>...<new>`. Re-analysis pending.
-   ```
-3. After re-analyzing changed files, remove the notice and update the content.
-
-## Resume protocol
-
-1. Run `brief` to load the project context (modules, issues, status) in one call.
-2. Run `sync` to detect new commits.
-   - `status=synced`: changed files added to frontier for re-analysis.
-   - `status=unchanged`: continue BFS from existing frontier.
-3. Use `search "<topic>" --snippet-only --snippet-len 600 --top-k 3` to recall specific topics from prior analysis instead of re-reading raw output files.
-4. Continue from `frontier` and pending `next actions`.
-5. Write the next checkpoint before ending.
-
-## Post-analysis: AI context generation
-
-When the session reaches `completed` or `paused` status, generate a context file for AI assistants:
-
-1. Run `python3 "$CHECKPOINT_SCRIPT" generate-summary` to produce `outputs/SUMMARY.json`.
-2. Run `python3 "$CHECKPOINT_SCRIPT" publish` (or rely on auto-publish from checkpoint).
-3. Search index generation happens automatically on publish. If this analysis was completed before the MCP cache existed, or if you need to rebuild it, run `python3 "$CHECKPOINT_SCRIPT" generate-search-index`.
-4. Write `.analysis/AI_CONTEXT.md` with the following structure:
-
-```markdown
-# Codebase Analysis Context
-
-> Auto-generated by source-analyzer. Session: `<session-id>`
-> Commit: `<hash>` | Status: `<status>` | Updated: `<timestamp>`
-
-## Quick Reference
-
-- Overview: `.analysis/outputs/overview.md`
-- Architecture: `.analysis/outputs/architecture.md`
-- Module details: `.analysis/outputs/modules/`
-- Structured data: `.analysis/outputs/SUMMARY.json`
-- Dependency graph: `.analysis/outputs/dependency-graph.json`
-
-## Module Summary
-
-<one-line summary per module from module-map.json>
-
-## Known Issues
-
-<list from issue-candidates.md if exists>
-```
-
-4. Register the analysis in project instruction files so all AI assistants can discover it.
-   Check for these files in the project root and append a pointer block to each one that exists:
-   - `CLAUDE.md` (Claude Code)
-   - `AGENTS.md` (Codex / general agents)
-   - `codex.md` (Codex legacy)
-   - `.claude/CLAUDE.md` (Claude Code project-level)
-
-   Append this block only if a `## Codebase Analysis` section does not already exist:
-
-   ```markdown
-   ## Codebase Analysis
-
-   Architecture and module analysis available at `.analysis/AI_CONTEXT.md`.
-   Read it first when you need to understand the project structure, dependencies, or key data flows.
-   ```
-
-If none of these files exist, create `CLAUDE.md` with the block above and inform the user.
+Write `.analysis/AI_CONTEXT.md` with session metadata, output pointers, module summaries, and known issues. Do not edit `AGENTS.md`, `CLAUDE.md`, `codex.md`, or `.claude/CLAUDE.md`.
 
 ## Search CLI
 
-Use the built-in CLI search commands to query analysis outputs without opening files manually. All commands output JSON to stdout.
-
-### Recommended usage pattern
-
-1. Start every session with `brief` to load the full project context in one call.
-2. Use `search --snippet-only --snippet-len 600` for focused topic lookups — this returns lightweight results with module context, avoiding full-text overhead.
-3. Use `get-module` or `get-overview` only when you need the complete document content.
-4. Use `trace-deps` to explore dependency chains before diving into source files.
-
-### Commands
-
 ```bash
-# 1. Project context in one call — start here
 python3 "$CHECKPOINT_SCRIPT" brief
-
-# 2. Focused search with snippet + module context (recommended default)
-python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --top-k 3 --snippet-only --snippet-len 600
-
-# 3. Full-text search (use only when snippets are insufficient)
 python3 "$CHECKPOINT_SCRIPT" search "query text" --top-k 5
-
-# 4. Filter by chunk kind
-python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --kinds section module --snippet-only --snippet-len 600
-
-# 5. Module document (full content)
+python3 "$CHECKPOINT_SCRIPT" search "auth middleware" --top-k 3 --snippet-only --snippet-len 600
 python3 "$CHECKPOINT_SCRIPT" get-module server-chat-pipeline
-
-# 6. Overview document (full content)
 python3 "$CHECKPOINT_SCRIPT" get-overview
-
-# 7. Dependency chain
 python3 "$CHECKPOINT_SCRIPT" trace-deps internal/llm/router.go --depth 3
-
-# 8. Issue candidates
-python3 "$CHECKPOINT_SCRIPT" get-issues
 python3 "$CHECKPOINT_SCRIPT" get-issues --type SEC
-```
-
-The search index is built automatically when outputs are published on `paused` or `completed` checkpoints. To rebuild manually:
-
-```bash
 python3 "$CHECKPOINT_SCRIPT" generate-search-index
 ```
 
-**Prefer CLI search over reading raw output files.** The `brief` + `search --snippet-only` combination minimizes token usage while providing sufficient context. Only fall back to full-text commands or direct file reads when snippets are insufficient.
+Prefer `brief` plus snippet search. Use full documents only when snippets are insufficient.
 
-## Publishing to GitHub Wiki
+## Search MCP integration
 
-After analysis is complete (or paused), publish the outputs to the project's GitHub wiki:
-
-```bash
-PUBLISH_SCRIPT="${CLAUDE_PLUGIN_ROOT}/scripts/publish_wiki.sh"
-# Publish latest session outputs
-bash "$PUBLISH_SCRIPT"
-# Publish a specific session
-bash "$PUBLISH_SCRIPT" --session-id analyze-20260308-120027
-# Dry-run: prepare wiki pages locally without pushing
-bash "$PUBLISH_SCRIPT" --dry-run
-```
-
-Prerequisites:
-- The GitHub wiki must be enabled for the repository (Settings > Features > Wikis).
-- At least one page must exist in the wiki (create it via the GitHub UI first).
-- The script uses the current directory as the project root by default. Use `--project-dir <path>` to override.
-
-The script generates:
-- Ordered wiki pages from analysis outputs (overview, architecture, etc.).
-- Per-module pages with `module-` prefix.
-- A `Home.md` with document and module tables.
-- A `_Sidebar.md` for navigation.
+Prefer installed MCP resources such as `analysis://overview` and tools including `analysis.search`, `analysis.get_module`, `analysis.trace_dependencies`, and `analysis.get_issue_candidates`. Rebuild a stale cache with the checkpoint manager.
 
 ## Constraints
 
-- Never modify analyzed source files.
-- Update only `.analysis/` outputs while running this skill.
-- Only analyze files committed to git (`git ls-tree -r HEAD --name-only`). Ignore uncommitted/unstaged changes.
-- Exclude non-source paths by default: `.analysis/`, `.codex/`, `.claude/`, `.git/`, `vendor/`, `node_modules/`, `.venv/`, `__pycache__/`, `dist/`, `build/`. Pass `--exclude` to add more patterns.
-- Every checkpoint must contain at least one of: visited files, output files, summary text, or next actions. Empty checkpoints are rejected.
+- Never modify analyzed source files or project instruction files.
+- Update only `.analysis/` while running this skill.
+- Analyze only committed files and ignore unstaged content.
+- Exclude `.analysis/`, `.codex/`, `.claude/`, `.git/`, `vendor/`, `node_modules/`, `.venv/`, `__pycache__/`, `dist/`, and `build/` by default.
+- Every checkpoint must record visited files, output files, summary text, or next actions.

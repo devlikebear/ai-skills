@@ -17,6 +17,34 @@
       "must_not_select": []
     },
     {
+      "id": "register-analysis-context-positive-ko",
+      "kind": "positive",
+      "prompt": "register-analysis-context 스킬로 생성된 AI_CONTEXT를 프로젝트 지시문에 등록해줘.",
+      "expected_skill": "register-analysis-context",
+      "must_not_select": []
+    },
+    {
+      "id": "register-analysis-context-positive-en",
+      "kind": "positive",
+      "prompt": "Explicitly use register-analysis-context to add the existing analysis pointer to project agent instructions.",
+      "expected_skill": "register-analysis-context",
+      "must_not_select": []
+    },
+    {
+      "id": "publish-analysis-wiki-positive-ko",
+      "kind": "positive",
+      "prompt": "publish-analysis-wiki 스킬로 분석 결과를 미리보기한 뒤 GitHub Wiki에 게시해줘.",
+      "expected_skill": "publish-analysis-wiki",
+      "must_not_select": []
+    },
+    {
+      "id": "publish-analysis-wiki-positive-en",
+      "kind": "positive",
+      "prompt": "Use publish-analysis-wiki explicitly to preview and publish the reviewed analysis outputs.",
+      "expected_skill": "publish-analysis-wiki",
+      "must_not_select": []
+    },
+    {
       "id": "plan-positive-ko",
       "kind": "positive",
       "prompt": "구현 전에 이 요청을 작고 검증 가능한 작업지시서로 나눠줘.",
@@ -119,14 +147,28 @@
       "kind": "confusion",
       "prompt": "변경 diff 말고 현재 시스템의 모듈 경계와 의존성 흐름을 분석해줘.",
       "expected_skill": "source-analyzer",
-      "must_not_select": ["review"]
+      "must_not_select": ["review", "register-analysis-context", "publish-analysis-wiki"]
+    },
+    {
+      "id": "register-explanation-without-modifying",
+      "kind": "confusion",
+      "prompt": "AI_CONTEXT를 지시문에 연결하는 방법만 설명해줘. 파일은 수정하지 마.",
+      "expected_skill": null,
+      "must_not_select": ["register-analysis-context"]
+    },
+    {
+      "id": "wiki-format-without-publishing",
+      "kind": "confusion",
+      "prompt": "GitHub Wiki에 맞는 문서 구조를 설명만 해줘. 미리보기나 게시 작업은 하지 마.",
+      "expected_skill": null,
+      "must_not_select": ["publish-analysis-wiki"]
     },
     {
       "id": "simple-question-no-workflow",
       "kind": "negative",
       "prompt": "이 함수 이름을 한국어로 번역하면 뭐야?",
       "expected_skill": null,
-      "must_not_select": ["source-analyzer", "implement", "plan", "refactor", "review", "github-flow"]
+      "must_not_select": ["source-analyzer", "register-analysis-context", "publish-analysis-wiki", "implement", "plan", "refactor", "review", "github-flow"]
     }
   ]
 }

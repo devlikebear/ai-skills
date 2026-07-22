@@ -1,0 +1,6 @@
+interface:
+  display_name: "Register Analysis Context"
+  short_description: "Register generated analysis in project instructions"
+  default_prompt: "Register the existing .analysis/AI_CONTEXT.md in project instruction files without disturbing existing guidance."
+policy:
+  allow_implicit_invocation: false

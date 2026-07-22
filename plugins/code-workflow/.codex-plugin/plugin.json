@@ -1,6 +1,6 @@
 {
   "name": "code-workflow",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Safe, test-driven workflows for planning, implementation, review, refactoring, source analysis, and GitHub Flow.",
   "author": {
     "name": "devlikebear"

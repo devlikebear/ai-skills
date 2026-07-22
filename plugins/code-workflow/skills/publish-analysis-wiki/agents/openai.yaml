@@ -1,0 +1,6 @@
+interface:
+  display_name: "Publish Analysis Wiki"
+  short_description: "Preview and publish reviewed analysis outputs"
+  default_prompt: "Preview reviewed .analysis outputs and publish them to the configured GitHub Wiki only after confirming the target."
+policy:
+  allow_implicit_invocation: false

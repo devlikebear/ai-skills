@@ -25,4 +25,7 @@ cp -R "${SOURCE_SKILLS}/." "${TARGET_SKILLS}/"
 ANALYZER_SKILL="${TARGET_SKILLS}/source-analyzer/SKILL.md"
 perl -0pi -e 's#\$\{CODEX_HOME:-\$HOME/\.codex\}/skills/source-analyzer#\$\{PLUGIN_ROOT\}/skills/source-analyzer#g' "${ANALYZER_SKILL}"
 
+PUBLISH_SKILL="${TARGET_SKILLS}/publish-analysis-wiki/SKILL.md"
+perl -0pi -e 's#\$\{CODEX_HOME:-\$HOME/\.codex\}/skills/publish-analysis-wiki#\$\{PLUGIN_ROOT\}/skills/publish-analysis-wiki#g' "${PUBLISH_SKILL}"
+
 echo "synced: codex/skills -> plugins/code-workflow/skills"

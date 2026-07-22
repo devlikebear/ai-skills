@@ -2,6 +2,24 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.14.0 - 2026-07-22
+
+### Added
+
+- Added explicit-only `register-analysis-context` skills for Codex and Claude Code
+  to register an existing analysis without coupling instruction-file edits to analysis.
+- Added explicit-only `publish-analysis-wiki` skills with mandatory dry-run review
+  before any GitHub Wiki push.
+- Added routing evaluations for both new side-effecting skills and their confusion
+  boundaries.
+
+### Changed
+
+- Restricted `source-analyzer` to `.analysis/` updates and moved operational detail
+  into focused reference documents.
+- Configured the Claude Code analyzer to run in an isolated fork context.
+- Expanded the Codex `code-workflow` plugin bundle to include all eight skills.
+
 ## 0.13.0 - 2026-07-22
 
 ### Added
