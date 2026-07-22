@@ -2,6 +2,22 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.13.0 - 2026-07-22
+
+### Added
+
+- Added the repo-local Codex `code-workflow` plugin with all six workflow skills
+  and the bundled `source-analyzer-search` MCP server.
+- Added `scripts/sync_codex_workflow_plugin.sh` to generate the Codex plugin skill
+  bundle from canonical `codex/skills` sources with plugin-relative runtime paths.
+- Added contract tests for the Codex plugin manifest, marketplace registration,
+  components, and canonical skill drift.
+
+### Changed
+
+- Marked `scripts/install_codex_skill.sh` as a legacy compatibility path while
+  preserving its existing behavior for current users.
+
 ## 0.12.0 - 2026-07-22
 
 ### Added

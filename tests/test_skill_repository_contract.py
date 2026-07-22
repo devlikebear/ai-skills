@@ -11,6 +11,7 @@ CLAUDE_CODE_PLUGIN_ROOT = REPO_ROOT / "claude-code" / "plugin"
 MARKETPLACE_ROOT = REPO_ROOT / ".claude-plugin"
 CODEX_PLUGIN_MARKETPLACE_ROOT = REPO_ROOT / ".agents" / "plugins"
 CODEX_PLUGIN_ROOT = REPO_ROOT / "plugins" / "source-analyzer-tools"
+CODEX_WORKFLOW_PLUGIN_ROOT = REPO_ROOT / "plugins" / "code-workflow"
 SOURCE_ANALYZER_MCP_ROOT = REPO_ROOT / "servers" / "source-analyzer-mcp"
 EXPECTED_PUBLIC_SKILLS = {
     "source-analyzer",
@@ -263,6 +264,89 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertTrue((CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json").exists(), msg="missing Codex plugin manifest")
         self.assertTrue((CODEX_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing Codex plugin MCP config")
         self.assertTrue((CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py").exists())
+
+    def test_codex_workflow_plugin_manifest_and_components(self):
+        import json
+
+        manifest_path = CODEX_WORKFLOW_PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        version = (REPO_ROOT / "VERSION.txt").read_text(encoding="utf-8").strip()
+
+        self.assertEqual(manifest["name"], "code-workflow")
+        self.assertEqual(manifest["version"], version)
+        self.assertEqual(manifest["skills"], "./skills/")
+        self.assertEqual(manifest["mcpServers"], "./.mcp.json")
+        self.assertEqual(manifest["interface"]["displayName"], "Code Workflow")
+
+        bundled_skills = {
+            path.name
+            for path in (CODEX_WORKFLOW_PLUGIN_ROOT / "skills").iterdir()
+            if path.is_dir()
+        }
+        self.assertEqual(bundled_skills, EXPECTED_PUBLIC_SKILLS)
+        self.assertTrue((CODEX_WORKFLOW_PLUGIN_ROOT / ".mcp.json").exists())
+
+        analyzer_skill = (
+            CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / "source-analyzer" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("${PLUGIN_ROOT}/skills/source-analyzer", analyzer_skill)
+        self.assertNotIn("CODEX_HOME", analyzer_skill)
+
+        mcp_config = json.loads(
+            (CODEX_WORKFLOW_PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8")
+        )
+        server = mcp_config["mcpServers"]["source-analyzer-search"]
+        self.assertIn("${PLUGIN_ROOT}/skills/source-analyzer", " ".join(server["args"]))
+
+    def test_codex_workflow_plugin_is_registered_in_marketplace(self):
+        import json
+
+        marketplace = json.loads(
+            (CODEX_PLUGIN_MARKETPLACE_ROOT / "marketplace.json").read_text(encoding="utf-8")
+        )
+        entries = {item["name"]: item for item in marketplace["plugins"]}
+        entry = entries["code-workflow"]
+
+        self.assertEqual(entry["source"]["path"], "./plugins/code-workflow")
+        self.assertEqual(entry["policy"]["installation"], "AVAILABLE")
+        self.assertEqual(entry["policy"]["authentication"], "ON_INSTALL")
+
+    def test_codex_workflow_plugin_skill_bundle_matches_canonical_sources(self):
+        for skill_name in EXPECTED_PUBLIC_SKILLS - {"source-analyzer"}:
+            canonical_root = PUBLIC_SKILLS_ROOT / skill_name
+            bundled_root = CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / skill_name
+            canonical_files = {
+                path.relative_to(canonical_root)
+                for path in canonical_root.rglob("*")
+                if path.is_file()
+            }
+            bundled_files = {
+                path.relative_to(bundled_root)
+                for path in bundled_root.rglob("*")
+                if path.is_file()
+            }
+
+            self.assertEqual(canonical_files, bundled_files)
+            for relative_path in canonical_files:
+                self.assertEqual(
+                    (canonical_root / relative_path).read_bytes(),
+                    (bundled_root / relative_path).read_bytes(),
+                    msg=f"Codex plugin skill drift: {skill_name}/{relative_path}",
+                )
+
+        canonical_analyzer = PUBLIC_SKILLS_ROOT / "source-analyzer"
+        bundled_analyzer = CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / "source-analyzer"
+        for relative_path in [
+            "agents/openai.yaml",
+            "shared/scripts/checkpoint_manager.py",
+            "shared/scripts/source_analyzer_search.py",
+            "shared/scripts/publish_wiki.sh",
+        ]:
+            self.assertEqual(
+                (canonical_analyzer / relative_path).read_bytes(),
+                (bundled_analyzer / relative_path).read_bytes(),
+                msg=f"Codex plugin analyzer drift: {relative_path}",
+            )
 
     def test_codex_plugin_readme_includes_install_and_usage_examples(self):
         plugin_readme = (CODEX_PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
