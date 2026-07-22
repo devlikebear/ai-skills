@@ -6,18 +6,18 @@ _페이즈 수: 4개_
 
 ## Overview
 
-현재 저장소는 Codex용 독립 스킬과 Claude Code 플러그인을 함께 제공하고, 구조·릴리스·복제본 동기화를 74개 테스트로 검증한다. 다음 개선의 목적은 최신 플랫폼 흐름에 맞춰 배포 단위를 플러그인으로 통합하고, 외부 변경을 수행하는 스킬의 자동 발동을 차단하며, 실제 스킬 라우팅과 결과 품질을 반복 평가할 수 있게 만드는 것이다.
+현재 저장소는 Codex용 독립 스킬과 Claude Code 플러그인을 함께 제공하고, 구조·릴리스·복제본 동기화를 85개 테스트로 검증한다. 이번 개선은 최신 플랫폼 흐름에 맞춰 배포 단위를 플러그인으로 통합하고, 외부 변경을 수행하는 스킬의 자동 발동을 차단하며, 실제 스킬 라우팅과 결과 품질을 반복 평가할 수 있게 만들었다.
 
 구현은 기존 배포 사용자를 한 번에 깨뜨리지 않는다. 안전 정책과 평가 기반을 먼저 만들고, Codex 플러그인 배포를 추가한 뒤, `source-analyzer`의 책임과 컨텍스트 비용을 줄이고 마지막으로 크로스플랫폼 설치·릴리스 계약을 정리한다.
 
 ## 완료 조건
 
-- [ ] 외부 변경 스킬이 Codex와 Claude Code에서 명시 호출로만 실행된다.
-- [ ] positive/negative/confusion 프롬프트로 스킬 라우팅을 평가할 수 있다.
-- [ ] 6개 워크플로 스킬과 MCP를 하나의 Codex 플러그인으로 설치할 수 있다.
-- [ ] `source-analyzer` 기본 실행은 `.analysis/` 밖을 수정하거나 외부 Wiki를 게시하지 않는다.
-- [ ] macOS, Linux, Windows에 대한 설치·경로 계약이 문서와 테스트에 반영된다.
-- [ ] 모든 버전 파일과 배포 manifest가 동일한 SemVer를 사용한다.
+- [x] 외부 변경 스킬이 Codex와 Claude Code에서 명시 호출로만 실행된다.
+- [x] positive/negative/confusion 프롬프트로 스킬 라우팅을 평가할 수 있다.
+- [x] 8개 워크플로 스킬과 MCP를 하나의 Codex 플러그인으로 설치할 수 있다.
+- [x] `source-analyzer` 기본 실행은 `.analysis/` 밖을 수정하거나 외부 Wiki를 게시하지 않는다.
+- [x] macOS, Linux, Windows에 대한 설치·경로 계약이 문서와 테스트에 반영된다.
+- [x] 모든 버전 파일과 배포 manifest가 동일한 SemVer를 사용한다.
 
 ## 기술 스택 / 환경
 
@@ -46,7 +46,7 @@ _페이즈 수: 4개_
 
 ### Phase 2: Codex 플러그인 통합
 
-- **목표**: 6개 스킬과 source-analyzer MCP를 `code-workflow` Codex 플러그인 하나로 설치한다.
+- **목표**: 워크플로 스킬과 source-analyzer MCP를 `code-workflow` Codex 플러그인 하나로 설치한다.
 - **포함 기능**: 플러그인 bundle, marketplace 등록, 기존 설치기 호환 경로
 - **예상 소요**: 6~10시간
 - **작업지시서**: [`skill-platform-modernization-phase-2-codex-plugin.md`](./skill-platform-modernization-phase-2-codex-plugin.md)
@@ -88,9 +88,9 @@ Phase 1의 정책·평가 fixture를 이후 페이즈의 회귀 기준으로 사
 
 ## 최종 완료 체크리스트
 
-- [ ] 모든 페이즈 Checkpoint 통과
-- [ ] `python3 -m unittest discover tests -v` 통과
-- [ ] Codex와 Claude Code 플러그인 manifest/version 일치
-- [ ] 명시 호출 전용 스킬의 정책 회귀 테스트 통과
-- [ ] 기존 수동 설치 사용자를 위한 마이그레이션 안내 제공
-- [ ] README와 CHANGELOG 업데이트
+- [x] 모든 페이즈 Checkpoint 통과
+- [x] `python3 -m unittest discover tests -v` 통과 (85 tests)
+- [x] Codex와 Claude Code 플러그인 manifest/version 일치
+- [x] 명시 호출 전용 스킬의 정책 회귀 테스트 통과
+- [x] 기존 수동 설치 사용자를 위한 마이그레이션 안내 제공
+- [x] README와 CHANGELOG 업데이트

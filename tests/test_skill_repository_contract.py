@@ -254,10 +254,12 @@ class SkillRepositoryContractTests(unittest.TestCase):
 
         config = json.loads((CLAUDE_CODE_PLUGIN_ROOT / ".mcp.json").read_text(encoding="utf-8"))
         server = config["mcpServers"]["source-analyzer-search"]
-        self.assertEqual(server["command"], "bash")
-        self.assertEqual(server["args"][0], "-c")
-        self.assertIn("$CLAUDE_PLUGIN_ROOT/servers/source-analyzer-mcp/server.py", server["args"][1])
-        self.assertIn("PATH", server.get("env", {}))
+        self.assertEqual(server["command"], "python3")
+        self.assertEqual(
+            server["args"],
+            ["${CLAUDE_PLUGIN_ROOT}/servers/source-analyzer-mcp/server.py"],
+        )
+        self.assertNotIn("env", server)
 
     def test_codex_plugin_marketplace_exists(self):
         marketplace_path = CODEX_PLUGIN_MARKETPLACE_ROOT / "marketplace.json"
@@ -269,9 +271,14 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("source-analyzer-tools", plugin_names)
 
     def test_codex_plugin_bundle_exists(self):
-        self.assertTrue((CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json").exists(), msg="missing Codex plugin manifest")
+        manifest_path = CODEX_PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+        self.assertTrue(manifest_path.exists(), msg="missing Codex plugin manifest")
         self.assertTrue((CODEX_PLUGIN_ROOT / ".mcp.json").exists(), msg="missing Codex plugin MCP config")
         self.assertTrue((CODEX_PLUGIN_ROOT / "servers" / "source-analyzer-mcp" / "server.py").exists())
+        import json
+
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertTrue(manifest["interface"]["defaultPrompt"])
 
     def test_codex_workflow_plugin_manifest_and_components(self):
         import json

@@ -2,6 +2,23 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.14.1 - 2026-07-22
+
+### Changed
+
+- Made Claude Code and Codex MCP manifests launch Python directly without
+  `bash -c`, Homebrew paths, or hard-coded Unix PATH injection.
+- Reframed Codex installation around the `code-workflow` plugin and modern
+  `.agents/skills` discovery while documenting the legacy installer boundary.
+- Added update, rollback, and macOS/Linux/Windows support guidance.
+
+### Fixed
+
+- Added one release contract that verifies every marketplace and plugin manifest
+  plus the MCP server handshake uses the exact `VERSION.txt` value.
+- Made the standalone Codex MCP plugin resolve its server through `PLUGIN_ROOT`
+  and added the required install-surface default prompts.
+
 ## 0.14.0 - 2026-07-22
 
 ### Added
