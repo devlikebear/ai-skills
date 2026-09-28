@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.14.1`
+Current release: `0.15.0` (unreleased)
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -27,6 +27,7 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
 - A local MCP server is also available for agents that support MCP-based tool discovery.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 - Public Codex skill roots:
+  - `codex/skills/app-service-planning`
   - `codex/skills/source-analyzer`
   - `codex/skills/register-analysis-context`
   - `codex/skills/publish-analysis-wiki`
@@ -36,11 +37,32 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
   - `codex/skills/review`
   - `codex/skills/github-flow`
 
+## Product planning
+
+Use `$app-service-planning` (standalone), `$code-workflow:app-service-planning`
+(Codex plugin), or `/code-workflow:app-service-planning` (Claude Code) to turn a
+product idea into an MVP and development plan. For example:
+
+> 독서 기록 앱의 대상 사용자와 핵심 가치를 정하고 MVP 개발계획서를 작성해줘.
+
+The skill supports new products and existing-product extensions. It reuses
+relevant analysis after checking source freshness, asks only about consequential
+unknowns, and writes in the user's language. It produces a brief, one development
+plan, or a roadmap with vertical phase plans in `docs/plans/` (or the project's
+existing location). A PRD-only request stays PRD-only.
+
+Ordinary bug fixes, implementing an approved feature, and generic engineering
+task breakdowns stay with existing engineering workflows. A repository path alone
+does not trigger product planning. Plans contain acceptance checks rather than mandatory
+approval after every task, and do not authorize implementation or deployment.
+No MCP server is required for planning.
+
 ## Repository Layout
 
 ```text
 codex/
   skills/
+    app-service-planning/  # Product discovery, MVP, development plans
     source-analyzer/       # BFS codebase analysis (3 modes)
     register-analysis-context/ # Explicit instruction registration
     publish-analysis-wiki/ # Explicit Wiki preview and publishing
@@ -54,7 +76,7 @@ claude-code/
     .claude-plugin/
       plugin.json          # code-workflow plugin manifest
     .mcp.json              # MCP server config (optional)
-    skills/                # 8 Claude Code skills
+    skills/                # 9 Claude Code skills
     references/            # Shared reference templates
     scripts/               # checkpoint_manager.py (canonical), search, wiki
     servers/               # MCP server bundle (synced copy)
@@ -64,7 +86,7 @@ claude-code/
 .claude-plugin/
   marketplace.json         # Claude Code marketplace
 plugins/
-  code-workflow/           # Codex workflow plugin (8 skills + MCP)
+  code-workflow/           # Codex workflow plugin (9 skills + MCP)
   source-analyzer-tools/   # Codex MCP plugin bundle
 servers/
   source-analyzer-mcp/     # Canonical MCP server sources
@@ -147,7 +169,7 @@ codex plugin list
 
 For local development, use `codex plugin marketplace add <absolute-repo-path>`.
 The repo marketplace is `.agents/plugins/marketplace.json`, and the installed
-bundle contains all eight skills plus `source-analyzer-search` MCP configuration.
+bundle contains all nine skills plus `source-analyzer-search` MCP configuration.
 
 Codex also discovers repo-local authoring skills from `.agents/skills/` and
 personal skills from `$HOME/.agents/skills/`. Use those locations for a single
@@ -235,6 +257,7 @@ After installation the following skills are available:
 - `/code-workflow:implement`
 - `/code-workflow:review`
 - `/code-workflow:refactor`
+- `/code-workflow:app-service-planning`
 - `/code-workflow:source-analyzer`
 - `/code-workflow:register-analysis-context`
 - `/code-workflow:publish-analysis-wiki`

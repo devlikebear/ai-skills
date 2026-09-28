@@ -56,6 +56,14 @@ When modifying source-analyzer or shared scripts:
   - Codex version creates `AGENTS.md`
   - Claude version creates `CLAUDE.md`
 
+### Product-planning resources
+
+`codex/skills/app-service-planning/` is canonical. Copy its `shared/` tree to
+`claude-code/plugin/references/app-service-planning/`; the Claude SKILL.md is
+identical except `shared/` links become `../../references/app-service-planning/`.
+Run `scripts/sync_codex_workflow_plugin.sh` to refresh the Codex bundle.
+`tests/test_app_service_planning.py` checks both copies and installed references.
+
 ## Testing
 
 ```bash

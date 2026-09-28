@@ -14,6 +14,7 @@ CODEX_PLUGIN_ROOT = REPO_ROOT / "plugins" / "source-analyzer-tools"
 CODEX_WORKFLOW_PLUGIN_ROOT = REPO_ROOT / "plugins" / "code-workflow"
 SOURCE_ANALYZER_MCP_ROOT = REPO_ROOT / "servers" / "source-analyzer-mcp"
 EXPECTED_PUBLIC_SKILLS = {
+    "app-service-planning",
     "source-analyzer",
     "register-analysis-context",
     "publish-analysis-wiki",
@@ -24,6 +25,7 @@ EXPECTED_PUBLIC_SKILLS = {
     "github-flow",
 }
 EXPECTED_PLUGIN_SKILLS = {
+    "app-service-planning",
     "source-analyzer",
     "register-analysis-context",
     "publish-analysis-wiki",

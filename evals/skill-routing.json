@@ -7,168 +7,303 @@
       "kind": "positive",
       "prompt": "이 저장소 구조와 주요 데이터 흐름을 분석해서 아키텍처 문서로 정리해줘.",
       "expected_skill": "source-analyzer",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "source-analyzer-positive-en",
       "kind": "positive",
       "prompt": "Analyze this codebase with BFS and produce a resumable module map and architecture overview.",
       "expected_skill": "source-analyzer",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "register-analysis-context-positive-ko",
       "kind": "positive",
       "prompt": "register-analysis-context 스킬로 생성된 AI_CONTEXT를 프로젝트 지시문에 등록해줘.",
       "expected_skill": "register-analysis-context",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "register-analysis-context-positive-en",
       "kind": "positive",
       "prompt": "Explicitly use register-analysis-context to add the existing analysis pointer to project agent instructions.",
       "expected_skill": "register-analysis-context",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "publish-analysis-wiki-positive-ko",
       "kind": "positive",
       "prompt": "publish-analysis-wiki 스킬로 분석 결과를 미리보기한 뒤 GitHub Wiki에 게시해줘.",
       "expected_skill": "publish-analysis-wiki",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "publish-analysis-wiki-positive-en",
       "kind": "positive",
       "prompt": "Use publish-analysis-wiki explicitly to preview and publish the reviewed analysis outputs.",
       "expected_skill": "publish-analysis-wiki",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "plan-positive-ko",
       "kind": "positive",
       "prompt": "구현 전에 이 요청을 작고 검증 가능한 작업지시서로 나눠줘.",
       "expected_skill": "plan",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "plan-positive-en",
       "kind": "positive",
       "prompt": "Plan this change as bounded work orders with acceptance criteria, but do not edit code.",
       "expected_skill": "plan",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "implement-positive-ko",
       "kind": "positive",
       "prompt": "승인한 작업지시서 1번을 테스트 우선으로 직접 구현해줘.",
       "expected_skill": "implement",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "implement-positive-en",
       "kind": "positive",
       "prompt": "Implement the approved work order now and run its verification commands.",
       "expected_skill": "implement",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "review-positive-ko",
       "kind": "positive",
       "prompt": "현재 diff를 회귀, 보안 문제, 누락 테스트 중심으로 리뷰해줘.",
       "expected_skill": "review",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "review-positive-en",
       "kind": "positive",
       "prompt": "Review these changes and report only actionable findings with file and line evidence.",
       "expected_skill": "review",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "refactor-positive-ko",
       "kind": "positive",
       "prompt": "동작은 유지하면서 이 모듈의 중복을 테스트 기반으로 제거해줘.",
       "expected_skill": "refactor",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "refactor-positive-en",
       "kind": "positive",
       "prompt": "Refactor this package without changing behavior and verify tests before and after.",
       "expected_skill": "refactor",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "github-flow-positive-ko",
       "kind": "positive",
       "prompt": "github-flow 스킬로 이 기능의 브랜치 단계만 시작해줘.",
       "expected_skill": "github-flow",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "github-flow-positive-en",
       "kind": "positive",
       "prompt": "Use github-flow explicitly to resume the pull request phase for this branch.",
       "expected_skill": "github-flow",
-      "must_not_select": []
+      "must_not_select": [
+        "app-service-planning"
+      ]
     },
     {
       "id": "review-not-analysis-or-refactor",
       "kind": "confusion",
       "prompt": "저장소 전체 분석이나 수정은 하지 말고 이 diff에서 실제 버그만 리뷰해줘.",
       "expected_skill": "review",
-      "must_not_select": ["source-analyzer", "refactor"]
+      "must_not_select": [
+        "source-analyzer",
+        "refactor",
+        "app-service-planning"
+      ]
     },
     {
       "id": "plan-not-implement",
       "kind": "confusion",
       "prompt": "아직 코드는 건드리지 말고 리팩터링 작업 순서만 계획해줘.",
       "expected_skill": "plan",
-      "must_not_select": ["implement", "refactor"]
+      "must_not_select": [
+        "implement",
+        "refactor",
+        "app-service-planning"
+      ]
     },
     {
       "id": "implement-not-plan",
       "kind": "confusion",
       "prompt": "계획은 이미 승인했으니 다시 계획하지 말고 작업지시서를 구현해줘.",
       "expected_skill": "implement",
-      "must_not_select": ["plan"]
+      "must_not_select": [
+        "plan",
+        "app-service-planning"
+      ]
     },
     {
       "id": "explain-github-flow-without-running",
       "kind": "confusion",
       "prompt": "GitHub Flow가 무엇인지 설명만 해줘. git 명령은 실행하지 마.",
       "expected_skill": null,
-      "must_not_select": ["github-flow"]
+      "must_not_select": [
+        "github-flow",
+        "app-service-planning"
+      ]
     },
     {
       "id": "architecture-not-diff-review",
       "kind": "confusion",
       "prompt": "변경 diff 말고 현재 시스템의 모듈 경계와 의존성 흐름을 분석해줘.",
       "expected_skill": "source-analyzer",
-      "must_not_select": ["review", "register-analysis-context", "publish-analysis-wiki"]
+      "must_not_select": [
+        "review",
+        "register-analysis-context",
+        "publish-analysis-wiki",
+        "app-service-planning"
+      ]
     },
     {
       "id": "register-explanation-without-modifying",
       "kind": "confusion",
       "prompt": "AI_CONTEXT를 지시문에 연결하는 방법만 설명해줘. 파일은 수정하지 마.",
       "expected_skill": null,
-      "must_not_select": ["register-analysis-context"]
+      "must_not_select": [
+        "register-analysis-context",
+        "app-service-planning"
+      ]
     },
     {
       "id": "wiki-format-without-publishing",
       "kind": "confusion",
       "prompt": "GitHub Wiki에 맞는 문서 구조를 설명만 해줘. 미리보기나 게시 작업은 하지 마.",
       "expected_skill": null,
-      "must_not_select": ["publish-analysis-wiki"]
+      "must_not_select": [
+        "publish-analysis-wiki",
+        "app-service-planning"
+      ]
     },
     {
       "id": "simple-question-no-workflow",
       "kind": "negative",
       "prompt": "이 함수 이름을 한국어로 번역하면 뭐야?",
       "expected_skill": null,
-      "must_not_select": ["source-analyzer", "register-analysis-context", "publish-analysis-wiki", "implement", "plan", "refactor", "review", "github-flow"]
+      "must_not_select": [
+        "source-analyzer",
+        "register-analysis-context",
+        "publish-analysis-wiki",
+        "implement",
+        "plan",
+        "refactor",
+        "review",
+        "github-flow",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "product-planning-new-ko",
+      "kind": "positive",
+      "prompt": "독서 기록 앱 아이디어가 있어. 대상 사용자와 핵심 가치를 정리하고 MVP 범위를 정해서 개발계획서까지 만들어줘.",
+      "expected_skill": "app-service-planning",
+      "must_not_select": [
+        "source-analyzer",
+        "publish-analysis-wiki",
+        "plan",
+        "implement"
+      ]
+    },
+    {
+      "id": "product-planning-existing-en",
+      "kind": "positive",
+      "prompt": "Help define the target audience, product requirements, and MVP for a team-sharing extension to this existing notes app. Reuse its architecture analysis and write a development plan.",
+      "expected_skill": "app-service-planning",
+      "must_not_select": [
+        "publish-analysis-wiki",
+        "plan",
+        "implement"
+      ]
+    },
+    {
+      "id": "product-planning-prd-only",
+      "kind": "positive",
+      "prompt": "서비스 아이디어를 PRD로 정리해줘. 이번에는 개발계획서는 필요 없어.",
+      "expected_skill": "app-service-planning",
+      "must_not_select": [
+        "source-analyzer",
+        "publish-analysis-wiki",
+        "plan",
+        "implement"
+      ]
+    },
+    {
+      "id": "product-planning-handoff",
+      "kind": "positive",
+      "prompt": "대상 사용자, 핵심 가치, MVP가 확정된 이 제품 PRD를 개발계획서로 변환해줘. 구현은 하지 마.",
+      "expected_skill": "app-service-planning",
+      "must_not_select": [
+        "publish-analysis-wiki",
+        "plan",
+        "implement"
+      ]
+    },
+    {
+      "id": "repo-path-is-not-product-planning",
+      "kind": "confusion",
+      "prompt": "/workspace/notes/src/export.ts에 CSV 내보내기를 구현하고 테스트해줘. 컬럼은 title, body로 확정했어.",
+      "expected_skill": "implement",
+      "must_not_select": [
+        "app-service-planning",
+        "source-analyzer",
+        "publish-analysis-wiki"
+      ]
+    },
+    {
+      "id": "bug-fix-is-not-product-planning",
+      "kind": "confusion",
+      "prompt": "Fix the null dereference in this handler and add a regression test.",
+      "expected_skill": "implement",
+      "must_not_select": [
+        "app-service-planning",
+        "source-analyzer",
+        "publish-analysis-wiki"
+      ]
     }
   ]
 }

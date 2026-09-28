@@ -1,7 +1,7 @@
 {
   "name": "code-workflow",
-  "description": "Code workflow skills for planning, implementing, reviewing, refactoring, and analyzing source code",
-  "version": "0.14.1",
+  "description": "Code workflow skills for planning, implementing, reviewing, refactoring, and analyzing source code Includes product discovery, MVP scoping, and development plans with app-service-planning.",
+  "version": "0.15.0",
   "author": {
     "name": "devlikebear"
   },
@@ -12,6 +12,7 @@
     "refactoring",
     "planning",
     "implementation",
-    "source-analysis"
+    "source-analysis",
+    "product-planning"
   ]
 }

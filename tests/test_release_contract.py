@@ -49,6 +49,13 @@ class ReleaseContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn(f'SERVER_VERSION = "{version}"', server_source)
 
+    def test_marketplace_metadata_and_mcp_package_versions_match(self):
+        version = (REPO_ROOT / "VERSION.txt").read_text().strip()
+        marketplace = json.loads((REPO_ROOT / ".claude-plugin/marketplace.json").read_text())
+        self.assertEqual(marketplace["metadata"]["version"], version)
+        package = (REPO_ROOT / "claude-code/plugin/servers/source-analyzer-mcp/pyproject.toml").read_text()
+        self.assertIn(f'version = "{version}"', package)
+
     def test_mcp_configs_avoid_shell_and_platform_specific_paths(self):
         configs = [
             REPO_ROOT / "claude-code" / "plugin" / ".mcp.json",

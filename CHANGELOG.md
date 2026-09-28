@@ -2,6 +2,25 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 0.15.0 - 2026-09-28 (Unreleased)
+
+### Added
+
+- Add app-service-planning across Codex standalone, Codex plugin, and Claude Code
+  for product discovery, MVP scoping, PRDs, and implementation-ready plans.
+- Include focused existing-project analysis with freshness checks, agent-neutral
+  handoffs, and product brief, single-plan, roadmap, and vertical-phase templates.
+- Add self-contained installation, reference integrity, and distribution sync
+  tests plus bilingual routing fixtures distinguishing product planning from
+  generic task breakdowns, implementation, architecture analysis, and bug fixes.
+
+### Changed
+
+- Document product-planning invocation and the nine-skill catalog. Checkpoints
+  describe verification without requiring approval after every task; planning
+  does not grant implementation or deployment authority.
+- Synchronize distribution and MCP version metadata to 0.15.0.
+
 ## 0.14.1 - 2026-07-22
 
 ### Changed
