@@ -6,11 +6,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EVAL_FIXTURE = REPO_ROOT / "evals" / "skill-routing.json"
 EXPECTED_SKILLS = {
+    "app-service-planning",
     "source-analyzer",
     "register-analysis-context",
     "publish-analysis-wiki",
     "implement",
-    "plan",
     "refactor",
     "review",
     "github-flow",

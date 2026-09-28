@@ -1,26 +1,39 @@
 {
   "name": "code-workflow",
-  "version": "0.14.1",
-  "description": "Safe, test-driven workflows for planning, implementation, review, refactoring, source analysis, and GitHub Flow.",
+  "version": "1.0.0",
+  "description": "Safe, test-driven workflows for planning, implementation, review, refactoring, source analysis, and GitHub Flow. Includes product discovery, MVP scoping, and development plans with app-service-planning.",
   "author": {
     "name": "devlikebear"
   },
   "repository": "https://github.com/devlikebear/ai-skills",
   "license": "MIT",
-  "keywords": ["planning", "implementation", "review", "refactoring", "source-analysis", "github-flow"],
+  "keywords": [
+    "planning",
+    "implementation",
+    "review",
+    "refactoring",
+    "source-analysis",
+    "github-flow",
+    "product-planning"
+  ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Code Workflow",
     "shortDescription": "Safe, test-driven coding workflows",
-    "longDescription": "Plan bounded work, implement with verification, review changes, refactor safely, analyze source code, and run explicitly authorized GitHub Flow phases.",
+    "longDescription": "Implement bounded work with verification, review changes, refactor safely, analyze source code, and run explicitly authorized GitHub Flow phases. Clarify product ideas and define MVPs before implementation.",
     "developerName": "devlikebear",
     "category": "Productivity",
-    "capabilities": ["Interactive", "Read", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
     "defaultPrompt": [
-      "Plan this change as small, verifiable work orders.",
+      "Implement this approved work order with tests.",
       "Review the current diff for regressions and missing tests.",
-      "Analyze this codebase and produce resumable architecture docs."
+      "Analyze this codebase and produce resumable architecture docs.",
+      "Clarify this app idea, define its MVP, and write a development plan."
     ]
   }
 }

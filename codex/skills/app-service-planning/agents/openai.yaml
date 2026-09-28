@@ -1,0 +1,4 @@
+interface:
+  display_name: "App & Service Planning"
+  short_description: "Shape product ideas into MVPs and development plans"
+  default_prompt: "Use $app-service-planning to clarify this product idea, define its MVP, and write a development plan."

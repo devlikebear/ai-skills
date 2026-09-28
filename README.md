@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.14.1`
+Current release: `1.0.0` (unreleased)
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -27,25 +27,47 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
 - A local MCP server is also available for agents that support MCP-based tool discovery.
 - A local authoring wrapper lives at `.codex/skills/skill-generator`.
 - Public Codex skill roots:
+  - `codex/skills/app-service-planning`
   - `codex/skills/source-analyzer`
   - `codex/skills/register-analysis-context`
   - `codex/skills/publish-analysis-wiki`
   - `codex/skills/implement`
-  - `codex/skills/plan-for-codex`
   - `codex/skills/refactor`
   - `codex/skills/review`
   - `codex/skills/github-flow`
+
+## Product planning
+
+Use `$app-service-planning` (standalone), `$code-workflow:app-service-planning`
+(Codex plugin), or `/code-workflow:app-service-planning` (Claude Code) to turn a
+product idea into an MVP and development plan. For example:
+
+> 독서 기록 앱의 대상 사용자와 핵심 가치를 정하고 MVP 개발계획서를 작성해줘.
+
+The skill supports new products and existing-product extensions. It reuses
+relevant analysis after checking source freshness, asks only about consequential
+unknowns, and writes in the user's language. It produces a brief, one development
+plan, or a roadmap with vertical phase plans in `docs/plans/` (or the project's
+existing location). A PRD-only request stays PRD-only.
+
+Ordinary bug fixes, implementing an approved feature, and generic engineering
+task breakdowns stay with existing engineering workflows (`implement`, `review`,
+or the host's built-in planning mode). The former `plan` / `plan-for-codex`
+skills were removed in 1.0.0 because they overlapped with product planning. A repository path alone
+does not trigger product planning. Plans contain acceptance checks rather than mandatory
+approval after every task, and do not authorize implementation or deployment.
+No MCP server is required for planning.
 
 ## Repository Layout
 
 ```text
 codex/
   skills/
+    app-service-planning/  # Product discovery, MVP, development plans
     source-analyzer/       # BFS codebase analysis (3 modes)
     register-analysis-context/ # Explicit instruction registration
     publish-analysis-wiki/ # Explicit Wiki preview and publishing
     implement/             # Work order execution
-    plan-for-codex/        # Request → work orders
     refactor/              # Behavior-preserving refactoring
     review/                # Diff-based code review
     github-flow/           # Full GitHub Flow lifecycle
@@ -54,7 +76,7 @@ claude-code/
     .claude-plugin/
       plugin.json          # code-workflow plugin manifest
     .mcp.json              # MCP server config (optional)
-    skills/                # 8 Claude Code skills
+    skills/                # 9 Claude Code skills
     references/            # Shared reference templates
     scripts/               # checkpoint_manager.py (canonical), search, wiki
     servers/               # MCP server bundle (synced copy)
@@ -106,11 +128,6 @@ tests/                     # 6 test suites
 - Executes an approved work order directly.
 - Keeps the scope small, explicit, and verification-driven.
 
-### `plan-for-codex`
-
-- Splits a request into executable work orders for Codex.
-- Keeps tasks bounded, verifiable, and ready for `/implement`.
-
 ### `refactor`
 
 - Performs safe, behavior-preserving refactoring.
@@ -125,7 +142,7 @@ tests/                     # 6 test suites
 ### `github-flow`
 
 - Guides through the full GitHub Flow lifecycle: branch → develop → PR → merge → release.
-- Phase 2 integrates `plan` → `implement` → `review` as an inner loop before each commit.
+- Phase 2 runs work-order scoping → `implement` → `review` as an inner loop before each commit.
 - Available for both Codex (`/github-flow`) and Claude Code (`/code-workflow:github-flow`).
 
 ### `skill-generator`
@@ -231,10 +248,10 @@ This repository is also a Claude Code plugin marketplace. Add it directly and in
 
 After installation the following skills are available:
 
-- `/code-workflow:plan`
 - `/code-workflow:implement`
 - `/code-workflow:review`
 - `/code-workflow:refactor`
+- `/code-workflow:app-service-planning`
 - `/code-workflow:source-analyzer`
 - `/code-workflow:register-analysis-context`
 - `/code-workflow:publish-analysis-wiki`

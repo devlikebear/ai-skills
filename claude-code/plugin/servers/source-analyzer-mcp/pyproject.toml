@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "source-analyzer-search"
-version = "0.10.4"
+version = "1.0.0"
 description = "MCP server for querying source-analyzer outputs and checkpoints"
 requires-python = ">=3.10"
 license = "MIT"

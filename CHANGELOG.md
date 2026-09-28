@@ -2,6 +2,42 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 1.0.0 - 2026-09-28 (Unreleased)
+
+### Added
+
+- Add app-service-planning across Codex standalone, Codex plugin, and Claude Code
+  for product discovery, MVP scoping, PRDs, and implementation-ready plans.
+- Include focused existing-project analysis with freshness checks, agent-neutral
+  handoffs, and product brief, single-plan, roadmap, and vertical-phase templates.
+- Add self-contained installation, reference integrity, and distribution sync
+  tests plus bilingual routing fixtures distinguishing product planning from
+  generic task breakdowns, implementation, architecture analysis, and bug fixes.
+
+### Changed
+
+- Document product-planning invocation and the eight-skill catalog. Checkpoints
+  describe verification without requiring approval after every task; planning
+  does not grant implementation or deployment authority.
+- Plans are saved only inside the target project's repository; new ideas or
+  unrelated working directories get a location question or an inline result.
+  Pre-delivery checks apply only to the requested artifacts (PRD-only stays PRD-only).
+- Development-plan and phase tasks now follow the `implement` work-order shape:
+  non-goals, at most 5 touch points, 30-90 minute sizing, and verification commands.
+- `github-flow` scopes work orders directly instead of calling a planning skill.
+- `scripts/sync_codex_workflow_plugin.sh` now generates the Claude Code copy of
+  app-service-planning; reference tests check links stay inside each distribution.
+- CLAUDE.md version checklist lists every file the release tests enforce.
+- Fix run-on plugin descriptions in the Claude marketplace and plugin manifests.
+- Synchronize distribution and MCP version metadata to 1.0.0. Removing public
+  planning skill names is a breaking interface change and requires a major bump.
+
+### Removed
+
+- Remove the `plan` (Claude Code) and `plan-for-codex` (Codex) skills, which
+  overlapped with app-service-planning. Use `implement` work orders or the host's
+  built-in planning mode for generic task breakdowns.
+
 ## 0.14.1 - 2026-07-22
 
 ### Changed

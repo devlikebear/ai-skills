@@ -20,8 +20,13 @@ Update ALL of these files — they must stay in sync:
 1. `VERSION.txt`
 2. `.claude-plugin/marketplace.json` (two `"version"` fields)
 3. `claude-code/plugin/.claude-plugin/plugin.json` (one `"version"` field)
-4. `plugins/source-analyzer-tools/.codex-plugin/plugin.json` (one `"version"` field when the Codex bundle changes)
-5. `CHANGELOG.md` (add new entry at top with date and changes)
+4. `plugins/source-analyzer-tools/.codex-plugin/plugin.json` (one `"version"` field)
+5. `plugins/code-workflow/.codex-plugin/plugin.json` (one `"version"` field)
+6. `servers/source-analyzer-mcp/server.py` (`SERVER_VERSION`), then run `scripts/sync_source_analyzer_mcp.sh` to update its copies
+7. `claude-code/plugin/servers/source-analyzer-mcp/pyproject.toml` (`version`)
+8. `CHANGELOG.md` (add new entry at top with date and changes)
+
+`tests/test_release_contract.py` enforces these versions.
 
 ### Versioning scheme
 
@@ -55,6 +60,15 @@ When modifying source-analyzer or shared scripts:
 - Fallback file creation when no instruction files exist:
   - Codex version creates `AGENTS.md`
   - Claude version creates `CLAUDE.md`
+
+### Product-planning resources
+
+`codex/skills/app-service-planning/` is canonical. Do not edit the Claude copy
+by hand: `scripts/sync_codex_workflow_plugin.sh` refreshes the Codex bundle and
+generates `claude-code/plugin/skills/app-service-planning/SKILL.md` and
+`claude-code/plugin/references/app-service-planning/` (with `shared/` links
+rewritten to `../../references/app-service-planning/`).
+`tests/test_app_service_planning.py` checks every copy and installed references.
 
 ## Testing
 
