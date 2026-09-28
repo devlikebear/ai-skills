@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `0.15.0` (unreleased)
+Current release: `1.0.0` (unreleased)
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -53,7 +53,7 @@ existing location). A PRD-only request stays PRD-only.
 Ordinary bug fixes, implementing an approved feature, and generic engineering
 task breakdowns stay with existing engineering workflows (`implement`, `review`,
 or the host's built-in planning mode). The former `plan` / `plan-for-codex`
-skills were removed in 0.15.0 because they overlapped with product planning. A repository path alone
+skills were removed in 1.0.0 because they overlapped with product planning. A repository path alone
 does not trigger product planning. Plans contain acceptance checks rather than mandatory
 approval after every task, and do not authorize implementation or deployment.
 No MCP server is required for planning.

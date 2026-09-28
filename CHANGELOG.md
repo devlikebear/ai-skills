@@ -2,7 +2,7 @@
 
 All notable changes to this repository will be documented in this file.
 
-## 0.15.0 - 2026-09-28 (Unreleased)
+## 1.0.0 - 2026-09-28 (Unreleased)
 
 ### Added
 
@@ -29,7 +29,8 @@ All notable changes to this repository will be documented in this file.
   app-service-planning; reference tests check links stay inside each distribution.
 - CLAUDE.md version checklist lists every file the release tests enforce.
 - Fix run-on plugin descriptions in the Claude marketplace and plugin manifests.
-- Synchronize distribution and MCP version metadata to 0.15.0.
+- Synchronize distribution and MCP version metadata to 1.0.0. Removing public
+  planning skill names is a breaking interface change and requires a major bump.
 
 ### Removed
 
