@@ -16,10 +16,26 @@ All notable changes to this repository will be documented in this file.
 
 ### Changed
 
-- Document product-planning invocation and the nine-skill catalog. Checkpoints
+- Document product-planning invocation and the eight-skill catalog. Checkpoints
   describe verification without requiring approval after every task; planning
   does not grant implementation or deployment authority.
+- Plans are saved only inside the target project's repository; new ideas or
+  unrelated working directories get a location question or an inline result.
+  Pre-delivery checks apply only to the requested artifacts (PRD-only stays PRD-only).
+- Development-plan and phase tasks now follow the `implement` work-order shape:
+  non-goals, at most 5 touch points, 30-90 minute sizing, and verification commands.
+- `github-flow` scopes work orders directly instead of calling a planning skill.
+- `scripts/sync_codex_workflow_plugin.sh` now generates the Claude Code copy of
+  app-service-planning; reference tests check links stay inside each distribution.
+- CLAUDE.md version checklist lists every file the release tests enforce.
+- Fix run-on plugin descriptions in the Claude marketplace and plugin manifests.
 - Synchronize distribution and MCP version metadata to 0.15.0.
+
+### Removed
+
+- Remove the `plan` (Claude Code) and `plan-for-codex` (Codex) skills, which
+  overlapped with app-service-planning. Use `implement` work orders or the host's
+  built-in planning mode for generic task breakdowns.
 
 ## 0.14.1 - 2026-07-22
 

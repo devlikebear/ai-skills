@@ -29,12 +29,18 @@ def linked_documents(entry):
 
 class AppServicePlanningTests(unittest.TestCase):
     def test_all_distributions_have_complete_reference_graph(self):
-        for root in [SOURCE, CLAUDE, BUNDLE]:
+        # Links must stay inside what each distribution actually ships.
+        shipped_roots = {
+            SOURCE: SOURCE,
+            CLAUDE: ROOT / "claude-code/plugin",
+            BUNDLE: BUNDLE,
+        }
+        for root, shipped in shipped_roots.items():
             with self.subTest(root=root):
                 documents = linked_documents(root / "SKILL.md")
                 self.assertGreaterEqual(len(documents), 5)
                 for path in documents:
-                    self.assertTrue(path.is_relative_to(ROOT))
+                    self.assertTrue(path.is_relative_to(shipped.resolve()), path)
 
     def test_standalone_install_is_self_contained_and_preserves_other_skills(self):
         with tempfile.TemporaryDirectory() as tmp:

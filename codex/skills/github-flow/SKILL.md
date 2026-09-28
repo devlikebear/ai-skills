@@ -55,8 +55,9 @@ or publish a release from an earlier phase.
 
 For each unit of work, run the inner loop in order:
 
-### 2-1. Plan — `/plan-for-codex`
-- Split the request into ≤3 bounded work orders (30–90 min each).
+### 2-1. Scope — work orders
+- Split the request into ≤3 bounded work orders (30–90 min each) using the
+  `/implement` work-order format. Use the host's built-in planning mode if needed.
 - Each work order must include measurable acceptance criteria and verification commands.
 - Mark API changes or broad refactors as blocked unless explicitly allowed.
 
@@ -147,7 +148,7 @@ Merge only after CI passes and review is complete.
 - Confirm before any destructive action.
 - Stage specific files only — avoid secrets and binaries.
 - One PR per logical change.
-- If work expands beyond scope, stop and re-run `/plan-for-codex`.
+- If work expands beyond scope, stop and re-scope the work orders.
 - Treat push, PR creation, merge, branch deletion, tag creation, and release
   publication as separate externally visible phases that require explicit user intent.
 

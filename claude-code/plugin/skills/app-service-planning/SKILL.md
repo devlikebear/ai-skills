@@ -52,10 +52,14 @@ request (such as a PRD only) instead of forcing a full development plan.
 ## Produce the handoff
 
 Read [handoff guidance](../../references/app-service-planning/references/handoff.md) to select a single plan or
-roadmap with vertical phases. Save Markdown in the project's existing planning
-location, defaulting to `docs/plans/`; use a feature-specific filename and
-preserve unrelated documents. Explain the format choice without making routine
-formatting or file creation depend on another confirmation.
+roadmap with vertical phases. When the working directory is the target
+project's repository, save Markdown in its existing planning location,
+defaulting to `docs/plans/`; use a feature-specific filename and preserve
+unrelated documents. For a new idea with no project yet, or when the working
+directory is unrelated or not a repository, do not write into it: ask for a
+location, or deliver the documents in the response if none is given. Explain the
+format choice without making routine formatting or file creation depend on
+another confirmation.
 
 Use the linked templates as starting structures, omitting irrelevant sections.
 Ground existing paths, patterns, and commands in inspected source. Mark proposed
@@ -76,8 +80,10 @@ available in the current environment. Revalidate affected source assumptions
 against the current checkout. Do not require a conversation-search API or trust
 a document solely because its modification time is recent.
 
-Before delivering, check that every MVP item has an observable acceptance test,
-that each phase ends with a usable result, and that open decisions are visible.
-Report the saved document paths, agreed scope, assumptions, and any decision
+Before delivering, check only what applies to the requested artifacts: every
+MVP item in a plan has an observable acceptance test, each roadmap phase ends
+with a usable result, and open decisions are visible. Do not add plans, phases,
+or tasks to a PRD-only or brief-only request to satisfy this check.
+Report any saved document paths, agreed scope, assumptions, and any decision
 that still blocks implementation. Verification commands in a plan are proposed
 procedures, not evidence that implementation or testing has already happened.

@@ -29,3 +29,17 @@ PUBLISH_SKILL="${TARGET_SKILLS}/publish-analysis-wiki/SKILL.md"
 perl -0pi -e 's#\$\{CODEX_HOME:-\$HOME/\.codex\}/skills/publish-analysis-wiki#\$\{PLUGIN_ROOT\}/skills/publish-analysis-wiki#g' "${PUBLISH_SKILL}"
 
 echo "synced: codex/skills -> plugins/code-workflow/skills"
+
+# Generate the Claude Code copy of app-service-planning from the canonical skill.
+PLANNING_SOURCE="${SOURCE_SKILLS}/app-service-planning"
+CLAUDE_PLUGIN_ROOT="${REPO_ROOT}/claude-code/plugin"
+PLANNING_REFS="${CLAUDE_PLUGIN_ROOT}/references/app-service-planning"
+PLANNING_SKILL_DIR="${CLAUDE_PLUGIN_ROOT}/skills/app-service-planning"
+
+rm -rf "${PLANNING_REFS}"
+mkdir -p "${PLANNING_REFS}" "${PLANNING_SKILL_DIR}"
+cp -R "${PLANNING_SOURCE}/shared/." "${PLANNING_REFS}/"
+perl -pe 's#shared/#../../references/app-service-planning/#g' \
+  "${PLANNING_SOURCE}/SKILL.md" > "${PLANNING_SKILL_DIR}/SKILL.md"
+
+echo "synced: codex/skills/app-service-planning -> claude-code/plugin"

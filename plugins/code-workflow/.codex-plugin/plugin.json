@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Code Workflow",
     "shortDescription": "Safe, test-driven coding workflows",
-    "longDescription": "Plan bounded work, implement with verification, review changes, refactor safely, analyze source code, and run explicitly authorized GitHub Flow phases. Clarify product ideas and define MVPs before implementation.",
+    "longDescription": "Implement bounded work with verification, review changes, refactor safely, analyze source code, and run explicitly authorized GitHub Flow phases. Clarify product ideas and define MVPs before implementation.",
     "developerName": "devlikebear",
     "category": "Productivity",
     "capabilities": [
@@ -30,7 +30,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Plan this change as small, verifiable work orders.",
+      "Implement this approved work order with tests.",
       "Review the current diff for regressions and missing tests.",
       "Analyze this codebase and produce resumable architecture docs.",
       "Clarify this app idea, define its MVP, and write a development plan."

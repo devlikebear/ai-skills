@@ -16,15 +16,19 @@ Follow a user-specified format. If estimates are requested, state assumptions
 and ranges rather than promising a delivery date.
 
 Use a feature prefix, for example `reading-list-dev-plan.md` or
-`reading-list-roadmap.md` with `reading-list-phase-1-capture.md`. Follow the
-repository's documentation location, otherwise use `docs/plans/`. Fill all
+`reading-list-roadmap.md` with `reading-list-phase-1-capture.md`. When saving
+into the target repository, follow its documentation location, otherwise use
+`docs/plans/`; never write into an unrelated working directory. Fill all
 applicable template slots; remove unused sections and placeholder text.
 
 ## Connect decisions to tasks
 
 For every MVP item, specify a task or phase, its visible user outcome, and an
-acceptance scenario. Each task identifies its dependencies, affected area,
-existing pattern when observed, and verification method with expected results.
+acceptance scenario. Write each task as a work order an implementing agent can
+take directly: goal, non-goals, at most 5 touch points, steps, acceptance
+criteria, and verification commands with expected results. Size each task to
+30-90 minutes and split larger ones. Treat plan-level exclusions as non-goals
+for every task, and note dependencies and observed patterns.
 Label new file paths as proposed. Do not invent existing function signatures,
 commands, database schemas, package versions, or test results.
 

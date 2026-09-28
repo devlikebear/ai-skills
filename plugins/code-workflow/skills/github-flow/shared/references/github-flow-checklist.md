@@ -9,7 +9,7 @@
 
 ## Phase 2 — Develop
 
-- [ ] `/plan-for-codex` run — work orders are bounded and have acceptance criteria
+- [ ] Work orders defined — bounded and have acceptance criteria
 - [ ] `/implement` run per work order — scope held to the work order
 - [ ] `/review` run after each implementation — all blocking findings fixed
 - [ ] Only relevant files staged (no secrets, binaries, or generated files)

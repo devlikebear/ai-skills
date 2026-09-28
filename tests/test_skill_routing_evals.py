@@ -11,7 +11,6 @@ EXPECTED_SKILLS = {
     "register-analysis-context",
     "publish-analysis-wiki",
     "implement",
-    "plan",
     "refactor",
     "review",
     "github-flow",

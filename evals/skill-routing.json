@@ -57,21 +57,23 @@
       ]
     },
     {
-      "id": "plan-positive-ko",
-      "kind": "positive",
+      "id": "task-breakdown-not-product-ko",
+      "kind": "negative",
       "prompt": "구현 전에 이 요청을 작고 검증 가능한 작업지시서로 나눠줘.",
-      "expected_skill": "plan",
+      "expected_skill": null,
       "must_not_select": [
-        "app-service-planning"
+        "app-service-planning",
+        "implement"
       ]
     },
     {
-      "id": "plan-positive-en",
-      "kind": "positive",
+      "id": "task-breakdown-not-product-en",
+      "kind": "negative",
       "prompt": "Plan this change as bounded work orders with acceptance criteria, but do not edit code.",
-      "expected_skill": "plan",
+      "expected_skill": null,
       "must_not_select": [
-        "app-service-planning"
+        "app-service-planning",
+        "implement"
       ]
     },
     {
@@ -158,10 +160,10 @@
       ]
     },
     {
-      "id": "plan-not-implement",
+      "id": "refactor-breakdown-not-implement",
       "kind": "confusion",
       "prompt": "아직 코드는 건드리지 말고 리팩터링 작업 순서만 계획해줘.",
-      "expected_skill": "plan",
+      "expected_skill": null,
       "must_not_select": [
         "implement",
         "refactor",
@@ -174,7 +176,6 @@
       "prompt": "계획은 이미 승인했으니 다시 계획하지 말고 작업지시서를 구현해줘.",
       "expected_skill": "implement",
       "must_not_select": [
-        "plan",
         "app-service-planning"
       ]
     },
@@ -230,7 +231,6 @@
         "register-analysis-context",
         "publish-analysis-wiki",
         "implement",
-        "plan",
         "refactor",
         "review",
         "github-flow",
@@ -245,7 +245,6 @@
       "must_not_select": [
         "source-analyzer",
         "publish-analysis-wiki",
-        "plan",
         "implement"
       ]
     },
@@ -256,7 +255,6 @@
       "expected_skill": "app-service-planning",
       "must_not_select": [
         "publish-analysis-wiki",
-        "plan",
         "implement"
       ]
     },
@@ -268,7 +266,6 @@
       "must_not_select": [
         "source-analyzer",
         "publish-analysis-wiki",
-        "plan",
         "implement"
       ]
     },
@@ -279,7 +276,6 @@
       "expected_skill": "app-service-planning",
       "must_not_select": [
         "publish-analysis-wiki",
-        "plan",
         "implement"
       ]
     },

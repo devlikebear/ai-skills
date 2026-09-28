@@ -11,7 +11,7 @@
     {
       "name": "code-workflow",
       "source": "./claude-code/plugin",
-      "description": "Code workflow skills: plan, implement, review, refactor, source-analyzer, and github-flow Includes product discovery, MVP scoping, and development plans with app-service-planning.",
+      "description": "Code workflow skills: implement, review, refactor, source-analyzer, and github-flow. Includes product discovery, MVP scoping, and development plans with app-service-planning.",
       "version": "0.15.0",
       "author": {
         "name": "devlikebear"

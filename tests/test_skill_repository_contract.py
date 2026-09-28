@@ -19,7 +19,6 @@ EXPECTED_PUBLIC_SKILLS = {
     "register-analysis-context",
     "publish-analysis-wiki",
     "implement",
-    "plan-for-codex",
     "refactor",
     "review",
     "github-flow",
@@ -30,7 +29,6 @@ EXPECTED_PLUGIN_SKILLS = {
     "register-analysis-context",
     "publish-analysis-wiki",
     "implement",
-    "plan",
     "refactor",
     "review",
     "github-flow",
@@ -51,6 +49,9 @@ class SkillRepositoryContractTests(unittest.TestCase):
     def test_public_skills_have_flat_structure(self):
         actual = {path.name for path in PUBLIC_SKILLS_ROOT.iterdir() if path.is_dir()}
         self.assertTrue(EXPECTED_PUBLIC_SKILLS.issubset(actual))
+        self.assertNotIn("plan-for-codex", actual)
+        self.assertFalse((CLAUDE_CODE_PLUGIN_ROOT / "skills" / "plan").exists())
+        self.assertFalse((CODEX_WORKFLOW_PLUGIN_ROOT / "skills" / "plan-for-codex").exists())
 
         for skill_name in EXPECTED_PUBLIC_SKILLS:
             root = PUBLIC_SKILLS_ROOT / skill_name
@@ -99,7 +100,7 @@ class SkillRepositoryContractTests(unittest.TestCase):
         self.assertIn("AI Skills Repository", readme)
         self.assertIn("codex/skills/source-analyzer", readme)
         self.assertIn("codex/skills/implement", readme)
-        self.assertIn("codex/skills/plan-for-codex", readme)
+        self.assertNotIn("codex/skills/plan-for-codex", readme)
         self.assertIn("codex/skills/refactor", readme)
         self.assertIn("codex/skills/review", readme)
         self.assertIn(".codex/skills/skill-generator", readme)

@@ -58,8 +58,9 @@ publish a release from an earlier phase.
 
 For each unit of work, run the inner loop in order:
 
-### 2-1. Plan — `/code-workflow:plan`
-- Split the request into ≤3 bounded work orders (30–90 min each).
+### 2-1. Scope — work orders
+- Split the request into ≤3 bounded work orders (30–90 min each) using the
+  [work-order template](../../references/work-order.md). Use plan mode if needed.
 - Each work order must include measurable acceptance criteria and verification commands.
 - Mark API changes or broad refactors as blocked unless explicitly allowed.
 
@@ -158,7 +159,7 @@ Run this phase only when publishing a versioned release.
 - Always confirm before destructive actions (reset --hard, force-push, branch deletion).
 - Stage specific files only — avoid accidentally committing secrets or large binaries.
 - One PR per logical change; keep PRs small and reviewable.
-- If work expands beyond the original scope, stop and re-run `/code-workflow:plan`.
+- If work expands beyond the original scope, stop and re-scope the work orders.
 - Treat push, PR creation, merge, branch deletion, tag creation, and release
   publication as separate externally visible phases that require explicit user intent.
 

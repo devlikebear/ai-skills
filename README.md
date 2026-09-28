@@ -32,7 +32,6 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
   - `codex/skills/register-analysis-context`
   - `codex/skills/publish-analysis-wiki`
   - `codex/skills/implement`
-  - `codex/skills/plan-for-codex`
   - `codex/skills/refactor`
   - `codex/skills/review`
   - `codex/skills/github-flow`
@@ -52,7 +51,9 @@ plan, or a roadmap with vertical phase plans in `docs/plans/` (or the project's
 existing location). A PRD-only request stays PRD-only.
 
 Ordinary bug fixes, implementing an approved feature, and generic engineering
-task breakdowns stay with existing engineering workflows. A repository path alone
+task breakdowns stay with existing engineering workflows (`implement`, `review`,
+or the host's built-in planning mode). The former `plan` / `plan-for-codex`
+skills were removed in 0.15.0 because they overlapped with product planning. A repository path alone
 does not trigger product planning. Plans contain acceptance checks rather than mandatory
 approval after every task, and do not authorize implementation or deployment.
 No MCP server is required for planning.
@@ -67,7 +68,6 @@ codex/
     register-analysis-context/ # Explicit instruction registration
     publish-analysis-wiki/ # Explicit Wiki preview and publishing
     implement/             # Work order execution
-    plan-for-codex/        # Request → work orders
     refactor/              # Behavior-preserving refactoring
     review/                # Diff-based code review
     github-flow/           # Full GitHub Flow lifecycle
@@ -86,7 +86,7 @@ claude-code/
 .claude-plugin/
   marketplace.json         # Claude Code marketplace
 plugins/
-  code-workflow/           # Codex workflow plugin (9 skills + MCP)
+  code-workflow/           # Codex workflow plugin (8 skills + MCP)
   source-analyzer-tools/   # Codex MCP plugin bundle
 servers/
   source-analyzer-mcp/     # Canonical MCP server sources
@@ -128,11 +128,6 @@ tests/                     # 6 test suites
 - Executes an approved work order directly.
 - Keeps the scope small, explicit, and verification-driven.
 
-### `plan-for-codex`
-
-- Splits a request into executable work orders for Codex.
-- Keeps tasks bounded, verifiable, and ready for `/implement`.
-
 ### `refactor`
 
 - Performs safe, behavior-preserving refactoring.
@@ -147,7 +142,7 @@ tests/                     # 6 test suites
 ### `github-flow`
 
 - Guides through the full GitHub Flow lifecycle: branch → develop → PR → merge → release.
-- Phase 2 integrates `plan` → `implement` → `review` as an inner loop before each commit.
+- Phase 2 runs work-order scoping → `implement` → `review` as an inner loop before each commit.
 - Available for both Codex (`/github-flow`) and Claude Code (`/code-workflow:github-flow`).
 
 ### `skill-generator`
@@ -169,7 +164,7 @@ codex plugin list
 
 For local development, use `codex plugin marketplace add <absolute-repo-path>`.
 The repo marketplace is `.agents/plugins/marketplace.json`, and the installed
-bundle contains all nine skills plus `source-analyzer-search` MCP configuration.
+bundle contains all eight skills plus `source-analyzer-search` MCP configuration.
 
 Codex also discovers repo-local authoring skills from `.agents/skills/` and
 personal skills from `$HOME/.agents/skills/`. Use those locations for a single
@@ -253,7 +248,6 @@ This repository is also a Claude Code plugin marketplace. Add it directly and in
 
 After installation the following skills are available:
 
-- `/code-workflow:plan`
 - `/code-workflow:implement`
 - `/code-workflow:review`
 - `/code-workflow:refactor`
