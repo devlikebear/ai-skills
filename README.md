@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `1.0.0` (unreleased)
+Current release: `1.0.0`
 
 ### Search CLI: A/B tested for token efficiency
 
