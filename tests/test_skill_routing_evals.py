@@ -14,6 +14,9 @@ EXPECTED_SKILLS = {
     "refactor",
     "review",
     "github-flow",
+    "verify-own-work",
+    "correction-ladder",
+    "garden-antipatterns",
 }
 EXPECTED_KINDS = {"positive", "negative", "confusion"}
 

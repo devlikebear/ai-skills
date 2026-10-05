@@ -300,6 +300,98 @@
         "source-analyzer",
         "publish-analysis-wiki"
       ]
+    },
+    {
+      "id": "verify-own-work-positive-ko",
+      "kind": "positive",
+      "prompt": "수정 끝났다고 하기 전에 앱을 직접 실행해서 로그와 스크린샷으로 동작을 확인해줘.",
+      "expected_skill": "verify-own-work",
+      "must_not_select": [
+        "review",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "verify-own-work-positive-en",
+      "kind": "positive",
+      "prompt": "This bug report just says the export is broken. Reproduce it against the running CLI using a feature map, then fix it and show evidence.",
+      "expected_skill": "verify-own-work",
+      "must_not_select": [
+        "source-analyzer",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "diff-review-not-runtime-verification",
+      "kind": "confusion",
+      "prompt": "Read this diff and tell me whether it has regressions or missing tests; do not run anything.",
+      "expected_skill": "review",
+      "must_not_select": [
+        "verify-own-work",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "correction-ladder-positive-ko",
+      "kind": "positive",
+      "prompt": "에이전트가 같은 SQL 문자열 결합 실수를 또 했어. 다시는 못 하도록 가장 강한 방지책을 정해서 적용해줘.",
+      "expected_skill": "correction-ladder",
+      "must_not_select": [
+        "review",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "correction-ladder-positive-en",
+      "kind": "positive",
+      "prompt": "Reviewers keep catching the same missing switch case. Decide whether a type check, lint rule, or skill should prevent it and add that prevention.",
+      "expected_skill": "correction-ladder",
+      "must_not_select": [
+        "review",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "one-off-bug-not-correction-ladder",
+      "kind": "confusion",
+      "prompt": "Fix the off-by-one in pagination on the orders page per this work order.",
+      "expected_skill": "implement",
+      "must_not_select": [
+        "correction-ladder",
+        "garden-antipatterns",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "garden-antipatterns-positive-ko",
+      "kind": "positive",
+      "prompt": "테스트마다 sleep으로 기다리는 우회 코드가 퍼지고 있어. 근본 원인을 고치고 다시 생기지 않게 검사도 추가해줘.",
+      "expected_skill": "garden-antipatterns",
+      "must_not_select": [
+        "refactor",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "garden-antipatterns-positive-en",
+      "kind": "positive",
+      "prompt": "We have two HTTP client wrappers and a 'temporary hack' comment justifying the old one. Keep one paved path and block the old wrapper from coming back.",
+      "expected_skill": "garden-antipatterns",
+      "must_not_select": [
+        "refactor",
+        "app-service-planning"
+      ]
+    },
+    {
+      "id": "plain-refactor-not-gardening",
+      "kind": "confusion",
+      "prompt": "Extract this 200-line function into smaller functions without changing behavior.",
+      "expected_skill": "refactor",
+      "must_not_select": [
+        "garden-antipatterns",
+        "correction-ladder",
+        "app-service-planning"
+      ]
     }
   ]
 }

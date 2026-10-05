@@ -30,16 +30,27 @@ perl -0pi -e 's#\$\{CODEX_HOME:-\$HOME/\.codex\}/skills/publish-analysis-wiki#\$
 
 echo "synced: codex/skills -> plugins/code-workflow/skills"
 
-# Generate the Claude Code copy of app-service-planning from the canonical skill.
-PLANNING_SOURCE="${SOURCE_SKILLS}/app-service-planning"
+# Generate Claude Code copies of skills whose Codex source is canonical.
+# Each skill's shared/ resources move to claude-code/plugin/references/<skill>/
+# and SKILL.md links are rewritten from shared/ to ../../references/<skill>/.
 CLAUDE_PLUGIN_ROOT="${REPO_ROOT}/claude-code/plugin"
-PLANNING_REFS="${CLAUDE_PLUGIN_ROOT}/references/app-service-planning"
-PLANNING_SKILL_DIR="${CLAUDE_PLUGIN_ROOT}/skills/app-service-planning"
+GENERATED_CLAUDE_SKILLS=(
+  app-service-planning
+  verify-own-work
+  correction-ladder
+  garden-antipatterns
+)
 
-rm -rf "${PLANNING_REFS}"
-mkdir -p "${PLANNING_REFS}" "${PLANNING_SKILL_DIR}"
-cp -R "${PLANNING_SOURCE}/shared/." "${PLANNING_REFS}/"
-perl -pe 's#shared/#../../references/app-service-planning/#g' \
-  "${PLANNING_SOURCE}/SKILL.md" > "${PLANNING_SKILL_DIR}/SKILL.md"
+for skill_name in "${GENERATED_CLAUDE_SKILLS[@]}"; do
+  skill_source="${SOURCE_SKILLS}/${skill_name}"
+  skill_refs="${CLAUDE_PLUGIN_ROOT}/references/${skill_name}"
+  skill_dir="${CLAUDE_PLUGIN_ROOT}/skills/${skill_name}"
 
-echo "synced: codex/skills/app-service-planning -> claude-code/plugin"
+  rm -rf "${skill_refs}"
+  mkdir -p "${skill_refs}" "${skill_dir}"
+  cp -R "${skill_source}/shared/." "${skill_refs}/"
+  perl -pe "s#shared/#../../references/${skill_name}/#g" \
+    "${skill_source}/SKILL.md" > "${skill_dir}/SKILL.md"
+
+  echo "synced: codex/skills/${skill_name} -> claude-code/plugin"
+done

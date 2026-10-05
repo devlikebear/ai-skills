@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `1.0.0`
+Current release: `1.1.0`
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -35,6 +35,9 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
   - `codex/skills/refactor`
   - `codex/skills/review`
   - `codex/skills/github-flow`
+  - `codex/skills/verify-own-work`
+  - `codex/skills/correction-ladder`
+  - `codex/skills/garden-antipatterns`
 
 ## Product planning
 
@@ -71,12 +74,15 @@ codex/
     refactor/              # Behavior-preserving refactoring
     review/                # Diff-based code review
     github-flow/           # Full GitHub Flow lifecycle
+    verify-own-work/       # Run the real software and capture evidence
+    correction-ladder/     # Fix mistakes where they cannot recur
+    garden-antipatterns/   # Remove spreading workarounds, block reintroduction
 claude-code/
   plugin/
     .claude-plugin/
       plugin.json          # code-workflow plugin manifest
     .mcp.json              # MCP server config (optional)
-    skills/                # 9 Claude Code skills
+    skills/                # 11 Claude Code skills
     references/            # Shared reference templates
     scripts/               # checkpoint_manager.py (canonical), search, wiki
     servers/               # MCP server bundle (synced copy)
@@ -86,7 +92,7 @@ claude-code/
 .claude-plugin/
   marketplace.json         # Claude Code marketplace
 plugins/
-  code-workflow/           # Codex workflow plugin (8 skills + MCP)
+  code-workflow/           # Codex workflow plugin (11 skills + MCP)
   source-analyzer-tools/   # Codex MCP plugin bundle
 servers/
   source-analyzer-mcp/     # Canonical MCP server sources
@@ -96,7 +102,7 @@ servers/
 scripts/
   install_codex_skill.sh   # Codex skill installer
   sync_source_analyzer_mcp.sh  # Sync canonical sources to all bundles
-tests/                     # 6 test suites
+tests/                     # 9 test suites
 ```
 
 `codex/skills/<skill-name>` stores the Codex source layout with flat runtime files only.
@@ -145,6 +151,26 @@ tests/                     # 6 test suites
 - Phase 2 runs work-order scoping → `implement` → `review` as an inner loop before each commit.
 - Available for both Codex (`/github-flow`) and Claude Code (`/code-workflow:github-flow`).
 
+### `verify-own-work`
+
+- Requires running the real app, CLI, or service and capturing evidence (output, logs, traces, screenshots) before reporting done.
+- Maintains a small feature map (`docs/feature-map.md`) of screens, commands, shortcuts, and endpoints and how to drive them.
+- Turns vague bug reports into concrete reproductions through the feature map.
+
+### `correction-ladder`
+
+- Places each correction at the strongest durable rung: architecture, types/static analysis, lint or review-bot rules, a skill, then style-guide prose.
+- Includes a decision checklist and requires proof that the new prevention catches the original mistake.
+
+### `garden-antipatterns`
+
+- Removes workarounds, duplicate paths, and stale hack-justifying comments before agents copy them.
+- Keeps one paved path and adds a check (type, lint rule, CI grep with allowlist) that blocks reintroduction.
+
+`verify-own-work`, `correction-ladder`, and `garden-antipatterns` are inspired by
+Lauren Tan (@poteto)'s talk "here's how i shipped 2,500 PRs last month to production"
+(https://x.com/poteto/status/2102050467505430555).
+
 ### `skill-generator`
 
 - Lives under `.codex/skills/skill-generator`.
@@ -164,7 +190,7 @@ codex plugin list
 
 For local development, use `codex plugin marketplace add <absolute-repo-path>`.
 The repo marketplace is `.agents/plugins/marketplace.json`, and the installed
-bundle contains all eight skills plus `source-analyzer-search` MCP configuration.
+bundle contains all eleven skills plus `source-analyzer-search` MCP configuration.
 
 Codex also discovers repo-local authoring skills from `.agents/skills/` and
 personal skills from `$HOME/.agents/skills/`. Use those locations for a single
@@ -256,6 +282,9 @@ After installation the following skills are available:
 - `/code-workflow:register-analysis-context`
 - `/code-workflow:publish-analysis-wiki`
 - `/code-workflow:github-flow`
+- `/code-workflow:verify-own-work`
+- `/code-workflow:correction-ladder`
+- `/code-workflow:garden-antipatterns`
 
 Plugin skills are bilingual and detect the user's language automatically.
 The plugin also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.

@@ -22,6 +22,9 @@ EXPECTED_PUBLIC_SKILLS = {
     "refactor",
     "review",
     "github-flow",
+    "verify-own-work",
+    "correction-ladder",
+    "garden-antipatterns",
 }
 EXPECTED_PLUGIN_SKILLS = {
     "app-service-planning",
@@ -32,6 +35,9 @@ EXPECTED_PLUGIN_SKILLS = {
     "refactor",
     "review",
     "github-flow",
+    "verify-own-work",
+    "correction-ladder",
+    "garden-antipatterns",
 }
 
 

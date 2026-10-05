@@ -1,0 +1,4 @@
+interface:
+  display_name: "Garden Antipatterns"
+  short_description: "Remove spreading workarounds and block their return"
+  default_prompt: "Use $garden-antipatterns to remove this workaround, keep one paved path, and add a check that blocks reintroduction."
