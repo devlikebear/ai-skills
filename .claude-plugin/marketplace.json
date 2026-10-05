@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Reusable AI-agent skills for code workflow automation",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "code-workflow",
       "source": "./claude-code/plugin",
-      "description": "Code workflow skills: implement, review, refactor, source-analyzer, and github-flow. Includes product discovery, MVP scoping, and development plans with app-service-planning.",
-      "version": "1.0.0",
+      "description": "Code workflow skills: implement, review, refactor, source-analyzer, and github-flow. Includes product discovery, MVP scoping, and development plans with app-service-planning. Adds evidence-based self-verification, durable correction placement, and antipattern gardening.",
+      "version": "1.1.0",
       "author": {
         "name": "devlikebear"
       },

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Own Work"
+  short_description: "Run the real software and capture evidence before done"
+  default_prompt: "Use $verify-own-work to run the changed app yourself, capture evidence, and check it against the feature map before reporting done."

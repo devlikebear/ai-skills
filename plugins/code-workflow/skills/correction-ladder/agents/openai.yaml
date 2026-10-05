@@ -1,0 +1,4 @@
+interface:
+  display_name: "Correction Ladder"
+  short_description: "Fix mistakes where they cannot recur"
+  default_prompt: "Use $correction-ladder to pick the strongest place to prevent this mistake from happening again and implement it."

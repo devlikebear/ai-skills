@@ -70,6 +70,16 @@ generates `claude-code/plugin/skills/app-service-planning/SKILL.md` and
 rewritten to `../../references/app-service-planning/`).
 `tests/test_app_service_planning.py` checks every copy and installed references.
 
+### Generated Claude copies
+
+`verify-own-work`, `correction-ladder`, and `garden-antipatterns` follow the same
+rule: `codex/skills/<skill>/` is canonical and
+`scripts/sync_codex_workflow_plugin.sh` generates
+`claude-code/plugin/skills/<skill>/SKILL.md` and
+`claude-code/plugin/references/<skill>/`. Add new canonical-in-Codex skills to
+`GENERATED_CLAUDE_SKILLS` in that script. `tests/test_agent_trust_skills.py`
+checks the copies, reference links, exit criteria, and attribution.
+
 ## Testing
 
 ```bash

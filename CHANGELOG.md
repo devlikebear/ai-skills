@@ -2,6 +2,31 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 1.1.0 - 2026-10-05
+
+### Added
+
+- Add `verify-own-work`: run the real app, CLI, or service, capture evidence, and
+  check against a project feature map before reporting done; includes a feature
+  map template and a vague-report-to-reproduction procedure.
+- Add `correction-ladder`: place each correction at the strongest durable rung
+  (architecture, types/static analysis, lint or review-bot rules, skill, style
+  guide) with a decision checklist and worked examples.
+- Add `garden-antipatterns`: remove spreading workarounds, duplicate paths, and
+  stale hack-justifying comments, keep one paved path, and block reintroduction
+  with a check.
+- Ship all three across Codex standalone, the Codex `code-workflow` plugin, and
+  the Claude Code plugin, with routing eval fixtures and distribution tests.
+  Inspired by Lauren Tan (@poteto)'s talk "here's how i shipped 2,500 PRs last
+  month to production" (https://x.com/poteto/status/2102050467505430555).
+
+### Changed
+
+- `scripts/sync_codex_workflow_plugin.sh` now generates Claude Code copies for
+  every skill listed in `GENERATED_CLAUDE_SKILLS`, not only app-service-planning.
+- Synchronize distribution and MCP version metadata to 1.1.0. The
+  source-analyzer MCP server is otherwise unchanged.
+
 ## 1.0.0 - 2026-09-28
 
 ### Added

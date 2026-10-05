@@ -15,7 +15,7 @@ import source_analyzer_search as search  # noqa: E402
 
 
 SERVER_NAME = "source-analyzer-search"
-SERVER_VERSION = "1.0.0"
+SERVER_VERSION = "1.1.0"
 
 
 class SourceAnalyzerMcpServer:
