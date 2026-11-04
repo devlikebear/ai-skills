@@ -1,4 +1,4 @@
-import type { Lane, Snapshot, Status, Step } from '../types'
+import type { Lane, Snapshot, Status, Step, Todo } from '../types'
 
 /** A heartbeat older than this means the session's process is gone. */
 export const STALE_MS = 90_000
@@ -197,4 +197,48 @@ export const stepColor = (step: Step): string => {
 export const byAttention = (now: number) => (a: Snapshot, b: Snapshot) => {
   const rank = (s: Snapshot) => LANES.indexOf(laneOf(s, now))
   return rank(a) - rank(b) || b.since - a.since
+}
+
+/** A todo list as TodoWrite or the desktop app's plan tool hands it over. */
+export const parseTodos = (raw: unknown): Todo[] | null => {
+  if (!Array.isArray(raw)) return null
+  const todos: Todo[] = []
+  for (const item of raw as Record<string, unknown>[]) {
+    const text = String(item?.content ?? item?.subject ?? item?.text ?? '')
+    const state = String(item?.status ?? 'pending')
+    if (!text) continue
+    todos.push({
+      text: cut(text, 120),
+      state: state === 'completed' || state === 'in_progress' ? state : 'pending',
+    })
+  }
+  return todos
+}
+
+/** The todo list after one call of TodoWrite, the Task tools or the plan tool. */
+export const nextTodos = (tool: string, input: Record<string, unknown>, before: readonly Todo[]): Todo[] => {
+  if (tool === 'TodoWrite') return parseTodos(input.todos) ?? [...before]
+  const todos = before.map(t => ({ ...t }))
+  if (tool.endsWith('update_plan')) {
+    const items = parseTodos(input.items)
+    if (items) return items
+    const done = Array.isArray(input.done) ? (input.done as number[]) : []
+    for (const n of done) if (todos[n - 1]) todos[n - 1]!.state = 'completed'
+    if (input.advance === true) {
+      const at = todos.findIndex(t => t.state === 'in_progress')
+      if (at >= 0) todos[at]!.state = 'completed'
+      const next = todos.find(t => t.state === 'pending')
+      if (next) next.state = 'in_progress'
+    }
+    if (typeof input.start === 'number' && todos[input.start - 1]) todos[input.start - 1]!.state = 'in_progress'
+    return todos
+  }
+  if (tool.endsWith('wrap_up')) return todos.map(t => ({ ...t, state: 'completed' as const }))
+  if (tool === 'TaskCreate' && typeof input.subject === 'string') return [...todos, { text: cut(input.subject, 120), state: 'pending' }]
+  if (tool === 'TaskUpdate') {
+    const t = todos[Number(input.taskId) - 1]
+    const state = String(input.status ?? '')
+    if (t && (state === 'pending' || state === 'in_progress' || state === 'completed')) t.state = state
+  }
+  return todos
 }

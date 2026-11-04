@@ -54,6 +54,18 @@ export type Snapshot = {
   ctx: number | null
   cost: number | null
   surface: string | null
+  /**
+   * Where the card came from: `mod`, the session's own collector; `live`, the
+   * engine's session registry and the session's transcript, for a running
+   * session that does not load this plugin. Absent on older snapshots: `mod`.
+   */
+  source?: 'mod' | 'live'
+  /** What a `waiting` session waits for, as the registry says it. */
+  waitingFor?: string | null
+  /** True while the engine's registry lists the session's process as alive. */
+  running?: boolean
+  /** The last pull request the session linked. */
+  pr?: { number: number; url: string } | null
 }
 
 export type View = 'board' | 'flow' | 'detail'

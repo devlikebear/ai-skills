@@ -1,8 +1,8 @@
 # session-board
 
-A Claude Code mod that shows every active session on one board. Each session that
-loads the plugin records its own state; the session where you open the board reads
-them all and draws three views in a pane beside the chat.
+A Claude Code mod that shows every running Claude Code session on one board, in a
+pane beside the chat. Sessions in the terminal and the desktop app both appear,
+whether or not they load the plugin.
 
 ## Install
 
@@ -16,9 +16,10 @@ claude plugin marketplace add devlikebear/ai-skills
 claude plugin install session-board@ai-skills
 ```
 
-`install` defaults to user scope. Keep it there so every session records itself:
-a session that does not load the plugin does not appear on the board. New
-sessions load it; restart sessions that were already running.
+`install` defaults to user scope. Every running session shows on the board.
+Sessions that load the plugin add live context use, subagents and the exact
+permission prompt. New sessions load it; restart sessions that were already
+running to get that detail for them too.
 
 Update or remove it the same way:
 
@@ -79,16 +80,25 @@ keeps a count per lane.
 
 ## How it works
 
-- Each session keeps a snapshot and writes it to
-  `~/.claude/session-board/sessions/<session-id>.json` within a second of a
-  change, and every 15 seconds otherwise.
-- The snapshot follows `turn.start`, `tool.call`, `tool.check` (a permission
-  prompt), `turn.complete` and `session.end`. It reads context use, cost and
-  subagents from the session. Todos come from TodoWrite, the Task tools and the
-  desktop app's plan tool.
+The board reads three sources and merges them per session:
+
+| Source | Gives |
+| --- | --- |
+| The engine's session registry, `~/.claude/sessions/<pid>.json`, kept to pids `ps` reports alive | which sessions run, their name, and whether each is busy, idle, or waiting on a dialog or input |
+| The end of each session's transcript, `~/.claude/projects/<project>/<session-id>.jsonl` (the last 512 KB, read again only when the file changes) | title, branch, model, prompts, tool calls, todos, changed files, last answer, cost, linked PR |
+| The plugin's own heartbeat, `~/.claude/session-board/sessions/<session-id>.json`, for sessions that load it | the same, live, plus context use and subagents |
+
+- The registry's status wins: it is the engine's own word, and it knows when a
+  dialog is open. A heartbeat keeps an error status while the registry calls the
+  session idle.
+- A session that loads the plugin writes its heartbeat from `turn.start`,
+  `tool.call`, `tool.check`, `turn.complete` and `session.end`, within a second of
+  a change and every 15 seconds otherwise. Todos follow TodoWrite, the Task tools
+  and the desktop app's plan tool.
 - No hook blocks or waits on the board: the hooks record and pass the event on.
-- The session with the board open reads the folder every two seconds. Snapshots
-  older than three days are skipped. Files are small; delete the folder to reset.
+- Only the session with the board open polls, every two seconds: one `ps` and one
+  `tail` per transcript that changed. Heartbeats of sessions that are no longer
+  running stay on the board, under 완료, for three days.
 
 ## Develop
 
@@ -99,6 +109,6 @@ claude --plugin-dir claude-code/session-board
 ```
 
 `hooks/register.tsx` wires the hooks and the ticker, `hooks/collector.ts` keeps the
-snapshot, `hooks/views.tsx` draws the pane, and `types/index.d.ts` is the state
+snapshot, `hooks/live.ts` reads the registry and transcripts, `hooks/views.tsx` draws the pane, and `types/index.d.ts` is the state
 contract. Engine calls stay inside hooks, spelled `$.noun.method(...)`; the other
 modules are pure.

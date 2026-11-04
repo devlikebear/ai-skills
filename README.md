@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `1.2.1`
+Current release: `1.3.0`
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -303,17 +303,18 @@ The plugin also bundles `source-analyzer-search` through `claude-code/plugin/.mc
 
 ### `session-board` (Claude Code mod)
 
-A second plugin in the same marketplace shows every active Claude Code session in
-a pane: a board with needs-you / working / review / done lanes, a workflow
-timeline of prompts, tool calls, subagents and permission prompts, and a detail
-view with todos, files, context and cost.
+A second plugin in the same marketplace shows every running Claude Code session
+in a pane, whether or not that session loads the plugin: a board with needs-you /
+working / review / done lanes, a workflow timeline of prompts, tool calls,
+subagents and permission prompts, and a detail view with todos, files, context,
+cost and the linked PR.
 
 ```bash
 claude plugin install session-board@ai-skills
 ```
 
-Run `/board` (or `/board flow`, `/board detail`) inside a session. Keep the
-default user scope: only sessions that load the plugin appear on the board. See
+Run `/board` (or `/board flow`, `/board detail`) inside a session. Sessions that
+load the plugin add live context use, subagents and exact permission prompts. See
 [`claude-code/session-board/README.md`](claude-code/session-board/README.md).
 
 ### Update or roll back Claude Code plugin

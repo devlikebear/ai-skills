@@ -1,8 +1,8 @@
 // This session's snapshot, kept in memory and written by the ticker that
 // session.start runs. Every function here is pure data work: the hooks do the
 // engine calls and hand in what they read.
-import type { Snapshot, Status, Step, Sub, Todo } from '../types'
-import { cut, firstLine } from './util'
+import type { Snapshot, Status, Step, Sub } from '../types'
+import { cut, firstLine, nextTodos } from './util'
 
 const MAX_STEPS = 160
 const MAX_FILES = 40
@@ -115,6 +115,8 @@ export const endStep = (id: string, state: Step['state'], now: number) => {
   if (!step || (step.state !== 'run' && step.state !== 'wait')) return
   step.ms = now - step.at
   step.state = state
+  // An ask that was granted is an ordinary call again: ◉ stays for the denied.
+  if (step.kind === 'permission' && state === 'ok') step.kind = 'tool'
   dirty = true
 }
 
@@ -135,52 +137,9 @@ export const touch = (file: string) => {
   snap.files = [file, ...snap.files.filter(one => one !== file)].slice(0, MAX_FILES)
 }
 
-export const setTodos = (raw: unknown) => {
-  if (!snap || !Array.isArray(raw)) return
-  const todos: Todo[] = []
-  for (const item of raw as Record<string, unknown>[]) {
-    const text = String(item?.content ?? item?.subject ?? item?.text ?? '')
-    const state = String(item?.status ?? 'pending')
-    if (!text) continue
-    todos.push({
-      text: cut(text, 120),
-      state: state === 'completed' || state === 'in_progress' ? state : 'pending',
-    })
-  }
-  snap.todos = todos
-}
-
 /** Follows TodoWrite, the Task tools and the desktop app's plan tool. */
 export const trackTodos = (tool: string, input: Record<string, unknown>) => {
-  if (!snap) return
-  const todos = snap.todos
-  if (tool === 'TodoWrite') return setTodos(input.todos)
-  if (tool.endsWith('update_plan')) {
-    if (Array.isArray(input.items)) return setTodos(input.items)
-    const done = Array.isArray(input.done) ? (input.done as number[]) : []
-    for (const n of done) if (todos[n - 1]) todos[n - 1]!.state = 'completed'
-    if (input.advance === true) {
-      const at = todos.findIndex(t => t.state === 'in_progress')
-      if (at >= 0) todos[at]!.state = 'completed'
-      const next = todos.find(t => t.state === 'pending')
-      if (next) next.state = 'in_progress'
-    }
-    if (typeof input.start === 'number' && todos[input.start - 1]) todos[input.start - 1]!.state = 'in_progress'
-    return
-  }
-  if (tool.endsWith('wrap_up')) {
-    for (const t of todos) t.state = 'completed'
-    return
-  }
-  if (tool === 'TaskCreate' && typeof input.subject === 'string') {
-    todos.push({ text: cut(input.subject, 120), state: 'pending' })
-    return
-  }
-  if (tool === 'TaskUpdate') {
-    const t = todos[Number(input.taskId) - 1]
-    const state = String(input.status ?? '')
-    if (t && (state === 'pending' || state === 'in_progress' || state === 'completed')) t.state = state
-  }
+  if (snap) snap.todos = nextTodos(tool, input, snap.todos)
 }
 
 export const prompted = (text: string, turnId: string, now: number) => {

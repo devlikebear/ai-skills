@@ -3,6 +3,7 @@ import type { Register } from 'claude-code'
 
 import type { BoardData, Snapshot, Status, StepKind, ViewState } from '../types'
 import * as collector from './collector'
+import * as live from './live'
 import { LANE_LABEL, STATUS_LABEL, base, cut, laneOf, toolLabel } from './util'
 import { view } from './views'
 import type { Act } from './views'
@@ -39,6 +40,7 @@ let dir = ''
 let boardOpen = false
 let pollNow = false
 let seen = new Map<string, Status>()
+const tailCache = new Map<string, { key: string; tail: live.Tail }>()
 
 // ── pure board work ─────────────────────────────────────────────────────────
 
@@ -68,7 +70,7 @@ const transitions = (list: readonly Snapshot[], self: string): string[] => {
 }
 
 const statusLine = (all: readonly Snapshot[], now: number, self: string) => {
-  const list = all.filter(s => s.turns > 0 || s.id === self)
+  const list = all.filter(s => s.turns > 0 || s.id === self || s.running === true)
   const parts = (['needs', 'working', 'review'] as const)
     .map(l => [l, list.filter(s => laneOf(s, now) === l).length] as const)
     .filter(([, n]) => n > 0)
@@ -96,6 +98,7 @@ export const register: Register = on => {
       $.ui.panes(),
     ])
     dir = `${home ?? ''}/.claude/session-board/sessions`
+    const regDir = `${home ?? ''}/.claude/sessions`
     file = `${dir}/${id}.json`
     const root = repo?.root ?? cwd
 
@@ -174,6 +177,8 @@ export const register: Register = on => {
         if (!boardOpen || (!pollNow && tick % POLL_TICKS !== 0)) return
         pollNow = false
         const own = collector.current()
+
+        // 1. Heartbeats the plugin wrote, this session's own from memory.
         let entries: { name: string; kind: string; mtimeMs: number }[] = []
         try {
           entries = await $.fs.list(dir)
@@ -190,8 +195,63 @@ export const register: Register = on => {
               }
             }),
         )
-        const list = loaded.filter((s): s is Snapshot => s !== null)
-        if (own && !list.some(s => s.id === own.id)) list.push(own)
+        const beats = new Map<string, Snapshot>()
+        for (const s of loaded) if (s) beats.set(s.id, s)
+        if (own) beats.set(own.id, own)
+
+        // 2. The engine's registry of running sessions, alive by their pid.
+        let regs: live.Reg[] = []
+        try {
+          const files = (await $.fs.list(regDir)).filter(f => f.kind === 'file' && f.name.endsWith('.json'))
+          const found = await Promise.all(
+            files.map(async f => {
+              try {
+                return live.parseReg((await $.fs.read(`${regDir}/${f.name}`)) as string)
+              } catch {
+                return null
+              }
+            }),
+          )
+          regs = found.filter((r): r is live.Reg => r !== null && (r.kind === undefined || r.kind === 'interactive' || r.kind === 'bg'))
+        } catch {}
+        if (regs.length > 0) {
+          try {
+            const ps = await $.process.run(['ps', '-o', 'pid=', '-p', regs.map(r => String(r.pid)).join(',')], { timeoutMs: 5000 })
+            const alive = live.alivePids(ps.stdout)
+            regs = regs.filter(r => alive.has(r.pid))
+          } catch {
+            regs = regs.filter(r => at - (r.updatedAt ?? r.startedAt) < 24 * 3600_000)
+          }
+        }
+
+        // 3. Each running session's transcript tail, read again only when it grew.
+        const tails = new Map<string, live.Tail>()
+        await Promise.all(
+          regs.map(async r => {
+            const path = `${home ?? ''}/.claude/projects/${live.projectDir(r.cwd)}/${r.sessionId}.jsonl`
+            try {
+              const stat = await $.fs.stat(path)
+              const key = `${stat.size}:${stat.mtimeMs}`
+              const cached = tailCache.get(r.sessionId)
+              if (cached && cached.key === key) return void tails.set(r.sessionId, cached.tail)
+              const out = await $.process.run(['tail', '-c', String(live.TAIL_BYTES), path], { timeoutMs: 5000 })
+              const tail = live.readTail(out.stdout, stat.size <= live.TAIL_BYTES)
+              tailCache.set(r.sessionId, { key, tail })
+              tails.set(r.sessionId, tail)
+            } catch {}
+          }),
+        )
+
+        const list: Snapshot[] = []
+        const running = new Set<string>()
+        for (const r of regs) {
+          running.add(r.sessionId)
+          const beat = beats.get(r.sessionId)
+          const tail = tails.get(r.sessionId) ?? null
+          list.push(beat ? live.overlay(beat, r, tail, at) : live.fromLive(r, tail, at))
+        }
+        for (const [id, s] of beats) if (!running.has(id)) list.push(s)
+        for (const id of tailCache.keys()) if (!running.has(id)) tailCache.delete(id)
 
         for (const text of transitions(list, own?.id ?? '')) $.ui.toast(text)
         $.ui.status(statusLine(list, at, own?.id ?? ''))
