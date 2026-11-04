@@ -19,6 +19,9 @@ All notable changes to this repository will be documented in this file.
 
 ### Changed
 
+- Document Claude Code installation, update and rollback with the terminal
+  `claude plugin` CLI (`claude plugin marketplace add`, `claude plugin install`,
+  `claude plugin update`) instead of the in-session `/plugin` command.
 - Synchronize distribution and MCP version metadata to 1.2.0. The
   source-analyzer MCP server and the `code-workflow` skills are otherwise
   unchanged.

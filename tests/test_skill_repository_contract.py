@@ -115,8 +115,11 @@ class SkillRepositoryContractTests(unittest.TestCase):
     def test_public_repo_readme_mentions_claude_code_plugin(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("code-workflow", readme)
-        self.assertIn("/plugin marketplace add", readme)
-        self.assertIn("/plugin install", readme)
+        self.assertIn("claude plugin marketplace add devlikebear/ai-skills", readme)
+        self.assertIn("claude plugin install code-workflow@ai-skills", readme)
+        self.assertIn("claude plugin install session-board@ai-skills", readme)
+        self.assertNotIn("/plugin install", readme)
+        self.assertNotIn("/plugin marketplace add", readme)
 
     def test_public_repo_readme_matches_current_release_and_flat_layout(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")

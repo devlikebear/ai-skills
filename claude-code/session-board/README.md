@@ -6,13 +6,29 @@ them all and draws three views in a pane beside the chat.
 
 ## Install
 
+From a terminal:
+
 ```bash
-/plugin marketplace add devlikebear/ai-skills
-/plugin install session-board@ai-skills
+claude plugin marketplace add devlikebear/ai-skills
 ```
 
-Install it at user scope so every session records itself. A session that does not
-load the plugin does not appear on the board.
+```bash
+claude plugin install session-board@ai-skills
+```
+
+`install` defaults to user scope. Keep it there so every session records itself:
+a session that does not load the plugin does not appear on the board. New
+sessions load it; restart sessions that were already running.
+
+Update or remove it the same way:
+
+```bash
+claude plugin update session-board@ai-skills
+```
+
+```bash
+claude plugin uninstall session-board@ai-skills
+```
 
 ## Use
 

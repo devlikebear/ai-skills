@@ -263,15 +263,24 @@ Use `scripts/sync_source_analyzer_mcp.sh` when bundle copies need to be refreshe
 
 ## Install via Plugin Marketplace (Claude Code)
 
-This repository is also a Claude Code plugin marketplace. Add it directly and install the `code-workflow` plugin:
+This repository is also a Claude Code plugin marketplace. Add it and install the
+`code-workflow` plugin from a terminal with the `claude plugin` CLI:
 
 ```bash
-# Add this repo as a marketplace
-/plugin marketplace add devlikebear/ai-skills
-
-# Install the plugin
-/plugin install code-workflow@ai-skills
+claude plugin marketplace add devlikebear/ai-skills
 ```
+
+```bash
+claude plugin install code-workflow@ai-skills
+```
+
+```bash
+claude plugin list
+```
+
+`install` defaults to user scope; pass `--scope project` to share the plugin
+through the repository's `.claude/settings.json`. Restart Claude Code (or open a
+new session) to load it.
 
 After installation the following skills are available:
 
@@ -298,20 +307,50 @@ timeline of prompts, tool calls, subagents and permission prompts, and a detail
 view with todos, files, context and cost.
 
 ```bash
-/plugin install session-board@ai-skills
+claude plugin install session-board@ai-skills
 ```
 
-Run `/board` (or `/board flow`, `/board detail`). Install it at user scope: only
-sessions that load the plugin appear on the board. See
+Run `/board` (or `/board flow`, `/board detail`) inside a session. Keep the
+default user scope: only sessions that load the plugin appear on the board. See
 [`claude-code/session-board/README.md`](claude-code/session-board/README.md).
 
 ### Update or roll back Claude Code plugin
 
-Use `/plugin` in Claude Code to refresh the marketplace and reinstall
-`code-workflow@ai-skills`. For rollback, check out or register a marketplace ref
-at the required tag, uninstall the current plugin, and install it again. Restart
-Claude Code after changing a bundled MCP server and verify the available skills
-before continuing.
+Refresh the marketplace, then update each installed plugin:
+
+```bash
+claude plugin marketplace update ai-skills
+```
+
+```bash
+claude plugin update code-workflow@ai-skills
+```
+
+```bash
+claude plugin update session-board@ai-skills
+```
+
+To roll back, register a checkout of a known-good tag as the marketplace and
+reinstall:
+
+```bash
+git clone --branch <known-good-tag> https://github.com/devlikebear/ai-skills.git ai-skills-<known-good-tag>
+```
+
+```bash
+claude plugin marketplace remove ai-skills
+```
+
+```bash
+claude plugin marketplace add ./ai-skills-<known-good-tag>
+```
+
+```bash
+claude plugin install code-workflow@ai-skills
+```
+
+Restart Claude Code after any update, rollback or change to a bundled MCP server,
+and confirm the versions with `claude plugin list` before continuing.
 
 ### Claude Code quickstart for `source-analyzer-search`
 
