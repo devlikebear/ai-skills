@@ -1,6 +1,6 @@
 {
   "name": "session-board",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Board, workflow and detail views of every active Claude Code session",
   "author": {
     "name": "devlikebear"

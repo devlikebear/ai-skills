@@ -39,11 +39,13 @@ type Ctx = {
   now: number
 }
 
+const prPath = (url: string) => url.replace('https://github.com/', '')
+
 const titleOf = (s: Snapshot) => s.title || cut(s.prompt, 70) || '새 세션'
 
 const visible = (c: Ctx) =>
   c.data.list
-    .filter(s => !c.data.hidden.includes(s.id) && (s.turns > 0 || s.id === c.data.self))
+    .filter(s => !c.data.hidden.includes(s.id) && (s.turns > 0 || s.id === c.data.self || s.running === true))
     .sort(byAttention(c.now))
 
 // ── shared bits ────────────────────────────────────────────────────────────
@@ -113,6 +115,7 @@ const meters = (c: Ctx, s: Snapshot) => {
       )}
       {running > 0 && <Text color="suggestion">◆ {String(running)}</Text>}
       {s.cost !== null && s.cost > 0 && <Text dimColor>{`$${s.cost.toFixed(2)}`}</Text>}
+      {s.pr && <Text color="suggestion">{`#${s.pr.number}`}</Text>}
     </Box>
   )
 }
@@ -250,7 +253,7 @@ const chain = (c: Ctx, steps: Step[], room: number) => {
 
 const lanesFlow = (c: Ctx, all: Snapshot[]) => {
   const { Box, Text, Button } = c.kit
-  const name = Math.min(28, Math.max(12, Math.floor(c.width * 0.3)))
+  const name = Math.min(30, Math.max(14, Math.floor(c.width * 0.45)))
   const room = c.width - name - 14
 
   return (
@@ -443,6 +446,8 @@ const detail = (c: Ctx, all: Snapshot[], s: Snapshot) => {
         {fact(c, '시작', `${ago(c.now - s.startedAt)} 전 · ${s.turns}턴${s.surface ? ` · ${s.surface}` : ''}`)}
         {s.ctx !== null && fact(c, '컨텍스트', `${meter(s.ctx, 12)} ${Math.round(s.ctx)}%`, ctxColor(s.ctx))}
         {s.cost !== null && fact(c, '비용', `$${s.cost.toFixed(2)}`)}
+        {s.pr && fact(c, 'PR', `#${s.pr.number}  ${prPath(s.pr.url)}`, 'suggestion')}
+        {s.source === 'live' && fact(c, '출처', '세션 레지스트리 · 대화 기록 (플러그인 미로드)')}
       </Box>
       {canSend &&
         Input &&

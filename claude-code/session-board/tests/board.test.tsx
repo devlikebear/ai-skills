@@ -2,6 +2,7 @@ import { expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
 import * as collector from '../hooks/collector'
+import * as live from '../hooks/live'
 import type { Snapshot } from '../types'
 
 const HOME = '/home/u'
@@ -73,8 +74,29 @@ const world = (on: On, files: Map<string, string>, where: { cwd?: string; root?:
   on('turn.start', (_, e) => ({ turnId: e.turnId }))
   on('turn.complete', (_, e) => ({ text: e.answer }))
   on('tool.call', () => ({ result: {} }))
+  on('fs.stat', (_, e) => {
+    const text = files.get(e.path)
+    if (text === undefined) throw new Error(`ENOENT ${e.path}`)
+    return { value: { kind: 'file' as const, size: text.length, mtimeMs: clock.now(), isLink: false } }
+  })
+  // `ps -o pid= -p …` answers the pids in `alive`; `tail -c N path` the file's end.
+  const alive = new Set<number>()
+  on('process.run', (_, e) => {
+    const [cmd, ...args] = e.argv
+    if (cmd === 'ps') {
+      const asked = String(args.at(-1) ?? '').split(',').map(Number)
+      const out = asked.filter(n => alive.has(n)).map(n => `  ${n}`).join('\n')
+      return { value: { exitCode: out ? 0 : 1, stdout: out, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }
+    }
+    if (cmd === 'tail') {
+      const text = files.get(String(args.at(-1))) ?? ''
+      const n = Number(args[1])
+      return { value: { exitCode: 0, stdout: text.slice(-n), stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }
+    }
+    throw new Error(`unexpected ${cmd}`)
+  })
   files.set('/work/app/.git/HEAD', 'ref: refs/heads/feat/login\n')
-  return { clock, toasts }
+  return { clock, toasts, alive }
 }
 
 const other = (id: string, fields: Partial<Snapshot>): Snapshot => ({
@@ -178,7 +200,7 @@ test('the ask marks the call it came from, which the engine raises inside the ca
   collector.endStep('tu1', 'ok', 5)
   const snap = collector.current()!
   expect(snap.steps).toHaveLength(1)
-  expect(snap.steps[0]).toMatchObject({ kind: 'permission', state: 'ok', ms: 4 })
+  expect(snap.steps[0]).toMatchObject({ kind: 'tool', state: 'ok', ms: 4 })
   expect(snap.status).toBe('permission')
 })
 
@@ -250,4 +272,115 @@ test('a value an earlier version stored is declined', async ($, on) => {
   const ui = await $.ui.mount({ ...PANE(100), surface: 'desktop' })
   expect(await ui.find({ type: 'Text', text: /아직 기록된 세션이 없습니다/ })).toBeDefined()
   await ui.unmount()
+})
+
+const row = (o: Record<string, unknown>) => JSON.stringify(o)
+
+/** A transcript as the engine writes it: one JSON row per line. */
+const TRANSCRIPT = [
+  row({ type: 'custom-title', customTitle: '결제 모듈 정리', sessionId: 'live-1' }),
+  row({ type: 'user', isSidechain: false, gitBranch: 'feat/pay', timestamp: '2026-11-04T08:00:00.000Z', uuid: 'u1', message: { role: 'user', content: 'Clean up the payment module' } }),
+  row({ type: 'user', isSidechain: false, isMeta: true, timestamp: '2026-11-04T08:00:00.100Z', message: { role: 'user', content: '<system-reminder>ignore me</system-reminder>' } }),
+  row({ type: 'assistant', isSidechain: false, gitBranch: 'feat/pay', timestamp: '2026-11-04T08:00:01.000Z', message: { role: 'assistant', model: 'claude-opus-5-5', content: [{ type: 'tool_use', id: 't1', name: 'Edit', input: { file_path: '/w/pay/charge.ts' } }] } }),
+  row({ type: 'user', isSidechain: false, timestamp: '2026-11-04T08:00:03.000Z', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't1' }] } }),
+  row({ type: 'assistant', isSidechain: false, timestamp: '2026-11-04T08:00:04.000Z', message: { role: 'assistant', content: [{ type: 'tool_use', id: 't2', name: 'TodoWrite', input: { todos: [{ content: 'split charge()', status: 'completed' }, { content: 'add tests', status: 'in_progress' }] } }] } }),
+  row({ type: 'user', isSidechain: false, timestamp: '2026-11-04T08:00:04.500Z', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't2' }] } }),
+  row({ type: 'assistant', isSidechain: false, timestamp: '2026-11-04T08:00:05.000Z', message: { role: 'assistant', content: [{ type: 'text', text: 'Split charge() into two steps.' }], stop_reason: 'end_turn' } }),
+  row({ type: 'user', isSidechain: false, timestamp: '2026-11-04T08:01:00.000Z', uuid: 'u2', message: { role: 'user', content: [{ type: 'text', text: 'now run the tests' }] } }),
+  row({ type: 'assistant', isSidechain: false, timestamp: '2026-11-04T08:01:01.000Z', message: { role: 'assistant', content: [{ type: 'tool_use', id: 't3', name: 'Bash', input: { command: 'npm test', description: 'Run tests' } }] } }),
+  row({ type: 'assistant', isSidechain: true, timestamp: '2026-11-04T08:01:02.000Z', message: { role: 'assistant', content: [{ type: 'tool_use', id: 'side', name: 'Read', input: { file_path: '/x' } }] } }),
+  row({ type: 'cost-state', totalCostUSD: 0.87 }),
+  row({ type: 'pr-link', prNumber: 42, prUrl: 'https://github.com/acme/pay/pull/42' }),
+].join('\n')
+
+test('a transcript tail reads into a card: title, steps, todos, files, the call still running', async () => {
+  const tail = live.readTail(TRANSCRIPT, true)
+  expect(tail.title).toBe('결제 모듈 정리')
+  expect(tail.branch).toBe('feat/pay')
+  expect(tail.model).toBe('claude-opus-5-5')
+  expect(tail.turns).toBe(2)
+  expect(tail.steps.map(s => `${s.kind}:${s.state}`)).toEqual([
+    'prompt:ok',
+    'tool:ok',
+    'tool:ok',
+    'answer:ok',
+    'prompt:ok',
+    'tool:run',
+  ])
+  expect(tail.steps[1]?.ms).toBe(2000)
+  expect(tail.todos.map(t => t.state)).toEqual(['completed', 'in_progress'])
+  expect(tail.files).toEqual(['/w/pay/charge.ts'])
+  expect(tail.summary).toBe('Split charge() into two steps.')
+  expect(tail.tool).toBe('Bash Run tests')
+  expect(tail.cost).toBe(0.87)
+  expect(tail.pr).toEqual({ number: 42, url: 'https://github.com/acme/pay/pull/42' })
+
+  // Read from the middle of a file, the first, partial line is dropped.
+  expect(live.readTail(`{"type":"cust\n${TRANSCRIPT}`, false).title).toBe('결제 모듈 정리')
+})
+
+test('the registry status maps onto the board, waiting split by what it waits for', async () => {
+  const reg = (fields: Partial<live.Reg>): live.Reg => ({ pid: 1, sessionId: 's', cwd: '/w/pay', startedAt: 0, ...fields })
+  expect(live.statusOfReg(reg({ status: 'busy' }))).toBe('working')
+  expect(live.statusOfReg(reg({ status: 'shell' }))).toBe('working')
+  expect(live.statusOfReg(reg({ status: 'idle' }))).toBe('idle')
+  expect(live.statusOfReg(reg({ status: 'waiting', waitingFor: 'dialog open' }))).toBe('permission')
+  expect(live.statusOfReg(reg({ status: 'waiting', waitingFor: 'input needed' }))).toBe('question')
+  expect(live.projectDir('/Users/me/work/ai-skills/.claude/worktrees/x-1')).toBe('-Users-me-work-ai-skills--claude-worktrees-x-1')
+
+  const card = live.fromLive(reg({ status: 'waiting', waitingFor: 'dialog open', name: 'Payments', nameSource: 'user', entrypoint: 'claude-desktop', statusUpdatedAt: 5 }), live.readTail(TRANSCRIPT, true), 9)
+  expect(card).toMatchObject({ status: 'permission', title: 'Payments', tool: '확인 대기 · 대화상자 열림', surface: 'desktop', since: 5, source: 'live', branch: 'feat/pay' })
+
+  // A derived registry name gives way to the transcript's title.
+  expect(live.fromLive(reg({ name: 'x-1-27', nameSource: 'derived' }), live.readTail(TRANSCRIPT, true), 9).title).toBe('결제 모듈 정리')
+})
+
+test('a running session without the plugin shows on the board from the registry and its transcript', async ($, on) => {
+  const files = new Map<string, string>()
+  const { clock, alive, toasts } = world(on, files)
+  const REG = `${HOME}/.claude/sessions`
+  files.set(`${REG}/4242.json`, JSON.stringify({ pid: 4242, sessionId: 'live-1', cwd: '/w/pay', startedAt: T0 - 60_000, kind: 'interactive', entrypoint: 'cli', name: 'pay-3', nameSource: 'derived', status: 'busy', statusUpdatedAt: T0 - 5000 }))
+  files.set(`${REG}/999.json`, JSON.stringify({ pid: 999, sessionId: 'gone', cwd: '/w/old', startedAt: T0 - 60_000, kind: 'interactive', status: 'idle', name: 'Gone session', nameSource: 'user' }))
+  files.set(`${HOME}/.claude/projects/-w-pay/live-1.jsonl`, TRANSCRIPT)
+  alive.add(4242)
+
+  await $.session.start({ cwd: '/work/app', surface: 'desktop', isInteractive: true })
+  await $.command.run(board(''))
+  await clock.advance(2000)
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE(130), surface })
+    expect(await ui.find({ key: 'open-live-1' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /▸ Bash Run tests/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /#42/ })).toBeDefined()
+    expect(await ui.find({ key: 'open-gone' })).toBeUndefined()
+    await ui.press({ key: 'open-live-1' })
+    expect(await ui.find({ type: 'Text', text: /플러그인 미로드/ })).toBeDefined()
+    await ui.press({ key: 'tab-board' })
+    await ui.unmount()
+  }
+
+  // The registry says it now waits on a dialog: the person hears of it.
+  files.set(`${REG}/4242.json`, JSON.stringify({ pid: 4242, sessionId: 'live-1', cwd: '/w/pay', startedAt: T0 - 60_000, kind: 'interactive', status: 'waiting', waitingFor: 'dialog open', statusUpdatedAt: T0 + 2500 }))
+  await clock.advance(2000)
+  expect(toasts.some(t => t.includes('결제 모듈 정리') && t.includes('권한 요청'))).toBe(true)
+})
+
+test('the registry corrects a heartbeat: its status wins, an empty heartbeat fills from the transcript', async () => {
+  const reg: live.Reg = { pid: 7, sessionId: 'm', cwd: '/w/pay', startedAt: 0, status: 'busy', statusUpdatedAt: 50, name: 'pay-1', nameSource: 'derived' }
+  const tail = live.readTail(TRANSCRIPT, true)
+
+  // A permission prompt the desktop app settled unseen: the registry says busy.
+  const asked = other('m', { status: 'permission', tool: '권한 요청 · Bash ls', since: 10, turns: 3, title: 'Mine' })
+  const fixed = live.overlay(asked, reg, tail, 100)
+  expect(fixed).toMatchObject({ status: 'working', since: 50, running: true, title: 'Mine', tool: 'Bash Run tests', pr: { number: 42 } })
+
+  // The plugin loaded mid-session: no turn of its own yet.
+  const empty = other('m', { status: 'idle', turns: 0, title: '', steps: [] })
+  const filled = live.overlay(empty, { ...reg, status: 'idle' }, tail, 100)
+  expect(filled).toMatchObject({ turns: 2, title: '결제 모듈 정리', running: true, tool: null })
+  expect(filled.steps.length).toBe(tail.steps.length)
+
+  // A turn that failed stays an error while the registry calls the session idle.
+  expect(live.overlay(other('m', { status: 'error', turns: 1 }), { ...reg, status: 'idle' }, null, 100).status).toBe('error')
 })

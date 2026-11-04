@@ -1,6 +1,6 @@
 {
   "name": "code-workflow",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Safe, test-driven workflows for planning, implementation, review, refactoring, source analysis, and GitHub Flow. Includes product discovery, MVP scoping, and development plans with app-service-planning. Adds evidence-based self-verification, durable correction placement, and antipattern gardening.",
   "author": {
     "name": "devlikebear"

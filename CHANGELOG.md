@@ -2,6 +2,27 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 1.3.0 - 2026-11-04
+
+### Added
+
+- `session-board` shows every running Claude Code session, not only those that
+  load the plugin. The engine's session registry (`~/.claude/sessions/<pid>.json`,
+  checked against live pids) says which sessions run and whether each is busy,
+  idle or waiting on a dialog or input. The end of each transcript fills in the
+  title, branch, model, prompts, tool calls, todos, changed files, last answer,
+  cost and linked pull request.
+- Cards and the detail view show the session's pull request (`#42`), and the
+  detail view says when a card comes from the registry and transcript.
+
+### Changed
+
+- The registry's status wins over a plugin heartbeat's, so a permission prompt the
+  desktop app settled unseen no longer reads as waiting. A granted ask is drawn
+  as an ordinary call; `◉` stays for calls that wait or were denied.
+- Synchronize distribution and MCP version metadata to 1.3.0. The source-analyzer
+  MCP server and the `code-workflow` skills are otherwise unchanged.
+
 ## 1.2.1 - 2026-11-04
 
 ### Fixed
