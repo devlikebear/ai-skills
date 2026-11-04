@@ -21,6 +21,8 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
 - Supports both Codex runtime skills and a Claude Code plugin marketplace.
 - Codex skills use a flat runtime layout: one `SKILL.md`, one `agents/openai.yaml`, and optional `shared/`.
 - Claude Code skills are distributed through the `code-workflow` plugin with bilingual `SKILL.md` files and shared `references/`.
+- The `session-board` Claude Code mod shows every active session as a board, a workflow timeline and a detail view (`/board`).
+- Claude Code plugins install from a terminal with `claude plugin marketplace add` and `claude plugin install`.
 - `source-analyzer` produces resumable `.analysis/` outputs and never changes files outside `.analysis/`.
 - Instruction registration and GitHub Wiki publishing are explicit-only companion skills.
 - `source-analyzer` provides built-in CLI search commands for querying analysis outputs and checkpoints.

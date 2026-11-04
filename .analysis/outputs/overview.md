@@ -13,7 +13,8 @@ AI Skills는 코드 워크플로 자동화를 위한 재사용 가능한 AI 에�
 | 배포판 | 경로 | 설치 방법 |
 |--------|------|-----------|
 | Codex 스킬 | `codex/skills/` | `scripts/install_codex_skill.sh <skill>` |
-| Claude Code 플러그인 | `claude-code/plugin/` | `/plugin marketplace add devlikebear/ai-skills` |
+| Claude Code 플러그인 | `claude-code/plugin/` | `claude plugin marketplace add devlikebear/ai-skills` → `claude plugin install code-workflow@ai-skills` |
+| Claude Code 세션 보드 mod | `claude-code/session-board/` | `claude plugin install session-board@ai-skills` |
 | Codex MCP 플러그인 | `plugins/source-analyzer-tools/` | `--with-mcp` 플래그 또는 별도 설치 |
 
 ## 포함된 스킬 (6개)
