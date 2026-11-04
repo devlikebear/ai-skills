@@ -29,6 +29,7 @@ class ReleaseContractTests(unittest.TestCase):
             REPO_ROOT / "claude-code" / "plugin" / ".claude-plugin" / "plugin.json",
             REPO_ROOT / "plugins" / "source-analyzer-tools" / ".codex-plugin" / "plugin.json",
             REPO_ROOT / "plugins" / "code-workflow" / ".codex-plugin" / "plugin.json",
+            REPO_ROOT / "claude-code" / "session-board" / ".claude-plugin" / "plugin.json",
         ]
 
         for path in manifests:

@@ -1,0 +1,10 @@
+{
+  "name": "session-board",
+  "version": "1.2.0",
+  "description": "Board, workflow and detail views of every active Claude Code session",
+  "author": {
+    "name": "devlikebear"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}

@@ -25,13 +25,25 @@ scripts/install_codex_skill.sh source-analyzer
 
 ### Claude Code에서 사용
 
+터미널에서 마켓플레이스를 추가하고 플러그인을 설치합니다.
+
 ```bash
-# 마켓플레이스 추가
-/plugin marketplace add devlikebear/ai-skills
+claude plugin marketplace add devlikebear/ai-skills
+```
 
-# 플러그인 설치
-/plugin install code-workflow@ai-skills
+```bash
+claude plugin install code-workflow@ai-skills
+```
 
+세션 보드가 필요하면 `session-board`도 설치합니다.
+
+```bash
+claude plugin install session-board@ai-skills
+```
+
+설치 후 새 Claude Code 세션에서 사용합니다.
+
+```bash
 # 사용 예시
 /code-workflow:source-analyzer   # 코드베이스 분석
 /code-workflow:plan              # 작업 계획

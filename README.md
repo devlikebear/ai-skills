@@ -2,7 +2,7 @@
 
 Public repository for reusable AI-agent skills, supporting both Codex and Claude Code.
 
-Current release: `1.1.0`
+Current release: `1.2.0`
 
 ### Search CLI: A/B tested for token efficiency
 
@@ -21,6 +21,8 @@ The `brief` + `search --snippet-only --snippet-len 600` pattern matches raw file
 - Supports both Codex runtime skills and a Claude Code plugin marketplace.
 - Codex skills use a flat runtime layout: one `SKILL.md`, one `agents/openai.yaml`, and optional `shared/`.
 - Claude Code skills are distributed through the `code-workflow` plugin with bilingual `SKILL.md` files and shared `references/`.
+- The `session-board` Claude Code mod shows every active session as a board, a workflow timeline and a detail view (`/board`).
+- Claude Code plugins install from a terminal with `claude plugin marketplace add` and `claude plugin install`.
 - `source-analyzer` produces resumable `.analysis/` outputs and never changes files outside `.analysis/`.
 - Instruction registration and GitHub Wiki publishing are explicit-only companion skills.
 - `source-analyzer` provides built-in CLI search commands for querying analysis outputs and checkpoints.
@@ -78,6 +80,7 @@ codex/
     correction-ladder/     # Fix mistakes where they cannot recur
     garden-antipatterns/   # Remove spreading workarounds, block reintroduction
 claude-code/
+  session-board/           # session-board mod: board of every active session
   plugin/
     .claude-plugin/
       plugin.json          # code-workflow plugin manifest
@@ -102,7 +105,7 @@ servers/
 scripts/
   install_codex_skill.sh   # Codex skill installer
   sync_source_analyzer_mcp.sh  # Sync canonical sources to all bundles
-tests/                     # 9 test suites
+tests/                     # 10 test suites
 ```
 
 `codex/skills/<skill-name>` stores the Codex source layout with flat runtime files only.
@@ -262,15 +265,24 @@ Use `scripts/sync_source_analyzer_mcp.sh` when bundle copies need to be refreshe
 
 ## Install via Plugin Marketplace (Claude Code)
 
-This repository is also a Claude Code plugin marketplace. Add it directly and install the `code-workflow` plugin:
+This repository is also a Claude Code plugin marketplace. Add it and install the
+`code-workflow` plugin from a terminal with the `claude plugin` CLI:
 
 ```bash
-# Add this repo as a marketplace
-/plugin marketplace add devlikebear/ai-skills
-
-# Install the plugin
-/plugin install code-workflow@ai-skills
+claude plugin marketplace add devlikebear/ai-skills
 ```
+
+```bash
+claude plugin install code-workflow@ai-skills
+```
+
+```bash
+claude plugin list
+```
+
+`install` defaults to user scope; pass `--scope project` to share the plugin
+through the repository's `.claude/settings.json`. Restart Claude Code (or open a
+new session) to load it.
 
 After installation the following skills are available:
 
@@ -289,13 +301,58 @@ After installation the following skills are available:
 Plugin skills are bilingual and detect the user's language automatically.
 The plugin also bundles `source-analyzer-search` through `claude-code/plugin/.mcp.json`.
 
+### `session-board` (Claude Code mod)
+
+A second plugin in the same marketplace shows every active Claude Code session in
+a pane: a board with needs-you / working / review / done lanes, a workflow
+timeline of prompts, tool calls, subagents and permission prompts, and a detail
+view with todos, files, context and cost.
+
+```bash
+claude plugin install session-board@ai-skills
+```
+
+Run `/board` (or `/board flow`, `/board detail`) inside a session. Keep the
+default user scope: only sessions that load the plugin appear on the board. See
+[`claude-code/session-board/README.md`](claude-code/session-board/README.md).
+
 ### Update or roll back Claude Code plugin
 
-Use `/plugin` in Claude Code to refresh the marketplace and reinstall
-`code-workflow@ai-skills`. For rollback, check out or register a marketplace ref
-at the required tag, uninstall the current plugin, and install it again. Restart
-Claude Code after changing a bundled MCP server and verify the available skills
-before continuing.
+Refresh the marketplace, then update each installed plugin:
+
+```bash
+claude plugin marketplace update ai-skills
+```
+
+```bash
+claude plugin update code-workflow@ai-skills
+```
+
+```bash
+claude plugin update session-board@ai-skills
+```
+
+To roll back, register a checkout of a known-good tag as the marketplace and
+reinstall:
+
+```bash
+git clone --branch <known-good-tag> https://github.com/devlikebear/ai-skills.git ai-skills-<known-good-tag>
+```
+
+```bash
+claude plugin marketplace remove ai-skills
+```
+
+```bash
+claude plugin marketplace add ./ai-skills-<known-good-tag>
+```
+
+```bash
+claude plugin install code-workflow@ai-skills
+```
+
+Restart Claude Code after any update, rollback or change to a bundled MCP server,
+and confirm the versions with `claude plugin list` before continuing.
 
 ### Claude Code quickstart for `source-analyzer-search`
 

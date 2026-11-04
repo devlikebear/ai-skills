@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Reusable AI-agent skills for code workflow automation",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "code-workflow",
       "source": "./claude-code/plugin",
       "description": "Code workflow skills: implement, review, refactor, source-analyzer, and github-flow. Includes product discovery, MVP scoping, and development plans with app-service-planning. Adds evidence-based self-verification, durable correction placement, and antipattern gardening.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "devlikebear"
       },
@@ -24,6 +24,24 @@
         "implementation",
         "source-analysis",
         "product-planning"
+      ],
+      "category": "developer-tools"
+    },
+    {
+      "name": "session-board",
+      "source": "./claude-code/session-board",
+      "description": "Monitor every active Claude Code session as a board: lanes for working, needs-you and review, a per-session workflow timeline of prompts, tool calls, subagents and permission prompts, and a detail view with todos, files, context and cost.",
+      "version": "1.2.0",
+      "author": {
+        "name": "devlikebear"
+      },
+      "license": "MIT",
+      "keywords": [
+        "session-monitor",
+        "dashboard",
+        "kanban",
+        "multi-session",
+        "mod"
       ],
       "category": "developer-tools"
     }

@@ -2,6 +2,30 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 1.2.0 - 2026-11-04
+
+### Added
+
+- Add `session-board`, a Claude Code mod published as a second plugin in the
+  `ai-skills` marketplace. Each session that loads it records its status, current
+  tool, prompts, tool calls, subagents, permission prompts, todos, changed files,
+  context use and cost. `/board` opens a pane with three views: a board of
+  needs-you, working, review and done lanes; a workflow timeline per session; and
+  a detail view that can send another session a message. Toasts and a status line
+  report when another session needs you or finishes.
+- Add `tests/test_session_board_plugin.py` for the manifest, marketplace entry and
+  hooks module, running the mod's own `claude plugin` checks when the CLI is
+  available.
+
+### Changed
+
+- Document Claude Code installation, update and rollback with the terminal
+  `claude plugin` CLI (`claude plugin marketplace add`, `claude plugin install`,
+  `claude plugin update`) instead of the in-session `/plugin` command.
+- Synchronize distribution and MCP version metadata to 1.2.0. The
+  source-analyzer MCP server and the `code-workflow` skills are otherwise
+  unchanged.
+
 ## 1.1.0 - 2026-10-05
 
 ### Added

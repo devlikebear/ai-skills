@@ -20,12 +20,16 @@ Claude Code 플러그인 마켓플레이스와 Codex 플러그인 배포 인프�
 
 ## Claude Code 설치 흐름
 
+터미널에서 `claude plugin` CLI로 설치합니다.
+
 ```
-/plugin marketplace add devlikebear/ai-skills
+claude plugin marketplace add devlikebear/ai-skills
   → .claude-plugin/marketplace.json 읽기
-  → source: ./claude-code/plugin 참조
-/plugin install code-workflow@ai-skills
+  → source: ./claude-code/plugin, ./claude-code/session-board 참조
+claude plugin install code-workflow@ai-skills
   → plugin.json + skills/ + references/ + scripts/ 설치
+claude plugin install session-board@ai-skills
+  → plugin.json + hooks/ (세션 보드 mod) 설치
 ```
 
 ## Codex 설치 흐름
