@@ -1,6 +1,6 @@
 {
   "name": "source-analyzer-tools",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Codex MCP bundle for querying source-analyzer outputs and checkpoints.",
   "author": {
     "name": "devlikebear"

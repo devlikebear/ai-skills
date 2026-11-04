@@ -32,7 +32,9 @@ const board = (args: string) => ({
 })
 
 /** Everything beneath the plugin: an in-memory home folder and a session. */
-const world = (on: On, files: Map<string, string>) => {
+const world = (on: On, files: Map<string, string>, where: { cwd?: string; root?: string } = {}) => {
+  const cwd = where.cwd ?? '/work/app'
+  const root = where.root ?? '/work/app'
   mock.env(on, { HOME })
   mock.store(on)
   const clock = mock.clock(on, { now: T0 })
@@ -52,9 +54,9 @@ const world = (on: On, files: Map<string, string>) => {
       .map(p => ({ name: p.slice(e.path.length + 1), kind: 'file' as const, size: 1, mtimeMs: clock.now(), isLink: false })),
   }))
   on('session.id', () => ({ value: 'self' }))
-  on('session.cwd', () => ({ value: '/work/app' }))
+  on('session.cwd', () => ({ value: cwd }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
-  on('session.repo', () => ({ value: { root: '/work/app', remote: null, internal: false, name: 'app' } }))
+  on('session.repo', () => ({ value: { root, remote: null, internal: false, name: 'app' } }))
   on('session.usage', () => ({
     value: { startedAt: T0, context: { window: 200_000, percent: 42 }, rateLimits: [], cost: { usd: 0.5 } },
   }))
@@ -130,6 +132,27 @@ test('a session writes its own heartbeat as it works', async ($, on) => {
   expect(snap.summary).toBe('Done')
   expect(snap.ctx).toBe(42)
   expect(snap.cost).toBe(0.5)
+})
+
+test("a git worktree shows its own branch, not the main checkout's", async ($, on) => {
+  const files = new Map<string, string>()
+  // The repository root the engine reports is the main checkout, on another branch.
+  const { clock } = world(on, files, { cwd: '/work/wt/packages/ui', root: '/work/app' })
+  files.set('/work/wt/.git', 'gitdir: /work/app/.git/worktrees/wt\n')
+  files.set('/work/app/.git/worktrees/wt/HEAD', 'ref: refs/heads/claude/session-fix\n')
+
+  await $.session.start({ cwd: '/work/wt/packages/ui', surface: 'terminal', isInteractive: true })
+  await clock.advance(1000)
+
+  const snap = JSON.parse(files.get(`${DIR}/self.json`)!) as Snapshot
+  expect(snap.branch).toBe('claude/session-fix')
+})
+
+test('folders are walked from the session up to the root', async () => {
+  expect(collector.dirsUp('/a/b/c/')).toEqual(['/a/b/c', '/a/b', '/a', '/'])
+  expect(collector.dirsUp('/')).toEqual(['/'])
+  expect(collector.resolveGitDir('/w', 'gitdir: ../main/.git/worktrees/w')).toBe('/w/../main/.git/worktrees/w')
+  expect(collector.resolveGitDir('/w', 'gitdir: /m/.git/worktrees/w')).toBe('/m/.git/worktrees/w')
 })
 
 test('a permission prompt puts the session in the needs-you lane', async ($, on) => {
