@@ -24,7 +24,8 @@ Update ALL of these files — they must stay in sync:
 5. `plugins/code-workflow/.codex-plugin/plugin.json` (one `"version"` field)
 6. `servers/source-analyzer-mcp/server.py` (`SERVER_VERSION`), then run `scripts/sync_source_analyzer_mcp.sh` to update its copies
 7. `claude-code/plugin/servers/source-analyzer-mcp/pyproject.toml` (`version`)
-8. `CHANGELOG.md` (add new entry at top with date and changes)
+8. `claude-code/session-board/.claude-plugin/plugin.json` (one `"version"` field; its marketplace entry is the second plugin in item 2)
+9. `CHANGELOG.md` (add new entry at top with date and changes)
 
 `tests/test_release_contract.py` enforces these versions.
 
@@ -86,6 +87,9 @@ checks the copies, reference links, exit criteria, and attribution.
 python3 -m unittest discover tests -v
 ```
 
+`tests/test_session_board_plugin.py` also runs `claude plugin validate` and
+`claude plugin test` on `claude-code/session-board` when the `claude` CLI is on PATH.
+
 All tests must pass before committing. Test file for checkpoint_manager is `tests/test_checkpoint_manager.py`.
 
 ## File structure quick reference
@@ -99,6 +103,7 @@ claude-code/plugin/.mcp.json             ← Claude plugin MCP config
 claude-code/plugin/skills/               ← Claude Code skills
 claude-code/plugin/references/           ← shared references (Claude)
 claude-code/plugin/scripts/              ← shared scripts (Claude)
+claude-code/session-board/               ← session-board mod (hooks module, own tests)
 plugins/source-analyzer-tools/           ← Codex MCP plugin bundle
 .agents/plugins/marketplace.json         ← Codex local marketplace manifest
 codex/skills/                            ← Codex skills
