@@ -104,14 +104,22 @@ export const register: Register = on => {
       prior = JSON.parse((await $.fs.read(file)) as string)
     } catch {}
 
+    // The nearest .git above the session's directory names its branch: a git
+    // worktree's own `.git` file points at its HEAD, while the repository root
+    // may be the main checkout on another branch.
     let branch: string | null = null
-    try {
-      branch = collector.branchOf((await $.fs.read(`${root}/.git/HEAD`)) as string)
-    } catch {
+    for (const dir of collector.dirsUp(cwd)) {
       try {
-        const pointer = ((await $.fs.read(`${root}/.git`)) as string).trim().replace(/^gitdir:\s*/, '')
-        const gitDir = pointer.startsWith('/') ? pointer : `${root}/${pointer}`
-        branch = collector.branchOf((await $.fs.read(`${gitDir}/HEAD`)) as string)
+        branch = collector.branchOf((await $.fs.read(`${dir}/.git/HEAD`)) as string)
+        break
+      } catch {}
+      try {
+        const pointer = ((await $.fs.read(`${dir}/.git`)) as string).trim()
+        if (pointer.startsWith('gitdir:')) {
+          const gitDir = collector.resolveGitDir(dir, pointer)
+          branch = collector.branchOf((await $.fs.read(`${gitDir}/HEAD`)) as string)
+          break
+        }
       } catch {}
     }
 

@@ -2,6 +2,21 @@
 
 All notable changes to this repository will be documented in this file.
 
+## 1.2.1 - 2026-11-04
+
+### Fixed
+
+- `session-board` now shows a git worktree's own branch. It reads the nearest
+  `.git` above the session's directory, following a worktree's `gitdir:` file,
+  instead of the repository root, which for a worktree is the main checkout on
+  another branch.
+
+### Changed
+
+- Synchronize distribution and MCP version metadata to 1.2.1. The
+  source-analyzer MCP server and the `code-workflow` skills are otherwise
+  unchanged.
+
 ## 1.2.0 - 2026-11-04
 
 ### Added

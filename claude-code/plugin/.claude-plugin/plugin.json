@@ -1,7 +1,7 @@
 {
   "name": "code-workflow",
   "description": "Code workflow skills for planning, implementing, reviewing, refactoring, and analyzing source code. Includes product discovery, MVP scoping, and development plans with app-service-planning. Adds evidence-based self-verification, durable correction placement, and antipattern gardening.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": {
     "name": "devlikebear"
   },

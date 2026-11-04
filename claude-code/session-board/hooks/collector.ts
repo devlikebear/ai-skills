@@ -76,6 +76,25 @@ export const branchOf = (head: string) => {
   return ref.startsWith('ref: refs/heads/') ? ref.slice(16) : ref.slice(0, 8) || null
 }
 
+/** `dir` and each folder above it, nearest first, the filesystem root last. */
+export const dirsUp = (dir: string): string[] => {
+  const out: string[] = []
+  let at = dir.replace(/\/+$/, '') || '/'
+  for (let i = 0; i < 64; i += 1) {
+    out.push(at)
+    if (at === '/') break
+    const cut = at.lastIndexOf('/')
+    at = cut <= 0 ? '/' : at.slice(0, cut)
+  }
+  return out
+}
+
+/** The git directory a `.git` file's `gitdir: <path>` line names, absolute. */
+export const resolveGitDir = (dir: string, pointer: string) => {
+  const path = pointer.replace(/^gitdir:\s*/, '').trim()
+  return path.startsWith('/') ? path : `${dir === '/' ? '' : dir}/${path}`
+}
+
 export const setStatus = (status: Status, now: number) => {
   if (!snap) return
   dirty = true
